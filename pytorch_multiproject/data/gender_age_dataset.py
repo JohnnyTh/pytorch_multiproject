@@ -12,18 +12,31 @@ from generic_dataset import GenericDataset
 class AgeGenderDataset(GenericDataset):
 
     def __init__(self, data_path, target_dtype, label_path, transform=None):
-        super(AgeGenderDataset, self).__init__(data_path, target_dtype, label_path)
+        """
+        :param data_path (str, list or tuple): full path/paths to root dir/dirs from where
+                          the local file paths must be collected
+        :param target_dtype (str or tuple): format of images to be collected ('.jpeg', '.jpg', '.png', etc.)
+        :param label_path (str): path to .csv file containing labels
+        :param transform (callable, optional): Optional transform to be applied
+                          on a sample.
+        """
+
+        super(AgeGenderDataset, self).__init__(data_path)
         self.transform = transform
+        self.target_dtype = target_dtype
 
         full_df = pd.read_csv(label_path, usecols=[1, 2, 3])
+        # Select only entries with target dtype (for example, .jpg files)
+        target_subset = [data_entry for data_entry in self.found_dataset if data_entry.endswith(self.target_dtype)]
         # replace windows slash with linux backslash to check intersection of two sets of image paths
-        subset = [data_entry.replace("\\", "/") for data_entry in self.dataset]
-        subset_df = full_df[full_df['image_path'].isin(subset)]
+        target_subset_linux = [data_entry.replace("\\", "/") for data_entry in target_subset]
+        subset_df = full_df[full_df['image_path'].isin(target_subset_linux)]
 
         if os.name == 'nt':
-            # Change the slash back if running windows system
-            subset_df['image_path'] = subset_df['image_path'].str.replace('/', "\\")
+            # Change the slash back if running on windows system
+            subset_df.image_path.str.replace('/', "\\")
 
+        subset_df.reset_index(inplace=True, drop=True)
         self.dataframe = subset_df
 
     def __len__(self):
@@ -47,8 +60,11 @@ class AgeGenderDataset(GenericDataset):
     def get_all_labels(self):
         return self.dataframe.iloc[:, [1, 2]]
 
+"""
+Some code for testing
 
 data_dir = os.path.join(ROOT_DIR, 'resources', 'wiki_crop')
 labels = os.path.join(ROOT_DIR, 'resources', 'wiki_crop', 'dataset_info.csv')
 
-test_dataset = AgeGenderDataset(data_dir, 'img', labels)
+test_dataset = AgeGenderDataset(data_dir, ('.jpg', '.png'), labels)
+"""
