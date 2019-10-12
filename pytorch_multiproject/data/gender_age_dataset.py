@@ -11,7 +11,7 @@ from generic_dataset import GenericDataset
 
 class AgeGenderDataset(GenericDataset):
 
-    def __init__(self, data_path, target_dtype, label_path, transform=None):
+    def __init__(self, data_path, extensions, label_path, root, transform=None):
         """
         :param data_path (str, list or tuple): full path/paths to root dir/dirs from where
                           the local file paths must be collected
@@ -21,22 +21,26 @@ class AgeGenderDataset(GenericDataset):
                           on a sample.
         """
 
-        super(AgeGenderDataset, self).__init__(data_path)
+        super(AgeGenderDataset, self).__init__(data_path, extensions)
         self.transform = transform
-        self.target_dtype = target_dtype
+        self.root_dir = root
 
         full_df = pd.read_csv(label_path, usecols=[1, 2, 3])
-        # Select only entries with target dtype (for example, .jpg files)
-        target_subset = [data_entry for data_entry in self.found_dataset if data_entry.endswith(self.target_dtype)]
-        # replace windows slash with linux backslash to check intersection of two sets of image paths
-        target_subset_linux = [data_entry.replace("\\", "/") for data_entry in target_subset]
-        subset_df = full_df[full_df['image_path'].isin(target_subset_linux)]
 
-        if os.name == 'nt':
-            # Change the slash back if running on windows system
-            subset_df.image_path.str.replace('/', "\\")
+        # Create a df from the list of dictionaries in self._found_dataset
+        # self_found_dataset contains root in format
+        # D:\..\pytorch_multiproject_vcs\pytorch_multiproject\resources\wiki_crop\00
+        # we need to convert this into 00\image.jpg in order to perform subset operation with df containing labels
 
+        names = []
+        for name_group in self._found_dataset:
+            names.extend([os.path.join(os.path.basename(name_group['root']), name) for name in name_group['names']])
+
+        # replace linux slash with windows  backslash to check intersection of two sets of image paths
+        full_df['image_path'] = full_df['image_path'].apply(lambda val: os.path.normpath(val))
+        subset_df = full_df[full_df['image_path'].isin(names)]
         subset_df.reset_index(inplace=True, drop=True)
+
         self.dataframe = subset_df
 
     def __len__(self):
@@ -60,11 +64,13 @@ class AgeGenderDataset(GenericDataset):
     def get_all_labels(self):
         return self.dataframe.iloc[:, [1, 2]]
 
-"""
-Some code for testing
 
-data_dir = os.path.join(ROOT_DIR, 'resources', 'wiki_crop')
+"""Some code for testing"""
+
+data_root = os.path.join(ROOT_DIR, 'resources', 'wiki_crop')
+data_dirs = [os.path.join(data_root, o) for o in os.listdir(data_root) if os.path.isdir(os.path.join(data_root, o))]
+extensions = (('.jpg', '.png', '.jpeg'), )*len(data_dirs)
 labels = os.path.join(ROOT_DIR, 'resources', 'wiki_crop', 'dataset_info.csv')
 
-test_dataset = AgeGenderDataset(data_dir, ('.jpg', '.png'), labels)
-"""
+test_dataset = AgeGenderDataset(data_dirs, extensions, labels, data_root)
+# print(test_dataset[160])
