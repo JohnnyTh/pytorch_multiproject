@@ -30,3 +30,6 @@ class GenericDataset(Dataset):
         for (_dir, _ext) in zip(data_paths, extensions):
             self._found_dataset.append({'root': _dir, 'names': [name for name in os.listdir(_dir) if name.endswith(_ext)]})
 
+    def get_dataset(self):
+        return self._found_dataset
+
