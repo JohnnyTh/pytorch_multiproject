@@ -73,4 +73,4 @@ extensions = (('.jpg', '.png', '.jpeg'), )*len(data_dirs)
 labels = os.path.join(ROOT_DIR, 'resources', 'wiki_crop', 'dataset_info.csv')
 
 test_dataset = AgeGenderDataset(data_dirs, extensions, labels, data_root)
-# print(test_dataset[160])
+test_dataset.

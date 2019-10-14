@@ -3,6 +3,7 @@ import pandas as pd
 from collections.abc import Iterable
 from torch.utils.data import Dataset
 
+
 class GenericDataset(Dataset):
 
     def __init__(self, data_paths, extensions):
