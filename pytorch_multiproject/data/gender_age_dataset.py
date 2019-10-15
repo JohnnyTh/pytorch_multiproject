@@ -11,24 +11,24 @@ from generic_dataset import GenericDataset
 
 class AgeGenderDataset(GenericDataset):
 
-    def __init__(self, data_path, extensions, label_path, root, transform=None):
+    def __init__(self, *args, label_path, root, transform=None, **kwargs):
+        super().__init__(*args, **kwargs)
         """
-        :param data_path (str, list or tuple): full path/paths to root dir/dirs from where
+        *args: data_paths (str, list or tuple): full path/paths to root dir/dirs from where
                           the local file paths must be collected
-        :param target_dtype (str or tuple): format of images to be collected ('.jpeg', '.jpg', '.png', etc.)
-        :param label_path (str): path to .csv file containing labels
-        :param transform (callable, optional): Optional transform to be applied
+               extensions (str or tuple): format of images to be collected ('.jpeg', '.jpg', '.png', etc.)
+        root (str): root directory with the resource files
+        label_path (str): path to .csv file containing labels
+        transform (callable, optional): Optional transform to be applied
                           on a sample.
         """
-
-        super(AgeGenderDataset, self).__init__(data_path, extensions)
         self.transform = transform
         self.root_dir = root
 
         full_df = pd.read_csv(label_path, usecols=[1, 2, 3])
 
         # Create a df from the list of dictionaries in self._found_dataset
-        # self_found_dataset contains root in format
+        # self_found_dataset contains root in the format
         # D:\..\pytorch_multiproject_vcs\pytorch_multiproject\resources\wiki_crop\00
         # we need to convert this into 00\image.jpg in order to perform subset operation with df containing labels
 
@@ -63,14 +63,3 @@ class AgeGenderDataset(GenericDataset):
 
     def get_all_labels(self):
         return self.dataframe.iloc[:, [1, 2]]
-
-
-"""Some code for testing"""
-
-data_root = os.path.join(ROOT_DIR, 'resources', 'wiki_crop')
-data_dirs = [os.path.join(data_root, o) for o in os.listdir(data_root) if os.path.isdir(os.path.join(data_root, o))]
-extensions = (('.jpg', '.png', '.jpeg'), )*len(data_dirs)
-labels = os.path.join(ROOT_DIR, 'resources', 'wiki_crop', 'dataset_info.csv')
-
-test_dataset = AgeGenderDataset(data_dirs, extensions, labels, data_root)
-test_dataset.
