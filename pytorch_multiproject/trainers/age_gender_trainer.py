@@ -3,8 +3,15 @@ from trainers.generic_trainer import GenericTrainer
 
 class AgeGenderTrainer(GenericTrainer):
 
-    def __init__(self, model, criterion, optimizer, scheduler, metrics, epochs, dataloaders, checkpoint=None, ):
-        super().__init__(model, criterion, optimizer, scheduler, metrics, epochs, checkpoint)
+    def __init__(self, *args, dataloaders, scheduler, **kwargs):
+        super().__init__(*args, **kwargs)
+        """Description here
+            Args:
+                *args: root, model, criterion, optimizer, metrics, epochs
+                **kwargs: checkpoint (default=None)
+                dataloaders (dict):
+                scheduler ():
+        """
         self.dataloaders = dataloaders
         self.scheduler = scheduler
 
