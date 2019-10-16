@@ -1,0 +1,78 @@
+import torch
+from sklearn.metrics import accuracy_score
+from trainers.generic_trainer import GenericTrainer
+
+
+class MnistTrainer(GenericTrainer):
+
+    def __init__(self, dataloaders, scheduler, *args,  **kwargs):
+        super().__init__(*args, **kwargs)
+        """Description here
+            Args:
+                *args: root, model, criterion, optimizer, metrics, epochs
+                **kwargs: checkpoint (default=None)
+                dataloaders (dict):
+                scheduler ():
+        """
+        self.dataloaders = dataloaders
+        self.scheduler = scheduler
+
+    def _train_step(self, epoch):
+        print('Epoch {}/{}'.format(epoch, self.epochs))
+        print('-' * 10)
+        results = {
+            'best_performance': False
+        }
+        # Each epoch has a training and validation phase
+        for phase in ['train', 'val']:
+            if phase == 'train':
+                self.model.train()  # Set model to training mode
+            else:
+                self.model.eval()  # Set model to evaluate mode
+
+            running_metrics = {
+                'loss': 0.0,
+                'acc': 0.0
+            }
+
+            # Run the training loop
+            for inputs, labels in self.dataloaders[phase]:
+                inputs = inputs.to(self.device)
+                labels = labels.to(self.device)
+
+                self.optimizer.zero_grad()
+                with torch.set_grad_enabled(phase == 'train'):
+                    outputs = self.model(inputs)
+                    loss = self.criterion(outputs, labels)
+                    if phase == 'train':
+                        loss.backward()
+                        self.optimizer.step()
+
+                # Statistics collection
+                running_metrics['loss'] += loss.item()*inputs.size(0)
+                running_metrics['acc'] += accuracy_score(labels.cpu(), outputs.data.argmax(dim=1).cpu())
+            if phase == 'train':
+                self.scheduler.step()
+            epoch_metrics = {
+                'epoch': epoch,
+                'loss': None,
+                'acc': None
+            }
+            epoch_metrics['loss'] = running_metrics['loss'] / len(self.dataloaders[phase].dataset)
+            # Divide the accumulated accuracy score by the number of minibatches in dataloader
+            epoch_metrics['acc'] = running_metrics['acc'] / len(self.dataloaders[phase])
+            print('>> {} phase <<'.format(phase))
+            print('Loss: {:.4f} Error: {:.4f} %'.format(epoch_metrics['loss'], (1 - epoch_metrics['acc'])*100))
+            print()
+
+            if (
+                phase == 'val'
+                and epoch_metrics['loss'] < self.best_metrics['loss']
+                and epoch_metrics['acc'] > self.best_metrics['acc']
+               ):
+                self.best_metrics = epoch_metrics
+                print('Best model performance so far at epoch {}!'.format(epoch))
+                results['best_performance'] = True
+
+        return results
+

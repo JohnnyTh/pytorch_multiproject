@@ -36,7 +36,7 @@ class GenericTrainer(BaseTrainer):
 
     def train(self):
         for epoch in range(self.start_epoch, self.epochs+1):
-            res = self._train_step(self.model)
+            res = self._train_step(epoch)
             if res['best_performance']:
                 self._serialize(epoch)
 
@@ -49,13 +49,13 @@ class GenericTrainer(BaseTrainer):
                           'state': self.optimizer.state_dict()},
             'best_metrics': self.best_metrics
         }
-        chkpt = '{}_epoch_{}.pth'.format(self.name, epoch)
-        file_path = os.path.join(self.root, 'saved', self.name, chkpt)
+        chkpt = '{}_best.pth'.format(self.name)
+        file_path = os.path.join(self.root, 'saved', chkpt)
         torch.save(state, file_path)
 
     def _deserialize(self, load_path):
         checkpoint = torch.load(load_path)
-        self.start_epoch = checkpoint['epoch']+1
+        self.start_epoch = checkpoint['epoch'] + 1
         self.epochs = self.epochs + self.start_epoch + 1
         self.model.load_state_dict(checkpoint['model_state'])
         self.best_metrics = checkpoint['best_metrics']

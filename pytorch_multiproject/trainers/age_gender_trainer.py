@@ -11,6 +11,9 @@ class AgeGenderTrainer(GenericTrainer):
                 **kwargs: checkpoint (default=None)
                 dataloaders (dict):
                 scheduler ():
+                
+                Note: best_metrics = { 'loss': {'gender' : 10.0, 'age': 100.0, 'total' : 100.0},
+                                       'acc_gender' : 0.0}
         """
         self.dataloaders = dataloaders
         self.scheduler = scheduler
