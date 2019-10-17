@@ -3,7 +3,7 @@ from trainers.generic_trainer import GenericTrainer
 
 class AgeGenderTrainer(GenericTrainer):
 
-    def __init__(self, *args, dataloaders, scheduler, **kwargs):
+    def __init__(self,  dataloaders, scheduler=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         """Description here
             Args:
@@ -64,7 +64,7 @@ class AgeGenderTrainer(GenericTrainer):
                 running_metrics['loss']['age'] += loss_age.item() * inputs.size(0)
                 running_metrics['loss']['total'] += loss.item() * inputs.size(0)
                 running_metrics['acc_gender'] += torch.sum(preds == labels_gender.data)
-            if phase == 'train':
+            if phase == 'train' and self.scheduler is not None:
                 self.scheduler.step()
 
             epoch_metrics = {'loss': None, 'acc_gender': None}
@@ -75,7 +75,7 @@ class AgeGenderTrainer(GenericTrainer):
             # Check if we got the best performance based on the selected criteria
             if (
                 phase == 'val'
-                and epoch_metrics['loss']['total'] < self.best_metrics['total']
+                and epoch_metrics['loss']['total'] < self.best_metrics['loss']['total']
                 and epoch_metrics['acc_gender'] > self.best_metrics['acc_gender']
                 and epoch_metrics['loss']['age'] < self.best_metrics['loss']['age']
                ):
