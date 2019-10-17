@@ -5,7 +5,7 @@ from trainers.generic_trainer import GenericTrainer
 
 class MnistTrainer(GenericTrainer):
 
-    def __init__(self, dataloaders, scheduler, *args,  **kwargs):
+    def __init__(self, dataloaders, scheduler=None, *args,  **kwargs):
         super().__init__(*args, **kwargs)
         """Description here
             Args:
@@ -51,7 +51,7 @@ class MnistTrainer(GenericTrainer):
                 # Statistics collection
                 running_metrics['loss'] += loss.item()*inputs.size(0)
                 running_metrics['acc'] += accuracy_score(labels.cpu(), outputs.data.argmax(dim=1).cpu())
-            if phase == 'train':
+            if phase == 'train' and self.scheduler is not None:
                 self.scheduler.step()
             epoch_metrics = {
                 'epoch': epoch,

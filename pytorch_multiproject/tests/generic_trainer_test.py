@@ -3,8 +3,6 @@ import sys
 
 ROOT_DIR = os.path.dirname(os.path.abspath(os.path.dirname('__file__')))
 sys.path.append(ROOT_DIR)
-import mock
-import torch.nn as nn
 from mock import patch
 from trainers.generic_trainer import GenericTrainer
 
