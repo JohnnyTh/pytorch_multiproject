@@ -1,5 +1,6 @@
 import torch
 from sklearn.metrics import accuracy_score
+from sklearn.metrics import classification_report
 from trainers.generic_trainer import GenericTrainer
 
 
@@ -34,6 +35,9 @@ class MnistTrainer(GenericTrainer):
                 'loss': 0.0,
                 'acc': 0.0
             }
+            # Collect y_hat, y_true values for classification report
+            y_hat = torch.Tensor([])
+            y_true = torch.Tensor([])
 
             # Run the training loop
             for inputs, labels in self.dataloaders[phase]:
@@ -49,8 +53,14 @@ class MnistTrainer(GenericTrainer):
                         self.optimizer.step()
 
                 # Statistics collection
+                preds = outputs.data.argmax(dim=1).cpu().float()
+
                 running_metrics['loss'] += loss.item()*inputs.size(0)
-                running_metrics['acc'] += accuracy_score(labels.cpu(), outputs.data.argmax(dim=1).cpu())
+                running_metrics['acc'] += accuracy_score(labels.cpu(), preds)
+
+                y_hat = torch.cat((y_hat, preds))
+                y_true = torch.cat((y_true, labels.cpu().float()))
+
             if phase == 'train' and self.scheduler is not None:
                 self.scheduler.step()
             epoch_metrics = {
@@ -65,6 +75,9 @@ class MnistTrainer(GenericTrainer):
             print('Loss: {:.4f} Error: {:.4f} %'.format(epoch_metrics['loss'], (1 - epoch_metrics['acc'])*100))
             print()
 
+            if epoch % 5 == 0:
+                print('         ---- Classification report: ----')
+                print(classification_report(y_true, y_hat))
             if (
                 phase == 'val'
                 and epoch_metrics['loss'] < self.best_metrics['loss']

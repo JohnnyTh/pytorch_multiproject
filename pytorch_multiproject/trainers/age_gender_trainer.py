@@ -1,5 +1,7 @@
 import torch
 from trainers.generic_trainer import GenericTrainer
+from sklearn.metrics import classification_report
+
 
 class AgeGenderTrainer(GenericTrainer):
 
@@ -34,6 +36,11 @@ class AgeGenderTrainer(GenericTrainer):
                 'loss': {'gender': 0.0, 'age': 0.0, 'total': 0.0},
                 'acc_gender': 0.0
             }
+
+            # Collect y_hat, y_true values for gender classification report
+            y_hat = torch.Tensor([])
+            y_true = torch.Tensor([])
+
             for inputs, labels_gender, labels_age in self.dataloaders[phase]:
                 inputs = inputs.to(self.device)
                 labels_gender = labels_gender.to(self.device)
@@ -60,10 +67,13 @@ class AgeGenderTrainer(GenericTrainer):
                         loss.backward()
                         self.optimizer.step()
                 # Statistics collection
+                y_hat = torch.cat((y_hat, preds.cpu()))
+                y_true = torch.cat((y_true, labels_gender.cpu()))
+
                 running_metrics['loss']['gender'] += loss_gender.item() * inputs.size(0)
                 running_metrics['loss']['age'] += loss_age.item() * inputs.size(0)
                 running_metrics['loss']['total'] += loss.item() * inputs.size(0)
-                running_metrics['acc_gender'] += torch.sum(preds == labels_gender.data)
+                running_metrics['acc_gender'] += torch.sum(preds==labels_gender.data)
             if phase == 'train' and self.scheduler is not None:
                 self.scheduler.step()
 
@@ -71,6 +81,18 @@ class AgeGenderTrainer(GenericTrainer):
             epoch_metrics['loss'] = {key: running_metrics['loss'][key] / len(self.dataloaders[phase].dataset)
                                      for key in running_metrics['loss'].keys()}
             epoch_metrics['acc_gender'] = running_metrics['acc_gender'].double() / len(self.dataloaders[phase].dataset)
+
+            # Output epoch results
+            print('>> {} phase <<'.format(phase))
+            print('Loss (gender): {:.4f} Acc: {:.4f}'.format(epoch_metrics['loss']['gender'],
+                                                             epoch_metrics['acc_gender']))
+            print('Loss (age, MAE): {:.4f}'.format(epoch_metrics['loss']['age']))
+            print('Total Loss: {}'.format(epoch_metrics['loss']['total']))
+            print()
+
+            if epoch % 5 == 0:
+                print('         ---- Gender classification report: ----')
+                print(classification_report(y_true, y_hat, target_names=['Female', 'Male']))
 
             # Check if we got the best performance based on the selected criteria
             if (
