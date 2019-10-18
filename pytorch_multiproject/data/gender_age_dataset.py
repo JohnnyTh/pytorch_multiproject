@@ -6,12 +6,12 @@ sys.path.append(ROOT_DIR)
 import numpy as np
 import pandas as pd
 from skimage import io
-from generic_dataset import GenericDataset
+from data.generic_dataset import GenericDataset
 
 
 class AgeGenderDataset(GenericDataset):
 
-    def __init__(self, *args, label_path, root, transform=None, **kwargs):
+    def __init__(self,  full_df, root, *args, transform=None, **kwargs):
         super().__init__(*args, **kwargs)
         """
         *args: data_paths (str, list or tuple): full path/paths to root dir/dirs from where
@@ -24,8 +24,6 @@ class AgeGenderDataset(GenericDataset):
         """
         self.transform = transform
         self.root_dir = root
-
-        full_df = pd.read_csv(label_path, usecols=[1, 2, 3])
 
         # Create a df from the list of dictionaries in self._found_dataset
         # self_found_dataset contains root in the format

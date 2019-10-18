@@ -27,6 +27,7 @@ class GenericTrainer(BaseTrainer):
         self.best_metrics = metrics
         self.epochs = epochs
         self.start_epoch = 1
+        self.generic_logger = logging.getLogger(os.path.basename(__file__))
         if checkpoint is not None:
             self._deserialize(checkpoint)
 
@@ -55,6 +56,7 @@ class GenericTrainer(BaseTrainer):
         chkpt = '{}_best.pth'.format(self.name)
         file_path = os.path.join(self.root, 'saved', chkpt)
         torch.save(state, file_path)
+        self.generic_logger.info('Saving the model at {}'.format(file_path))
 
     def _deserialize(self, load_path):
         # restore the model and other parameters from the checkpoint file ('xxx.pth')

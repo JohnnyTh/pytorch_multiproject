@@ -1,4 +1,6 @@
+import os
 import torch
+import logging
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import classification_report
 from trainers.generic_trainer import GenericTrainer
@@ -17,10 +19,11 @@ class MnistTrainer(GenericTrainer):
         """
         self.dataloaders = dataloaders
         self.scheduler = scheduler
+        self.logger = logging.getLogger(os.path.basename(__file__))
 
     def _train_step(self, epoch):
-        print('Epoch {}/{}'.format(epoch, self.epochs))
-        print('-' * 10)
+        self.logger.info('Epoch {}/{}'.format(epoch, self.epochs))
+        self.logger.info('-' * 10)
         results = {
             'best_performance': False
         }
@@ -71,20 +74,20 @@ class MnistTrainer(GenericTrainer):
             epoch_metrics['loss'] = running_metrics['loss'] / len(self.dataloaders[phase].dataset)
             # Divide the accumulated accuracy score by the number of minibatches in dataloader
             epoch_metrics['acc'] = running_metrics['acc'] / len(self.dataloaders[phase])
-            print('>> {} phase <<'.format(phase))
-            print('Loss: {:.4f} Error: {:.4f} %'.format(epoch_metrics['loss'], (1 - epoch_metrics['acc'])*100))
-            print()
+            self.logger.info('>> {} phase <<'.format(phase))
+            self.logger.info('Loss: {:.4f} Error: {:.4f} %'.format(epoch_metrics['loss'], (1 - epoch_metrics['acc'])*100))
+            self.logger.info(' ')
 
             if epoch % 5 == 0:
-                print('         ---- Classification report: ----')
-                print(classification_report(y_true, y_hat))
+                self.logger.info('         ---- Classification report: ----')
+                self.logger.info(classification_report(y_true, y_hat))
             if (
                 phase == 'val'
                 and epoch_metrics['loss'] < self.best_metrics['loss']
                 and epoch_metrics['acc'] > self.best_metrics['acc']
                ):
                 self.best_metrics = epoch_metrics
-                print('Best model performance so far at epoch {}!'.format(epoch))
+                self.logger.info('Best model performance so far at epoch {}!'.format(epoch))
                 results['best_performance'] = True
 
         return results
