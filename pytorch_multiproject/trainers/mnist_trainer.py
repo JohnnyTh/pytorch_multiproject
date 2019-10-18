@@ -57,7 +57,6 @@ class MnistTrainer(GenericTrainer):
 
                 # Statistics collection
                 preds = outputs.data.argmax(dim=1).cpu().float()
-
                 running_metrics['loss'] += loss.item()*inputs.size(0)
                 running_metrics['acc'] += accuracy_score(labels.cpu(), preds)
 
@@ -74,13 +73,13 @@ class MnistTrainer(GenericTrainer):
             epoch_metrics['loss'] = running_metrics['loss'] / len(self.dataloaders[phase].dataset)
             # Divide the accumulated accuracy score by the number of minibatches in dataloader
             epoch_metrics['acc'] = running_metrics['acc'] / len(self.dataloaders[phase])
-            self.logger.info('>> {} phase <<'.format(phase))
+            self.logger.info('>>> {} phase <<<'.format(phase))
             self.logger.info('Loss: {:.4f} Error: {:.4f} %'.format(epoch_metrics['loss'], (1 - epoch_metrics['acc'])*100))
             self.logger.info(' ')
 
             if epoch % 5 == 0:
-                self.logger.info('         ---- Classification report: ----')
-                self.logger.info(classification_report(y_true, y_hat))
+                self.logger.info('         ---- Classification report: ----' +
+                                 '\n' + classification_report(y_true, y_hat))
             if (
                 phase == 'val'
                 and epoch_metrics['loss'] < self.best_metrics['loss']

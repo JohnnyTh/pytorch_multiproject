@@ -1,3 +1,5 @@
+import os
+import logging
 import torch
 from trainers.generic_trainer import GenericTrainer
 from sklearn.metrics import classification_report
@@ -19,8 +21,11 @@ class AgeGenderTrainer(GenericTrainer):
         """
         self.dataloaders = dataloaders
         self.scheduler = scheduler
+        self.logger = logging.getLogger(os.path.basename(__file__))
 
     def _train_step(self, epoch):
+        self.logger.info('Epoch {}/{}'.format(epoch, self.epochs))
+        self.logger.info('-' * 10)
         results = {
             'best_performance': False
         }
@@ -56,7 +61,6 @@ class AgeGenderTrainer(GenericTrainer):
                 with torch.set_grad_enabled(phase == 'train'):
                     outputs_gender, outputs_age = self.model(inputs)
                     # Round the outputs of sigmoid func to obtain predicted class
-                    preds = outputs_gender.round()
 
                     loss_gender = self.criterion['gender'](outputs_gender, labels_gender)
                     loss_age = self.criterion['age'](outputs_age, labels_age)
@@ -68,7 +72,9 @@ class AgeGenderTrainer(GenericTrainer):
                     if phase == 'train':
                         loss.backward()
                         self.optimizer.step()
+
                 # Statistics collection
+                preds = outputs_gender.round()
                 y_hat = torch.cat((y_hat, preds.cpu()))
                 y_true = torch.cat((y_true, labels_gender.cpu()))
 
@@ -85,16 +91,16 @@ class AgeGenderTrainer(GenericTrainer):
             epoch_metrics['acc_gender'] = running_metrics['acc_gender'].double() / len(self.dataloaders[phase].dataset)
 
             # Output epoch results
-            print('>> {} phase <<'.format(phase))
-            print('Loss (gender): {:.4f} Acc: {:.4f}'.format(epoch_metrics['loss']['gender'],
+            self.logger.info('>>> {} phase <<<'.format(phase))
+            self.logger.info('Loss (gender): {:.4f} Acc: {:.4f}'.format(epoch_metrics['loss']['gender'],
                                                              epoch_metrics['acc_gender']))
-            print('Loss (age, MAE): {:.4f}'.format(epoch_metrics['loss']['age']))
-            print('Total Loss: {}'.format(epoch_metrics['loss']['total']))
-            print()
+            self.logger.info('Loss (age, MAE): {:.4f}'.format(epoch_metrics['loss']['age']))
+            self.logger.info('Total Loss: {}'.format(epoch_metrics['loss']['total']))
+            self.logger.info('')
 
             if epoch % 5 == 0:
-                print('         ---- Gender classification report: ----')
-                print(classification_report(y_true, y_hat, target_names=['Female', 'Male']))
+                self.logger.info('         ---- Gender classification report: ----' +
+                                 '\n' + classification_report(y_true.detach(), y_hat.detach(), target_names=['Female', 'Male']))
 
             # Check if we got the best performance based on the selected criteria
             if (

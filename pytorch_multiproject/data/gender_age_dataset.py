@@ -35,6 +35,7 @@ class AgeGenderDataset(GenericDataset):
             names.extend([os.path.join(os.path.basename(name_group['root']), name) for name in name_group['names']])
 
         # replace linux slash with windows  backslash to check intersection of two sets of image paths
+        full_df = full_df.copy()
         full_df['image_path'] = full_df['image_path'].apply(lambda val: os.path.normpath(val))
         subset_df = full_df[full_df['image_path'].isin(names)]
         subset_df.reset_index(inplace=True, drop=True)
