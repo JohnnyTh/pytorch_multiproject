@@ -8,14 +8,14 @@ from abc import abstractmethod
 class GenericTrainer(BaseTrainer):
 
     def __init__(self, root, model, criterion, optimizer, metrics, epochs, checkpoint=None):
-        """ Description here
-            root:
-            model:
-            criterion:
-            optimizer:
-            metrics:
-            epochs:
-            checkpoint:
+        """ Generic trainer implements train(), _serialize(), and _deserialize methods.
+            root (str): project root directory
+            model (callable): an instance of custom neural network class inheriting from nn.Module class.
+            criterion (callable): a loss function.
+            optimizer (optimizer object): object implementing optimization algorithm
+            metrics (dict): dict containing metrics, specific for every custom trainer implementation
+            epochs (int): number of training epochs
+            checkpoint (str, optional): checkpoint path to resume training from
         """
         self.logger = logging.getLogger('trainer')
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -32,15 +32,18 @@ class GenericTrainer(BaseTrainer):
 
     @abstractmethod
     def _train_step(self, epoch):
+        # this method is implemented in custom Trainers
         raise NotImplementedError
 
     def train(self):
+        # training loop through epochs, saves the model if some criteria are satisfied during the training
         for epoch in range(self.start_epoch, self.epochs+1):
             res = self._train_step(epoch)
             if res['best_performance']:
                 self._serialize(epoch)
 
     def _serialize(self, epoch):
+        # save the model and some other parameters
         state = {
             'epoch': epoch,
             'model_name': self.name,
@@ -54,6 +57,7 @@ class GenericTrainer(BaseTrainer):
         torch.save(state, file_path)
 
     def _deserialize(self, load_path):
+        # restore the model and other parameters from the checkpoint file ('xxx.pth')
         checkpoint = torch.load(load_path)
         self.start_epoch = checkpoint['epoch'] + 1
         self.epochs = self.epochs + self.start_epoch + 1

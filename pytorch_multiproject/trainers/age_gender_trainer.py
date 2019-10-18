@@ -7,12 +7,12 @@ class AgeGenderTrainer(GenericTrainer):
 
     def __init__(self,  dataloaders, scheduler=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        """Description here
+        """Trainer implementing single training step behavior for AgeGenderModel.
             Args:
                 *args: root, model, criterion, optimizer, metrics, epochs
                 **kwargs: checkpoint (default=None)
-                dataloaders (dict):
-                scheduler ():
+                dataloaders (dict): a dict containing 'train' and 'val' dataloaders
+                scheduler (lr_scheduler): learning rate scheduler
                 
                 Note: best_metrics = { 'loss': {'gender' : 10.0, 'age': 100.0, 'total' : 100.0},
                                        'acc_gender' : 0.0}
@@ -60,6 +60,8 @@ class AgeGenderTrainer(GenericTrainer):
 
                     loss_gender = self.criterion['gender'](outputs_gender, labels_gender)
                     loss_age = self.criterion['age'](outputs_age, labels_age)
+                    # Total loss is calculated as a sum of two losses for gender and
+                    # age multiplied by respective correction coefficients
                     loss = 1. * loss_gender + 0.25 * loss_age
 
                     # backward + optimize only if in training phase

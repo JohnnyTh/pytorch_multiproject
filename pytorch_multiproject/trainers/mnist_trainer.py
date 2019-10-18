@@ -8,12 +8,12 @@ class MnistTrainer(GenericTrainer):
 
     def __init__(self, dataloaders, scheduler=None, *args,  **kwargs):
         super().__init__(*args, **kwargs)
-        """Description here
+        """Trainer implementing single training step behavior for MnistNet.
             Args:
                 *args: root, model, criterion, optimizer, metrics, epochs
                 **kwargs: checkpoint (default=None)
-                dataloaders (dict):
-                scheduler ():
+                dataloaders (dict): a dict containing 'train' and 'val' dataloaders
+                scheduler (lr_scheduler): learning rate scheduler
         """
         self.dataloaders = dataloaders
         self.scheduler = scheduler
