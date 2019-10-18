@@ -8,7 +8,7 @@ import torch.nn as nn
 import torch.optim as optim
 import torchvision.datasets as datasets
 import torchvision.transforms as transforms
-from projects.mnist.mnist_model import MnistNet
+from models.mnist_model import MnistNet
 from trainers.mnist_trainer import MnistTrainer
 from logger.logger import main_run, default_log_config
 

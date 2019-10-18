@@ -1,10 +1,5 @@
 import os
-import sys
-ROOT_DIR = os.path.dirname(os.path.abspath(os.path.dirname('__file__')))
-sys.path.append(ROOT_DIR)
-
 import numpy as np
-import pandas as pd
 from skimage import io
 from data.generic_dataset import GenericDataset
 

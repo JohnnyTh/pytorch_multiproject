@@ -8,10 +8,9 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torchvision.models as models
-import torchvision.datasets as datasets
 import torchvision.transforms as transforms
 from data.gender_age_dataset import AgeGenderDataset
-from projects.gender_age_model.age_gender_model import AgeGenderModel
+from models.age_gender_model import AgeGenderModel
 from trainers.age_gender_trainer import AgeGenderTrainer
 from logger.logger import main_run, default_log_config
 from utils import freeze_unfreeze_model, weights_inint_seq
