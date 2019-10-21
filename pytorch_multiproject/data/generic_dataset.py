@@ -1,5 +1,4 @@
 import os
-import pandas as pd
 from collections.abc import Iterable
 from torch.utils.data import Dataset
 

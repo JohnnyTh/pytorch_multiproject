@@ -40,6 +40,7 @@ def freeze_unfreeze_model(model, mode):
         for param in model.parameters():
             param.requires_grad = True
 
+
 def weights_inint_seq(sequential):
     # A loop to iterate over the modules in nn.Sequential
     for module in sequential:
