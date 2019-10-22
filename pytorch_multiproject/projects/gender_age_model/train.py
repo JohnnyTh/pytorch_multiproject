@@ -19,7 +19,13 @@ from utils import freeze_unfreeze_model, weights_inint_seq
 DEFAULT_CONFIG = 'train.json'
 
 
-def main(config):
+def main(config, args):
+    """
+    Args:
+    :param config: dictionary with hyperparameters (e.g. number of epochs, learning rate, etc.)
+    :param args: optional arguments from argparser
+    """
+
     # create an instance of logger
     logger = logging.getLogger(os.path.basename(__file__))
     resources_dir = os.path.join(ROOT_DIR, 'resources', 'wiki_crop')
@@ -103,12 +109,13 @@ def main(config):
 
     # create a session of trainer
     session = AgeGenderTrainer(dataloaders, scheduler, ROOT_DIR, vgg11_age_gender,
-                               criterion, optimizer, metrics, epochs)
+                               criterion, optimizer, metrics, epochs, checkpoint=args.checkpoint)
 
     # run the training session
     logger.info('Training session begins.')
     logger.info('Using device {}'.format(torch.cuda.get_device_name(0)))
     session.train()
+
 
 if __name__ == '__main__':
     default_log_config()

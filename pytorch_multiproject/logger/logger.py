@@ -7,14 +7,14 @@ def main_run(main_func, DEFAULT_CONFIG):
     parser = argparse.ArgumentParser(description='Protocol configuration:')
     parser.add_argument('-c', '--config', default=DEFAULT_CONFIG, type=str,
                         help='config file (default: ./<sript_filename>.json)')
+    parser.add_argument('-ch', '--checkpoint', default=None, type=str,
+                        help='Path to a model checkpoint (.pth file)')
     parser.add_argument('-s', '--silence', default=False, type=str,
                         help='Run Training without console outputs')
-    parser.add_argument('-l', '--log', default=None, type=str,
-                        help='Path to log file')
     arguments = parser.parse_args()
     config = json.load(open(arguments.config))
     assert config is not None, 'Default configuration file is not accessible. Please define custom configuration file.'
-    main_func(config)
+    main_func(config, arguments)
 
 
 def default_log_config(file_output=None, silence=False, console_level=logging.DEBUG, file_level=logging.DEBUG):
