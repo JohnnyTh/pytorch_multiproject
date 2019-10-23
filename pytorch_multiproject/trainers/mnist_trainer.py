@@ -77,8 +77,8 @@ class MnistTrainer(GenericTrainer):
             self.logger.info('Loss: {:.4f} Error: {:.4f} %'.format(epoch_metrics['loss'], (1 - epoch_metrics['acc'])*100))
             self.logger.info(' ')
 
-            if epoch % 5 == 0:
-                self.logger.info('         ---- Classification report: ----' +
+            if epoch % 1 == 0:
+                self.logger.info('\n' + '         ---- Classification report: ----' +
                                  '\n' + classification_report(y_true, y_hat))
             if (
                 phase == 'val'
