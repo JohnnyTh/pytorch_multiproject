@@ -25,7 +25,7 @@ get_data()
 
 # Extract the files from the dataset archive
 with tarfile.open(local_file_path) as tf:
-    tf.extractall(path=unpacked_path)
+    tf.extractall(path=os.path.join(ROOT_DIR, 'resources'))
 
 mat_path = os.path.join(unpacked_path, 'wiki.mat')
 dataset_info = scipy.io.loadmat(mat_path)
