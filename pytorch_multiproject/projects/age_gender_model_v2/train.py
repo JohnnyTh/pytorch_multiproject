@@ -73,19 +73,22 @@ def main(config, args):
     epochs = config['epochs']
 
     # Create a model template
-    resnet_age_gender = None
+    resnet_age_gender = AgeGenderModel()
     # Get the pretrained donor model
     resnet = models.resnet18(pretrained=True)
 
-    """
-    Needs correction: 
+    # collect all resnet modules in a list
+    modules = [module for module in resnet.children()]
+    # remove the head of resnet
+    modules = modules[:-1]
     
     # Transfer the features' layer parameters from the donor
-    resnet_age_gender.features = resnet.features
-    
+    resnet_age_gender.features = nn.Sequential(*modules)
+    # freeze the weights of the features layer so they will not be updated during the training
     freeze_unfreeze_model(resnet_age_gender, 'freeze')
-    # Determine the number of features passed from the last  layer of the frozen feature extractor
-    in_features = resnet_age_gender.classifier[0].in_features
+    # number of input features is determined number of convolutions in the last layer of resnet (512) multiplied by
+    # expansion of used res blocks (for BasicBlock = 1, Bottleneck = 4)
+    in_features = 512 * resnet_age_gender.features[4][0].expansion
 
     # get new heads for gender and age
     sequential_gender = resnet_age_gender.gender_head(in_features)
@@ -96,8 +99,8 @@ def main(config, args):
     weights_inint_seq(sequential_age)
 
     # attach new heads to the model
-    vgg11_age_gender.classifier_gender = sequential_gender
-    vgg11_age_gender.classifier_age = sequential_age
+    resnet_age_gender.classifier_gender = sequential_gender
+    resnet_age_gender.classifier_age = sequential_age
 
     # Binary cross entropy loss for gender prediction
     criterion_gender = nn.BCELoss()
@@ -106,7 +109,7 @@ def main(config, args):
     criterion = {'gender': criterion_gender, 'age': criterion_age}
 
     # setting an optimizer
-    params = list(vgg11_age_gender.classifier_age.parameters()) + list(vgg11_age_gender.classifier_gender.parameters())
+    params = list(resnet_age_gender.classifier_age.parameters()) + list(resnet_age_gender.classifier_gender.parameters())
     optimizer = optim.Adam(params, lr=config['learning_rate'], weight_decay=1e-5)
 
     # Set a learning rate scheduler
@@ -114,14 +117,13 @@ def main(config, args):
     scheduler = optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda_)
 
     # create a session of trainer
-    session = AgeGenderTrainer(dataloaders, scheduler, ROOT_DIR, vgg11_age_gender,
+    session = AgeGenderTrainer(dataloaders, scheduler, ROOT_DIR, resnet_age_gender,
                                criterion, optimizer, metrics, epochs, checkpoint=args.checkpoint)
 
     # run the training session
     logger.info('Training session begins.')
     logger.info('Using device {}'.format(torch.cuda.get_device_name(0)))
     session.train()
-    """
 
 
 if __name__ == '__main__':

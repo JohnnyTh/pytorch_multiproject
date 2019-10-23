@@ -16,7 +16,7 @@ from logger.logger import main_run, default_log_config
 DEFAULT_CONFIG = 'train.json'
 
 
-def main(config):
+def main(config, args):
     # create an instance of logger
     logger = logging.getLogger(os.path.basename(__file__))
 
@@ -42,7 +42,8 @@ def main(config):
     def f(epoch): return 0.89 ** epoch  # Set a learning rate scheduler
 
     scheduler = optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=f)
-    session = MnistTrainer(dataloaders, scheduler, ROOT_DIR, model, criterion, optimizer, metrics, epochs)
+    session = MnistTrainer(dataloaders, scheduler, ROOT_DIR, model, criterion, optimizer, metrics, epochs,
+                           checkpoint=args.checkpoint)
 
     # run the training session
     logger.info('Training session begins.')
