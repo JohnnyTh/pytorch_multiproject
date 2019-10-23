@@ -22,7 +22,7 @@ class MnistTrainer(GenericTrainer):
         self.logger = logging.getLogger(os.path.basename(__file__))
 
     def _train_step(self, epoch):
-        self.logger.info('Epoch {}/{}'.format(epoch, self.epochs))
+        self.logger.info('\n\n' +'Epoch {}/{}'.format(epoch, self.epochs))
         self.logger.info('-' * 10)
         results = {
             'best_performance': False
