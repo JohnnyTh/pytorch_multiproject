@@ -1,3 +1,5 @@
-{"epochs":  20,
-  "learning_rate": 0.001
+{"train_size": 35000,
+  "epochs":  20,
+  "learning_rate": 0.001,
+  "num_workers": 2
 }

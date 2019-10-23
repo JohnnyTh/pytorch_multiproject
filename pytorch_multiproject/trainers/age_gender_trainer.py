@@ -92,14 +92,14 @@ class AgeGenderTrainer(GenericTrainer):
 
             # Output epoch results
             self.logger.info('>>> {} phase <<<'.format(phase))
-            self.logger.info('Loss (gender): {:.4f} Acc: {:.4f}'.format(epoch_metrics['loss']['gender'],
+            self.logger.info('Gender: loss: {:.4f} acc: {:.4f}'.format(epoch_metrics['loss']['gender'],
                                                              epoch_metrics['acc_gender']))
-            self.logger.info('Loss (age, MAE): {:.4f}'.format(epoch_metrics['loss']['age']))
+            self.logger.info('Age: loss (MAE): {:.4f}'.format(epoch_metrics['loss']['age']))
             self.logger.info('Total Loss: {}'.format(epoch_metrics['loss']['total']))
             self.logger.info('')
 
-            if epoch % 5 == 0:
-                self.logger.info('         ---- Gender classification report: ----' +
+            if epoch % 1 == 0:
+                self.logger.info('\n' + '         ---- Gender classification report: ----' +
                                  '\n' + classification_report(y_true.detach(), y_hat.detach(), target_names=['Female', 'Male']))
 
             # Check if we got the best performance based on the selected criteria

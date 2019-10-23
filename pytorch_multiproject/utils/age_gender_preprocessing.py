@@ -85,6 +85,8 @@ dataset_df['age'] = dataset_df['age'].astype(float)
 
 print('-'*30)
 print(dataset_df.head())
+print()
+print('Dataset size: {}'.format(len(dataset_df)))
 
 # Save path in session for csv file
 INFO_SAVE_PATH = os.path.join(unpacked_path, 'dataset_info.csv')

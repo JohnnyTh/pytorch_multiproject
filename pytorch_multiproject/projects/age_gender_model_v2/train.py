@@ -10,7 +10,7 @@ import torch.optim as optim
 import torchvision.models as models
 import torchvision.transforms as transforms
 from data.gender_age_dataset import AgeGenderDataset
-from models.age_gender_model import AgeGenderModel
+from models.age_gender_model_v2 import AgeGenderModelV2
 from trainers.age_gender_trainer import AgeGenderTrainer
 from logger.logger import main_run, default_log_config
 from utils import freeze_unfreeze_model, weights_inint_seq
@@ -37,7 +37,7 @@ def main(config, args):
     dataset_df['gender'] = dataset_df['gender'].astype(float)
 
     # split the full df into train and test datasets
-    train_size = 35000
+    train_size = config['train_size']
     test_size = train_size * 0.25
     train_df = dataset_df.loc[0: train_size]
     test_df = dataset_df.loc[train_size: train_size+test_size]
@@ -60,8 +60,10 @@ def main(config, args):
                                     extensions=(('.jpg'),)*len(data_dirs), transform=trans_non_aug)
 
     # create dataloaders
-    trainloader = torch.utils.data.DataLoader(train_dataset, batch_size=64, shuffle=True, num_workers=0)
-    testloader = torch.utils.data.DataLoader(test_dataset, batch_size=64, shuffle=False, num_workers=0)
+    trainloader = torch.utils.data.DataLoader(train_dataset, batch_size=64, shuffle=True,
+                                              num_workers=config["num_workers"])
+    testloader = torch.utils.data.DataLoader(test_dataset, batch_size=64, shuffle=False,
+                                             num_workers=config["num_workers"])
     dataloaders = {'train': trainloader, 'val': testloader}
 
     # define metrics
@@ -72,35 +74,10 @@ def main(config, args):
     # define number of epochs
     epochs = config['epochs']
 
-    # Create a model template
-    resnet_age_gender = AgeGenderModel()
     # Get the pretrained donor model
     resnet = models.resnet18(pretrained=True)
-
-    # collect all resnet modules in a list
-    modules = [module for module in resnet.children()]
-    # remove the head of resnet
-    modules = modules[:-1]
-    
-    # Transfer the features' layer parameters from the donor
-    resnet_age_gender.features = nn.Sequential(*modules)
-    # freeze the weights of the features layer so they will not be updated during the training
-    freeze_unfreeze_model(resnet_age_gender, 'freeze')
-    # number of input features is determined number of convolutions in the last layer of resnet (512) multiplied by
-    # expansion of used res blocks (for BasicBlock = 1, Bottleneck = 4)
-    in_features = 512 * resnet_age_gender.features[4][0].expansion
-
-    # get new heads for gender and age
-    sequential_gender = resnet_age_gender.gender_head(in_features)
-    sequential_age = resnet_age_gender.age_head(in_features)
-
-    # initialize the weights of new layers using Xavier init
-    weights_inint_seq(sequential_gender)
-    weights_inint_seq(sequential_age)
-
-    # attach new heads to the model
-    resnet_age_gender.classifier_gender = sequential_gender
-    resnet_age_gender.classifier_age = sequential_age
+    # Create a model using donor
+    resnet_age_gender = AgeGenderModelV2(resnet)
 
     # Binary cross entropy loss for gender prediction
     criterion_gender = nn.BCELoss()
