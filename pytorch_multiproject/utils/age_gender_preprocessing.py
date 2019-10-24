@@ -77,7 +77,7 @@ print('{} data entries with incorrect image size have been dropped.'.format(orig
 # Drop entries with broken age
 original_len = len(dataset_df)
 mask = (dataset_df['age'] > 90) | (dataset_df['age'] < 1)
-dataset_df = dataset_df.drop(labels = dataset_df[mask].index)
+dataset_df = dataset_df.drop(labels=dataset_df[mask].index)
 print('{} data entries with incorrect age have been dropped.'.format(original_len - len(dataset_df)))
 
 dataset_df['gender'] = dataset_df['gender'].astype(int)

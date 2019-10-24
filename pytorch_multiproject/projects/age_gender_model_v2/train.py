@@ -38,11 +38,11 @@ def main(config, args):
 
     # split the full df into train and test datasets
     train_size = config['train_size']
-    test_size = train_size * 0.25
-    train_df = dataset_df.loc[0: train_size]
+    test_size = train_size * config['test_share']
+    train_df = dataset_df.iloc[0: train_size]
 
     # grab all the remaining from train split data
-    test_imbalanced = dataset_df.loc[train_size:]
+    test_imbalanced = dataset_df.iloc[train_size:]
     # get all the female and male images
     test_female = test_imbalanced[test_imbalanced['gender'] == 0]
     test_male = test_imbalanced[test_imbalanced['gender'] == 1]
@@ -54,7 +54,9 @@ def main(config, args):
         test_df = test_balanced_full.sample(test_size)
         test_df.reset_index(drop=True, inplace=True)
     else:
-        logger.warning('Please decrease the size of test dataset, the are not enough data')
+        logger.warning('Please decrease the size of test dataset, the are not enough data. '
+                       'The size of test must be below {}'.format(len(test_balanced_full)))
+        raise Exception('Could not create test dataset!')
 
     # collect list of folders containing input images
     data_dirs = [os.path.join(resources_dir, o)
