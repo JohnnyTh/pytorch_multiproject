@@ -40,7 +40,21 @@ def main(config, args):
     train_size = config['train_size']
     test_size = train_size * 0.25
     train_df = dataset_df.loc[0: train_size]
-    test_df = dataset_df.loc[train_size: train_size+test_size]
+
+    # grab all the remaining from train split data
+    test_imbalanced = dataset_df.loc[train_size:]
+    # get all the female and male images
+    test_female = test_imbalanced[test_imbalanced['gender'] == 0]
+    test_male = test_imbalanced[test_imbalanced['gender'] == 1]
+    # get the full balanced dataset based on the length of female dataset
+    test_balanced_full = pd.concat((test_female, test_male.iloc[0: len(test_female)]))
+
+    # get a random sample from concatenated balanced df
+    if test_size <= len(test_balanced_full):
+        test_df = test_balanced_full.sample(test_size)
+        test_df.reset_index(drop=True, inplace=True)
+    else:
+        logger.warning('Please decrease the size of test dataset, the are not enough data')
 
     # collect list of folders containing input images
     data_dirs = [os.path.join(resources_dir, o)

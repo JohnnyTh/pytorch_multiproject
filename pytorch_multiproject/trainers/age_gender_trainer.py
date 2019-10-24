@@ -96,7 +96,6 @@ class AgeGenderTrainer(GenericTrainer):
                                                              epoch_metrics['acc_gender']))
             self.logger.info('Age: loss (MAE): {:.4f}'.format(epoch_metrics['loss']['age']))
             self.logger.info('Total Loss: {}'.format(epoch_metrics['loss']['total']))
-            self.logger.info('')
 
             if epoch % 1 == 0:
                 self.logger.info('\n' + '         ---- Gender classification report: ----' +
