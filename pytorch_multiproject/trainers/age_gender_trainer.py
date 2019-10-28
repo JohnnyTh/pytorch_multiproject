@@ -60,7 +60,6 @@ class AgeGenderTrainer(GenericTrainer):
                 # track history if only in train
                 with torch.set_grad_enabled(phase == 'train'):
                     outputs_gender, outputs_age = self.model(inputs)
-                    # Round the outputs of sigmoid func to obtain predicted class
 
                     loss_gender = self.criterion['gender'](outputs_gender, labels_gender)
                     loss_age = self.criterion['age'](outputs_age, labels_age)

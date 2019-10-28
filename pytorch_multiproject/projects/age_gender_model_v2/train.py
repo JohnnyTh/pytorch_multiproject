@@ -13,7 +13,6 @@ from data.gender_age_dataset import AgeGenderDataset
 from models.age_gender_model_v2 import AgeGenderModelV2
 from trainers.age_gender_trainer import AgeGenderTrainer
 from logger.logger import main_run, default_log_config
-from utils import freeze_unfreeze_model, weights_inint_seq
 
 
 # default configuration file with hyperparameters
@@ -38,7 +37,7 @@ def main(config, args):
 
     # split the full df into train and test datasets
     train_size = config['train_size']
-    test_size = train_size * config['test_share']
+    test_size = int(train_size * config['test_share'])
     train_df = dataset_df.iloc[0: train_size]
 
     # grab all the remaining from train split data
