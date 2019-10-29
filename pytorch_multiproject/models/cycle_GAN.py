@@ -2,6 +2,7 @@ import copy
 import torch
 import torch.nn as nn
 
+
 class GANLoss(nn.Module):
     """Define different GAN objectives.
     The GANLoss class abstracts away the need to create the target label tensor
@@ -95,7 +96,7 @@ class CycleGAN(nn.Module):
 
         elif step_flag == 'disc_step':
             self._set_requires_grad([self.ab_discriminator, self.ba_discriminator], True)
-            return self._loss_discriminators()
+            return self._loss_discriminators(real_A, real_B)
         else:
             raise Exception('correct step flag name not provided !')
 
@@ -124,8 +125,26 @@ class CycleGAN(nn.Module):
         loss_genertators = loss_idt_A + loss_idt_B + loss_ab_gen + loss_ba_gen + loss_cycle_A + loss_cycle_B
         return loss_genertators
 
-    def _loss_discriminators(self):
-        pass
+    def _loss_discriminators(self, real_A, real_B):
+        # take note that image pooling for fake(generated) images can be implemented here
+        # calculate loss for ab_discriminator
+        ab_disc_loss = self._loss_discriminators_base(self.ab_discriminator, real_B, self.fake_B)
+
+        # calculate loss for ba_discriminator
+        ba_disc_loss = self._loss_discriminators_base(self.ba_discriminator, real_A, self.fake_B)
+
+        return ab_disc_loss, ba_disc_loss
+
+    def _loss_discriminators_base(self, discrim, real, fake):
+
+        pred_real = discrim(real)
+        loss_real = self.criterionGAN(pred_real, True)
+
+        pred_fake = discrim(fake)
+        loss_fake = self.criterionGAN(pred_fake, False)
+
+        loss_discrim = (loss_real + loss_fake) / 2
+        return loss_discrim
 
     @staticmethod
     def _set_requires_grad(models, requires_grad=False):
