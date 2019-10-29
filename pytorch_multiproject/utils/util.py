@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 
+
 def same_padding_calc(inp_shape, kernel_shape, stride):
     """
        !Attention - only square image padding calculation implemented!
@@ -47,3 +48,22 @@ def weights_inint_seq(sequential):
         if isinstance(module, nn.Linear):
             torch.nn.init.xavier_uniform_(module.weight.data)
 
+
+def mock_generator_foo(real_img):
+    """
+       Imitates work of a generator in GAN.
+       Returns a tensor with random values in range 0-1 in the shape (64, 3, 32, 32),
+       imitating batch of 64 32x32 images with 3 channels.
+    """
+    mock_fake_img = torch.rand((64, 3, 32, 32))
+    return mock_fake_img
+
+
+def mock_discriminator_foo(real_or_fake):
+    """
+       Imitates work of a discriminator in GAN.
+       Returns a tensor with random values 0 or 1 in the shape (64, 1),
+       imitating predictictions for batch of 64 images.
+    """
+    mock_pred = torch.randint(2, (64, 1))
+    return mock_pred

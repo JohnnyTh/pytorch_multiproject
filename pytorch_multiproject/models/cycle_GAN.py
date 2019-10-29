@@ -131,7 +131,7 @@ class CycleGAN(nn.Module):
         ab_disc_loss = self._loss_discriminators_base(self.ab_discriminator, real_B, self.fake_B)
 
         # calculate loss for ba_discriminator
-        ba_disc_loss = self._loss_discriminators_base(self.ba_discriminator, real_A, self.fake_B)
+        ba_disc_loss = self._loss_discriminators_base(self.ba_discriminator, real_A, self.fake_A)
 
         return ab_disc_loss, ba_disc_loss
 
