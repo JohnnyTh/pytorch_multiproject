@@ -17,6 +17,8 @@ class ResBlock(nn.Module):
 
     def forward(self, x):
         out = x + self.block(x)
+
+        # missing relu added!
         out = self.relu(out)
         return out
 
