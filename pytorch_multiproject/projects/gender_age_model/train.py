@@ -110,6 +110,7 @@ def main(config):
     logger.info('Using device {}'.format(torch.cuda.get_device_name(0)))
     session.train()
 
+
 if __name__ == '__main__':
     default_log_config()
     main_run(main, DEFAULT_CONFIG)
