@@ -40,6 +40,7 @@ def main(config):
     dataset = CycleGanDataset(full_df=dataset_df, root=resources_dir, mode='train',
                               data_paths=[sources, targets], extensions=(('.jpg'),)*2, transform=trans_non_aug)
 
+
     # create dataloader
     loader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=True, num_workers=2)
 
