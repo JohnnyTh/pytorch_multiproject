@@ -16,64 +16,64 @@ class CycleGAN(nn.Module):
         self.criterionIdt = identity_loss
         self._hyperparams = hyperparams
 
-    def forward(self, real_A, real_B, step_flag,
-                fake_B_disc=None, fake_A_disc=None):
+    def forward(self, real_a, real_b, step_flag,
+                fake_b_disc=None, fake_a_disc=None):
         if step_flag == 'gen_step':
-            device = real_A.device
+            device = real_a.device
             # discriminators require no gradients while optimizing generators
             self._set_requires_grad([self.ab_discriminator, self.ba_discriminator], False)
 
-            fake_B = self.ab_generator(real_A)
-            rec_A = self.ba_generator(self.fake_B)
-            fake_A = self.ba_generator(real_B)
-            rec_B = self.ab_generator(self.fake_A)
+            fake_b = self.ab_generator(real_a)
+            rec_a = self.ba_generator(self.fake_b)
+            fake_a = self.ba_generator(real_b)
+            rec_b = self.ab_generator(self.fake_a)
 
-            return fake_B, fake_A, rec_A, rec_B, self._loss_generators(real_A, real_B,
-                                                                       fake_B, fake_A, rec_A, rec_B, device)
+            return fake_b, fake_a, rec_a, rec_b, self._loss_generators(real_a, real_b,
+                                                                       fake_b, fake_a, rec_a, rec_b, device)
 
         elif step_flag == 'disc_step':
-            device = real_A.device
+            device = real_a.device
             self._set_requires_grad([self.ab_discriminator, self.ba_discriminator], True)
-            return self._loss_discriminators(real_A, real_B, fake_B_disc, fake_A_disc, device)
+            return self._loss_discriminators(real_a, real_b, fake_b_disc, fake_a_disc, device)
         else:
             raise Exception('correct step flag name not provided !')
 
-    def _loss_generators(self, real_A, real_B, fake_B, fake_A, rec_A, rec_B, device):
+    def _loss_generators(self, real_a, real_b, fake_b, fake_a, rec_a, rec_b, device):
         lambda_idt = self._hyperparams['lambda_identity']
-        lambda_A = self._hyperparams['lambda_A']
-        lambda_B = self._hyperparams['lambda_B']
+        lambda_a = self._hyperparams['lambda_a']
+        lambda_b = self._hyperparams['lambda_b']
 
         # calculate identity loss
-        idt_A = self.ab_generator(real_B)
-        loss_idt_A = self.criterionIdt(idt_A, real_B) * lambda_B * lambda_idt
+        idt_a = self.ab_generator(real_b)
+        loss_idt_a = self.criterionIdt(idt_a, real_b) * lambda_b * lambda_idt
 
-        idt_B = self.ba_generator(real_A)
-        loss_idt_B = self.criterionIdt(idt_B, real_A) * lambda_A * lambda_idt
+        idt_b = self.ba_generator(real_a)
+        loss_idt_b = self.criterionIdt(idt_b, real_a) * lambda_a * lambda_idt
 
         # GAN loss ab_disc(ab_gen(A))
-        prediction_B = self.ab_discriminator(fake_B)
-        all_true_labels_B = torch.tensor([1.0]).expand_as(prediction_B).to(device)
-        loss_ab_gen = self.criterionGAN(prediction_B, all_true_labels_B)
+        prediction_b = self.ab_discriminator(fake_b)
+        all_true_labels_b = torch.tensor([1.0]).expand_as(prediction_b).to(device)
+        loss_ab_gen = self.criterionGAN(prediction_b, all_true_labels_b)
         # GAN loss ba_disc(ba_gen(B))
-        prediction_A = self.ba_discriminator(fake_A)
-        all_true_labels_A = torch.tensor([1.0]).expand_as(prediction_A).to(device)
-        loss_ba_gen = self.criterionGAN(prediction_A, all_true_labels_A)
+        prediction_a = self.ba_discriminator(fake_a)
+        all_true_labels_a = torch.tensor([1.0]).expand_as(prediction_a).to(device)
+        loss_ba_gen = self.criterionGAN(prediction_a, all_true_labels_a)
 
         # forward cycle loss
-        loss_cycle_A = self.criterionCycle(rec_A, real_A) * lambda_A
+        loss_cycle_a = self.criterionCycle(rec_a, real_a) * lambda_a
         # backward cycle loss
-        loss_cycle_B = self.criterionCycle(rec_B, real_B) * lambda_B
+        loss_cycle_b = self.criterionCycle(rec_b, real_b) * lambda_b
         # total loss
-        loss_generators = loss_idt_A + loss_idt_B + loss_ab_gen + loss_ba_gen + loss_cycle_A + loss_cycle_B
+        loss_generators = loss_idt_a + loss_idt_b + loss_ab_gen + loss_ba_gen + loss_cycle_a + loss_cycle_b
         return loss_generators
 
-    def _loss_discriminators(self, real_A, real_B, fake_B_disc, fake_A_disc, device):
+    def _loss_discriminators(self, real_a, real_b, fake_b_disc, fake_a_disc, device):
         # take note that image pooling for fake(generated) images can be implemented here
         # calculate loss for ab_discriminator
-        ab_disc_loss = self._loss_discriminators_base(self.ab_discriminator, real_B, fake_B_disc, device)
+        ab_disc_loss = self._loss_discriminators_base(self.ab_discriminator, real_b, fake_b_disc, device)
 
         # calculate loss for ba_discriminator
-        ba_disc_loss = self._loss_discriminators_base(self.ba_discriminator, real_A, fake_A_disc, device)
+        ba_disc_loss = self._loss_discriminators_base(self.ba_discriminator, real_a, fake_a_disc, device)
 
         return ab_disc_loss, ba_disc_loss
 
