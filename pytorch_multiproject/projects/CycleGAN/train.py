@@ -24,8 +24,8 @@ DEFAULT_CONFIG = 'train.json'
 def main(config):
     # create an instance of logger
     logger = logging.getLogger(os.path.basename(__file__))
-    resources_dir = os.path.join(ROOT_DIR, 'resources', 'gan', 'horse2zebra')
-    label_path = os.path.join(ROOT_DIR, 'resources', 'gan', 'horse2zebra', 'dataset_info.csv')
+    resources_dir = os.path.join(ROOT_DIR, 'resources', 'horse2zebra')
+    label_path = os.path.join(ROOT_DIR, 'resources', 'horse2zebra', 'dataset_info.csv')
 
     sources = os.path.join(resources_dir, 'trainA')
     targets = os.path.join(resources_dir, 'trainB')

@@ -7,7 +7,7 @@ import zipfile
 import pandas as pd
 import numpy as np
 
-data_root = os.path.join(ROOT_DIR, 'resources', 'gan')
+data_root = os.path.join(ROOT_DIR, 'resources')
 
 
 def get_data():
@@ -23,7 +23,7 @@ get_data()
 
 
 with zipfile.ZipFile(os.path.join(data_root, 'horse2zebra_.zip'), 'r') as zip_ref:
-    zip_ref.extractall()
+    zip_ref.extractall(path=data_root)
 
 source_train = os.path.join(data_root, 'horse2zebra', 'trainA')
 target_train = os.path.join(data_root, 'horse2zebra', 'trainB')
