@@ -35,6 +35,9 @@ class CycleGanTrainer(GenericTrainer):
 
         for img_source, img_target in self.dataloader:
 
+            device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+            img_source = img_source.to(device)
+            img_target = img_target.to(device)
             self.model.train()
             self.optimizer['optim_gen'].zero_grad()
             # forward pass trough generators
