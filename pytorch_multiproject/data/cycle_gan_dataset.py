@@ -6,19 +6,24 @@ from data.generic_dataset import GenericDataset
 
 class CycleGanDataset(GenericDataset):
 
-    def __init__(self,  full_df, root, *args, transform=None, **kwargs):
+    def __init__(self,  full_df, root, mode, *args, transform=None, **kwargs):
         super().__init__(*args, **kwargs)
         """
         *args: data_paths (str, list or tuple): full path/paths to root dir/dirs from where
                           the local file paths must be collected
                extensions (str or tuple): format of images to be collected ('.jpeg', '.jpg', '.png', etc.)
         root (str): root directory with the resource files
+        mode (str): _______
         label_path (str): path to .csv file containing labels
         transform (callable, optional): Optional transform to be applied
                           on a sample.
         """
         self.transform = transform
         self.root_dir = root
+        if mode == 'train' or mode == 'test':
+            self.mode = mode
+        else:
+            raise Exception('Provide correct mode name ("train" or "test")')
 
         names = []
         for name_group in self._found_dataset:
@@ -30,10 +35,20 @@ class CycleGanDataset(GenericDataset):
 
         # df['path'] - 'sources|targets/00/example.jpg'
         # df['source_or_target'] - 'source' | 'target'
-        self.series_sources = subset_df[subset_df['source_or_target'] == 'source']['image_path']
-        self.series_targets = subset_df[subset_df['source_or_target'] == 'target']['image_path']
-        msg = 'Number of soruce and target images must be equal'
-        assert len(self.series_sources) == len(self.series_targets), msg
+        if mode == 'train':
+            series_sources = subset_df[subset_df['designation'] == 'source_train']['image_path']
+            series_targets = subset_df[subset_df['designation'] == 'target_train']['image_path']
+        if mode == 'test':
+            series_sources = subset_df[subset_df['designation'] == 'source_test']['image_path']
+            series_targets = subset_df[subset_df['designation'] == 'target_test']['image_path']
+
+        if len(series_sources) != len(series_targets):
+            target_len = min(len(self.series_sources), len(self.series_targets))
+            series_sources = series_sources.loc[:target_len, :]
+            series_targets = series_sources.loc[:target_len, :]
+
+        self.series_sources = series_sources
+        self.series_targets = series_targets
 
     def __len__(self):
         return len(self.series_sources)
