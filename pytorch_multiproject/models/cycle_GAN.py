@@ -1,6 +1,8 @@
 import copy
+import itertools
 import torch
 import torch.nn as nn
+import torch.optim as optim
 
 
 class CycleGAN(nn.Module):
@@ -89,6 +91,11 @@ class CycleGAN(nn.Module):
 
         loss_discrim = (loss_real + loss_fake) / 2
         return loss_discrim
+
+    def get_optims(self, lr=0.0002):
+        optim_gen = optim.Adam(itertools.chain(self.ab_generator, self.ba_generator), lr=lr, betas=(0.5, 0.999))
+        optim_disc = optim.Adam(itertools.chain(self.ab_discriminator, self.ba_discriminator), lr=lr, betas=(0.5, 0.999))
+        return optim_gen, optim_disc
 
     @staticmethod
     def _set_requires_grad(models, requires_grad=False):

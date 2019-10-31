@@ -38,14 +38,16 @@ class CycleGanDataset(GenericDataset):
         if mode == 'train':
             series_sources = subset_df[subset_df['designation'] == 'source_train']['image_path']
             series_targets = subset_df[subset_df['designation'] == 'target_train']['image_path']
-        if mode == 'test':
+        elif mode == 'test':
             series_sources = subset_df[subset_df['designation'] == 'source_test']['image_path']
             series_targets = subset_df[subset_df['designation'] == 'target_test']['image_path']
 
+        series_sources.reset_index(inplace=True, drop=True)
+        series_targets.reset_index(inplace=True, drop=True)
         if len(series_sources) != len(series_targets):
-            target_len = min(len(self.series_sources), len(self.series_targets))
-            series_sources = series_sources.loc[:target_len, :]
-            series_targets = series_sources.loc[:target_len, :]
+            min_len = min(len(series_sources), len(series_targets))
+            series_sources = series_sources.loc[:min_len]
+            series_targets = series_targets.loc[:min_len]
 
         self.series_sources = series_sources
         self.series_targets = series_targets
@@ -57,8 +59,8 @@ class CycleGanDataset(GenericDataset):
         """
            Returns unpaired source and target images
         """
-        img_name_source = os.path.join(self.root_dir, self.series_sources.iloc[item, 0])
-        img_name_target = os.path.join(self.root_dir, self.series_targets.iloc[item, 0])
+        img_name_source = os.path.join(self.root_dir, self.series_sources.iloc[item])
+        img_name_target = os.path.join(self.root_dir, self.series_targets.iloc[item])
         img_source = io.imread(img_name_source)
         img_target = io.imread(img_name_target)
 

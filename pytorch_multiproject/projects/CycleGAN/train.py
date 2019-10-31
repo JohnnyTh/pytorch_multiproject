@@ -37,7 +37,8 @@ def main(config):
 
     dataset_df = pd.read_csv(label_path)
     dataset = CycleGanDataset(full_df=dataset_df, root=resources_dir, mode='train',
-                              data_paths=[sources, targets], extensions=(('.jpg'),)*2, transforms=trans_non_aug)
+                              data_paths=[sources, targets], extensions=(('.jpg'),)*2, transform=trans_non_aug)
+
 
 
 if __name__ == '__main__':
