@@ -13,9 +13,11 @@ class ResBlock(nn.Module):
                                    nn.Conv2d(256, 256, kernel_size=3, padding=0, bias=True),
                                    nn.InstanceNorm2d(256)
                                    )
+        self.relu = nn.ReLU(True)
 
     def forward(self, x):
         out = x + self.block(x)
+        out = self.relu(out)
         return out
 
 
