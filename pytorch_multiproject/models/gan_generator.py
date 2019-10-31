@@ -3,7 +3,7 @@ import torch.nn as nn
 
 class ResBlock(nn.Module):
 
-    def __init__(self):
+    def __init__(self, skip_relu):
         super(ResBlock, self).__init__()
         self.block = nn.Sequential(nn.ReflectionPad2d(1),
                                    nn.Conv2d(256, 256, kernel_size=3, padding=0, bias=True),
@@ -13,19 +13,21 @@ class ResBlock(nn.Module):
                                    nn.Conv2d(256, 256, kernel_size=3, padding=0, bias=True),
                                    nn.InstanceNorm2d(256)
                                    )
+        self.skip_relu = skip_relu
         self.relu = nn.ReLU(True)
 
     def forward(self, x):
         out = x + self.block(x)
 
-        # missing relu added!
-        out = self.relu(out)
+        if not self.skip_relu:
+            # missing relu added!
+            out = self.relu(out)
         return out
 
 
 class GanGenerator(nn.Module):
 
-    def __init__(self):
+    def __init__(self, skip_relu=False):
         super(GanGenerator, self).__init__()
 
         block_initial = [nn.ReflectionPad2d(3),
@@ -41,7 +43,7 @@ class GanGenerator(nn.Module):
                         nn.ReLU(True)
                         ]
 
-        resblocks = [ResBlock()] * 9
+        resblocks = [ResBlock(skip_relu=skip_relu)] * 9
 
         upsampling = [nn.ConvTranspose2d(256, 128, kernel_size=3, stride=2, padding=1, output_padding=1, bias=True),
                       nn.InstanceNorm2d(128),
