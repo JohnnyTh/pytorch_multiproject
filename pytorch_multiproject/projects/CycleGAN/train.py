@@ -24,7 +24,18 @@ DEFAULT_CONFIG = 'train.json'
 def main(config):
     # create an instance of logger
     logger = logging.getLogger(os.path.basename(__file__))
-    resources_dir = os.path.join(ROOT_DIR, 'resources', 'horse_zebras')
-    label_path = os.path.join(ROOT_DIR, 'resources', 'horse_zebras', 'dataset_info.csv')
+    resources_dir = os.path.join(ROOT_DIR, 'resources', 'gan', 'horse2zebra')
+    label_path = os.path.join(ROOT_DIR, 'resources', 'gan', 'horse2zebra', 'dataset_info.csv')
 
+    sources = os.path.join(resources_dir, 'trainA')
+    targets = os.path.join(resources_dir, 'trainB')
+
+    trans_non_aug = transforms.Compose([transforms.ToPILImage(),
+                                        transforms.Resize((224, 224)),
+                                        transforms.ToTensor(),
+                                        transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])])
+
+    dataset_df = pd.read_csv(label_path)
+    dataset = CycleGanDataset(full_df=dataset_df, root=resources_dir, mode='train',
+                              data_paths=[sources, targets], extensions=(('.jpg'),)*2, transforms=trans_non_aug)
 

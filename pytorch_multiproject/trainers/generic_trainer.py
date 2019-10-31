@@ -45,6 +45,7 @@ class GenericTrainer(BaseTrainer):
 
     def _serialize(self, epoch):
         # save the model and some other parameters
+
         state = {
             'epoch': epoch,
             'model_name': self.name,
