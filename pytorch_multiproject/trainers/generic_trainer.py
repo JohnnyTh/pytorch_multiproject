@@ -7,7 +7,7 @@ from abc import abstractmethod
 
 class GenericTrainer(BaseTrainer):
 
-    def __init__(self, root, model, criterion, optimizer, metrics, epochs, checkpoint=None):
+    def __init__(self, root, model, criterion, optimizer, scheduler, metrics, epochs, checkpoint=None):
         """ Generic trainer implements train(), _serialize(), and _deserialize methods.
             root (str): project root directory
             model (callable): an instance of custom neural network class inheriting from nn.Module class.
@@ -24,6 +24,7 @@ class GenericTrainer(BaseTrainer):
         self.name = model.__class__.__name__
         self.criterion = criterion
         self.optimizer = optimizer
+        self.scheduler = scheduler
         self.best_metrics = metrics
         self.epochs = epochs
         self.start_epoch = 1
@@ -52,6 +53,8 @@ class GenericTrainer(BaseTrainer):
             'model_state': self.model.state_dict(),
             'optimizer': {'name': self.optimizer.__class__.__name__,
                           'state': self.optimizer.state_dict()},
+            'scheduler': {'name': self.scheduler.__class__.__name__,
+                          'state': self.scheduler.state_dict()},
             'best_metrics': self.best_metrics
         }
         chkpt = '{}_best.pth'.format(self.name)
@@ -72,3 +75,8 @@ class GenericTrainer(BaseTrainer):
                                 "Optimizer parameters not being resumed.")
         else:
             self.optimizer.load_state_dict(checkpoint['optimizer']['state'])
+        if checkpoint['scheduler']['name'] != self.scheduler.__class__.__name__:
+            self.logger.warning("Warning: Given scheduler type  is different from that of checkpoint. "
+                                "Optimizer parameters not being resumed.")
+        else:
+            self.scheduler.load_state_dict(checkpoint['scheduler']['state'])

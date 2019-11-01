@@ -84,7 +84,7 @@ def main(config):
     optimizer = GanOptimizer(optim_gen, optim_disc)
     lr_sched = GanLrScheduler(sched_gen, sched_gen)
 
-    session = CycleGanTrainer(loader, lr_sched, False, ROOT_DIR, model, None, optimizer, metrics, epochs)
+    session = CycleGanTrainer(loader, lr_sched, ROOT_DIR, model, None, optimizer, metrics, epochs)
 
     session.train()
 

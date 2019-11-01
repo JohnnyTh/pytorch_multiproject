@@ -6,7 +6,7 @@ from trainers.generic_trainer import GenericTrainer
 
 class CycleGanTrainer(GenericTrainer):
 
-    def __init__(self, dataloader, scheduler=None, save_chkpt=False, *args, **kwargs):
+    def __init__(self, dataloader, *args, **kwargs):
         super().__init__(*args, **kwargs)
         """Trainer implementing single training step behavior for AgeGenderModel.
             Args:
@@ -15,9 +15,7 @@ class CycleGanTrainer(GenericTrainer):
                 dataloader ():  DESCRIPTION HERE 
                 scheduler (lr_scheduler): learning rate scheduler
         """
-        self.save_chckpt = save_chkpt
         self.dataloader = dataloader
-        self.scheduler = scheduler
         self.logger = logging.getLogger(os.path.basename(__file__))
 
     def _train_step(self, epoch):
@@ -71,14 +69,14 @@ class CycleGanTrainer(GenericTrainer):
         self.logger.info('AB discriminator loss: {:.4f}'.format(epoch_metrics['ab_disc_loss']))
         self.logger.info('BA discriminator loss: {:.4f}'.format(epoch_metrics['ba_disc_loss']))
 
+        # set flag to save the model if conditions are met
         if (
             epoch_metrics['loss_gen'] < self.best_metrics['loss_gen']
             and epoch_metrics['ab_disc_loss'] < self.best_metrics['ab_disc_loss']
             and epoch_metrics['ba_disc_loss'] < self.best_metrics['ba_disc_loss']
         ):
             self.best_metrics = epoch_metrics
-            if self.save_chckpt:
-                results['best_performance'] = True
+            results['best_performance'] = True
 
         return results
 
