@@ -2,7 +2,6 @@ import sys
 import os
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(os.path.dirname('__file__'))))
 sys.path.insert(0, ROOT_DIR)
-print(sys.path)
 import logging
 import itertools
 import pandas as pd
@@ -77,14 +76,11 @@ def main(config):
     if torch.cuda.device_count() > 1:
         model = nn.DataParallel(model)
 
-    # transfer the model to device
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    model = model.to(device)
-
     optimizer = GanOptimizer(optim_gen, optim_disc)
     lr_sched = GanLrScheduler(sched_gen, sched_gen)
 
-    session = CycleGanTrainer(loader, lr_sched, ROOT_DIR, model, None, optimizer, metrics, epochs)
+    session = CycleGanTrainer(dataloader=loader, root=ROOT_DIR, model=model, criterion=None, optimizer=optimizer,
+                              scheduler=lr_sched, metrics=metrics, epochs=epochs)
 
     session.train()
 
