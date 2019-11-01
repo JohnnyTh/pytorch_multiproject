@@ -184,8 +184,10 @@ class CycleGAN(nn.Module):
         return loss_discrim
 
     def get_optims(self, lr=0.0002):
-        optim_gen = optim.Adam(itertools.chain(self.ab_generator, self.ba_generator), lr=lr, betas=(0.5, 0.999))
-        optim_disc = optim.Adam(itertools.chain(self.ab_discriminator, self.ba_discriminator), lr=lr, betas=(0.5, 0.999))
+        optim_gen = optim.Adam(itertools.chain(self.ab_generator.parameters(), self.ba_generator.parameters()),
+                               lr=lr, betas=(0.5, 0.999))
+        optim_disc = optim.Adam(itertools.chain(self.ab_discriminator.parameters(), self.ba_discriminator.parameters()),
+                                lr=lr, betas=(0.5, 0.999))
         return optim_gen, optim_disc
 
     @staticmethod

@@ -6,7 +6,7 @@ from data.generic_dataset import GenericDataset
 
 class CycleGanDataset(GenericDataset):
 
-    def __init__(self,  full_df, root, mode, *args, transform=None, **kwargs):
+    def __init__(self, full_df, root, mode, *args, transform=None, **kwargs):
         super().__init__(*args, **kwargs)
         """
         *args: data_paths (str, list or tuple): full path/paths to root dir/dirs from where
