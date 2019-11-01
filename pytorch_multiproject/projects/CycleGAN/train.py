@@ -8,9 +8,7 @@ import pandas as pd
 import torch
 import torch.nn as nn
 import torchvision.transforms as transforms
-from models.cycle_GAN import CycleGAN
-from models.gan_generator import GanGenerator
-from models.gan_discriminator import GanDiscriminator
+from models.cycle_GAN import CycleGAN, GanGenerator, GanDiscriminator
 from data.cycle_gan_dataset import CycleGanDataset
 
 from trainers.cycle_gan_trainer import CycleGanTrainer
