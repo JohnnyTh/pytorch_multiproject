@@ -5,6 +5,54 @@ import torch.nn as nn
 import torch.optim as optim
 
 
+class GanOptimizer:
+
+    def __init__(self, optim_generator, optim_discriminator):
+        self.generator_optim = optim_generator
+        self.discriminator_optim = optim_discriminator
+
+    def zero_grad(self, optim):
+        if optim == 'optim_gen':
+            self.generator_optim.zero_grad()
+        elif optim == 'optim_gen':
+            self.discriminator_optim.zero_grad()
+
+    def step(self, optim):
+        if optim == 'optim_gen':
+            self.generator_optim.step()
+        elif optim == 'optim_gen':
+            self.discriminator_optim.step()
+
+    def state_dict(self):
+        return {'optim_gen_state': self.generator_optim.state_dict(),
+                'optim_disc_state': self.discriminator_optim.state_dict()}
+
+    def load_state_dict(self, dict_):
+        self.generator_optim.load_state_dict(dict_['optim_gen_state'])
+        self.discriminator_optim.load_state_dict(dict_['optim_disc_state'])
+
+
+class GanLrScheduler:
+
+    def __init__(self, sched_gen, sched_disc):
+        self.sched_gen = sched_gen
+        self.sched_disc = sched_disc
+
+    def step(self, sched):
+        if sched == 'sched_gen':
+            self.sched_gen.step()
+        elif sched == 'sched_disc':
+            self.sched_disc.step()
+
+    def state_dict(self):
+        return {'sched_gen_state': self.sched_gen.state_dict(),
+                'sched_disc_state': self.sched_disc.state_dict()}
+
+    def load_state_dict(self, dict_):
+        self.sched_gen.load_state_dict(dict_['sched_gen_state'])
+        self.sched_disc.load_state_dict(dict_[''])
+
+
 class ResBlock(nn.Module):
 
     def __init__(self, skip_relu):

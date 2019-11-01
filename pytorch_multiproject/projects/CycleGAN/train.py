@@ -10,7 +10,7 @@ import torch
 import torch.nn as nn
 import torchvision.transforms as transforms
 from torch import optim
-from models.cycle_GAN import CycleGAN, GanGenerator, GanDiscriminator
+from models.cycle_GAN import CycleGAN, GanGenerator, GanDiscriminator, GanOptimizer, GanLrScheduler
 from data.cycle_gan_dataset import CycleGanDataset
 
 from trainers.cycle_gan_trainer import CycleGanTrainer
@@ -32,7 +32,7 @@ def main(config):
     targets = os.path.join(resources_dir, 'trainB')
 
     trans_non_aug = transforms.Compose([transforms.ToPILImage(),
-                                        transforms.Resize((225, 225)),
+                                        transforms.Resize((256, 256)),
                                         transforms.ToTensor(),
                                         transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])])
 
@@ -81,10 +81,10 @@ def main(config):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model = model.to(device)
 
-    optims = {'optim_gen': optim_gen, 'optim_disc': optim_disc}
-    lr_scheds = {'sched_gen': sched_gen, 'sched_disc': sched_disc}
+    optimizer = GanOptimizer(optim_gen, optim_disc)
+    lr_sched = GanLrScheduler(sched_gen, sched_gen)
 
-    session = CycleGanTrainer(loader, lr_scheds, False, ROOT_DIR, model, None, optims, metrics, epochs)
+    session = CycleGanTrainer(loader, lr_sched, False, ROOT_DIR, model, None, optimizer, metrics, epochs)
 
     session.train()
 

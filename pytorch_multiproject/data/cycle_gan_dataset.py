@@ -64,6 +64,12 @@ class CycleGanDataset(GenericDataset):
         img_source = io.imread(img_name_source)
         img_target = io.imread(img_name_target)
 
+        # to deal with grayscale images (1 channel instead of 3)
+        if len(img_source.shape) != 3:
+            img_source = np.repeat(img_source[:, :, np.newaxis], 3, axis=2)
+        if len(img_target.shape) != 3:
+            img_source = np.repeat(img_target[:, :, np.newaxis], 3, axis=2)
+
         if self.transform:
             img_source = self.transform(img_source)
             img_target = self.transform(img_target)
