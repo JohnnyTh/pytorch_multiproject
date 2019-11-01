@@ -68,7 +68,7 @@ class CycleGanDataset(GenericDataset):
         if len(img_source.shape) != 3:
             img_source = np.repeat(img_source[:, :, np.newaxis], 3, axis=2)
         if len(img_target.shape) != 3:
-            img_source = np.repeat(img_target[:, :, np.newaxis], 3, axis=2)
+            img_target = np.repeat(img_target[:, :, np.newaxis], 3, axis=2)
 
         if self.transform:
             img_source = self.transform(img_source)
