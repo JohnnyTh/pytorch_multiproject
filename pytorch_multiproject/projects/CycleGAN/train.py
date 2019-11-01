@@ -1,13 +1,15 @@
 import sys
 import os
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(os.path.dirname('__file__'))))
-sys.path.append(ROOT_DIR)
+sys.path.insert(0, ROOT_DIR)
+print(sys.path)
 import logging
 import itertools
 import pandas as pd
 import torch
 import torch.nn as nn
 import torchvision.transforms as transforms
+from torch import optim
 from models.cycle_GAN import CycleGAN, GanGenerator, GanDiscriminator
 from data.cycle_gan_dataset import CycleGanDataset
 
@@ -30,7 +32,7 @@ def main(config):
     targets = os.path.join(resources_dir, 'trainB')
 
     trans_non_aug = transforms.Compose([transforms.ToPILImage(),
-                                        transforms.Resize((224, 224)),
+                                        transforms.Resize((225, 225)),
                                         transforms.ToTensor(),
                                         transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])])
 
@@ -42,6 +44,7 @@ def main(config):
     # create dataloader
     loader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=True, num_workers=2)
 
+    # initialize metrics with very high loss values
     metrics = {
         'loss_gen': 100.0,
         'ab_disc_loss': 100.0,
@@ -58,23 +61,32 @@ def main(config):
     gan_loss = nn.MSELoss()
     cycle_loss = nn.L1Loss()
     identity_loss = nn.L1Loss()
-    model_hyperparams = {'lambda_identity': 0, 'lambda_a': 0, 'lambda_b': 0}
+    model_hyperparams = {'lambda_identity': 0.5, 'lambda_a': 10.0, 'lambda_b': 10.0}
     model = CycleGAN(generator, discriminator, gan_loss, cycle_loss, identity_loss, model_hyperparams)
 
     # initialize with normal weights
     model.apply(normal_weights)
 
+    # create optimizers for generators and discriminators
     optim_gen, optim_disc = model.get_optims(lr=0.0002)
 
+    sched_gen = optim.lr_scheduler.StepLR(optim_gen, step_size=30, gamma=0.1)
+    sched_disc = optim.lr_scheduler.StepLR(optim_disc, step_size=30, gamma=0.1)
+
+    # enable parallel forward pass computation if possible
     if torch.cuda.device_count() > 1:
         model = nn.DataParallel(model)
 
+    # transfer the model to device
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model = model.to(device)
-    """
-    session = CycleGanTrainer()
+
+    optims = {'optim_gen': optim_gen, 'optim_disc': optim_disc}
+    lr_scheds = {'sched_gen': sched_gen, 'sched_disc': sched_disc}
+
+    session = CycleGanTrainer(loader, lr_scheds, False, ROOT_DIR, model, None, optims, metrics, epochs)
+
     session.train()
-    """
 
 
 if __name__ == '__main__':

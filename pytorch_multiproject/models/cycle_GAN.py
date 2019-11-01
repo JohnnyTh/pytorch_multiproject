@@ -113,13 +113,13 @@ class CycleGAN(nn.Module):
                 fake_b_disc=None, fake_a_disc=None):
         if step_flag == 'gen_step':
             device = real_a.device
+            fake_b = self.ab_generator(real_a)
+            rec_a = self.ba_generator(fake_b)
+            fake_a = self.ba_generator(real_b)
+            rec_b = self.ab_generator(fake_a)
+
             # discriminators require no gradients while optimizing generators
             self._set_requires_grad([self.ab_discriminator, self.ba_discriminator], False)
-
-            fake_b = self.ab_generator(real_a)
-            rec_a = self.ba_generator(self.fake_b)
-            fake_a = self.ba_generator(real_b)
-            rec_b = self.ab_generator(self.fake_a)
 
             return fake_b, fake_a, rec_a, rec_b, self._loss_generators(real_a, real_b,
                                                                        fake_b, fake_a, rec_a, rec_b, device)
@@ -176,7 +176,7 @@ class CycleGAN(nn.Module):
         all_true_labels = torch.tensor([1.0]).expand_as(pred_real).to(device)
         loss_real = self.criterionGAN(pred_real, all_true_labels)
 
-        pred_fake = discrim(fake)
+        pred_fake = discrim(fake.detach())
         all_false_labels = torch.tensor([0.0]).expand_as(pred_fake).to(device)
         loss_fake = self.criterionGAN(pred_fake, all_false_labels)
 

@@ -39,27 +39,29 @@ class CycleGanTrainer(GenericTrainer):
             img_source = img_source.to(device)
             img_target = img_target.to(device)
             self.model.train()
-            self.optimizer['optim_gen'].zero_grad()
             # forward pass trough generators
             fake_b, fake_a, rec_a, rec_b, loss_gen = self.model(img_source, img_target, 'gen_step')
 
+            self.optimizer['optim_gen'].zero_grad()
             loss_gen.backward()
             self.optimizer['optim_gen'].step()
 
-            self.optimizer['optim_disc'].zero_grad()
             # get losses from discriminators
             ab_disc_loss, ba_disc_loss = self.model(img_source, img_target, 'disc_step',
                                                     fake_b_disc=fake_b, fake_a_disc=fake_a)
+
+            self.optimizer['optim_disc'].zero_grad()
             ab_disc_loss.backward()
             ba_disc_loss.backward()
+            self.optimizer['optim_disc'].step()
 
             running_metrics['loss_gen'] += loss_gen.item() * img_source.size(0)
             running_metrics['ab_disc_loss'] += ab_disc_loss.item() * img_source.size(0)
             running_metrics['ba_disc_loss'] += ba_disc_loss.item() * img_source.size(0)
 
-            if self.scheduler is not None:
-                self.scheduler['sched_gen'].step()
-                self.scheduler['sched_disc'].step()
+        if self.scheduler is not None:
+            self.scheduler['sched_gen'].step()
+            self.scheduler['sched_disc'].step()
 
         epoch_metrics = {key: running_metrics[key]/len(self.dataloader.dataset)
                          for key in running_metrics.keys()}
@@ -76,7 +78,6 @@ class CycleGanTrainer(GenericTrainer):
         ):
             self.best_metrics = epoch_metrics
             if self.save_chckpt:
-                results['best_performance'] = True
                 results['best_performance'] = True
 
         return results
