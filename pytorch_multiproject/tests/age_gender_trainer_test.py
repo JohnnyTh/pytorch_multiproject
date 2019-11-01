@@ -9,6 +9,7 @@ from trainers.age_gender_trainer import AgeGenderTrainer
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
+
 class ModelTestMock:
 
     def __init__(self):
