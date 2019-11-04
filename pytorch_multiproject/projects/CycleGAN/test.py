@@ -12,19 +12,16 @@ from models.cycle_GAN import CycleGAN, GanGenerator, GanDiscriminator, GanOptimi
 from data.cycle_gan_dataset import CycleGanDataset
 from trainers.cycle_gan_trainer import CycleGanTrainer
 from logger.logger import main_run, default_log_config
-from utils import normal_weights
+
 
 # default configuration file with hyperparameters
 DEFAULT_CONFIG = 'train.json'
-
 
 def main(config, args):
     # create an instance of logger
     logger = logging.getLogger(os.path.basename(__file__))
     resources_dir = os.path.join(ROOT_DIR, 'resources', 'horse2zebra')
 
-    train_sources = os.path.join(resources_dir, 'trainA')
-    train_targets = os.path.join(resources_dir, 'trainB')
     test_sources = os.path.join(resources_dir, 'testA')
     test_targets = os.path.join(resources_dir, 'testB')
 
@@ -33,24 +30,11 @@ def main(config, args):
                                         transforms.ToTensor()])
 
     # get datasets
-    train_dataset = CycleGanDataset(root=resources_dir, data_paths=[train_sources, train_targets],
-                                    extensions=(('.jpg'),)*2, transform=trans_non_aug)
     test_dataset = CycleGanDataset(root=resources_dir, data_paths=[test_sources, test_targets],
                                    extensions=(('.jpg'),)*2, transform=trans_non_aug)
 
     # create dataloaders
-    train_loader = DataLoader(train_dataset, batch_size=1, shuffle=True, num_workers=4)
     test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False, num_workers=4)
-    dataloaders = {'train': train_loader, 'val': test_loader}
-
-    # initialize metrics with very high loss values so that the first iteration of model always overrides them
-    metrics = {
-        'loss_gen': 100.0,
-        'ab_disc_loss': 100.0,
-        'ba_disc_loss': 100.0
-    }
-    # define number of epochs
-    epochs = config['epochs']
 
     # define generator
     generator = GanGenerator(num_resblocks=6, skip_relu=False)
@@ -62,9 +46,6 @@ def main(config, args):
     identity_loss = nn.L1Loss()
     model_hyperparams = {'lambda_identity': 0.5, 'lambda_a': 10.0, 'lambda_b': 10.0}
     model = CycleGAN(generator, discriminator, gan_loss, cycle_loss, identity_loss, model_hyperparams)
-
-    # initialize with normal weights
-    model.apply(normal_weights)
 
     # create optimizers for generators and discriminators
     optim_gen, optim_disc = model.get_optims(lr=0.0002)
@@ -79,10 +60,10 @@ def main(config, args):
     optimizer = GanOptimizer(optim_gen, optim_disc)
     lr_sched = GanLrScheduler(sched_gen, sched_gen)
 
-    trainer = CycleGanTrainer(dataloaders=dataloaders, root=ROOT_DIR, model=model, criterion=None, optimizer=optimizer,
-                              scheduler=lr_sched, metrics=metrics, epochs=epochs, checkpoint=args.checkpoint)
+    trainer = CycleGanTrainer(dataloaders=test_loader, root=ROOT_DIR, model=model, criterion=None, optimizer=optimizer,
+                              scheduler=lr_sched, metrics=None, epochs=None, checkpoint=args.checkpoint)
 
-    trainer.train()
+    trainer.test()
 
 
 if __name__ == '__main__':

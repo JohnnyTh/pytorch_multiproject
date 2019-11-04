@@ -97,3 +97,20 @@ class CycleGanTrainer(GenericTrainer):
 
         return results
 
+    def test(self):
+        self.model.eval()
+        t = tqdm(iter(self.dataloaders), leave=False, total=len(self.dataloaders))
+        for idx, images in enumerate(t):
+            device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+            img_source = images[0].to(device)
+            img_target = images[1].to(device)
+            # forward pass trough generators
+            fake_b, fake_a, rec_a, rec_b, loss_gen = self.model(img_source, img_target, 'gen_step')
+
+            # save the generated image files
+            save_dir = os.path.join(self.root, 'saved', 'gan')
+            os.mkdir(save_dir)
+            save_image(fake_b, os.path.join(save_dir, 'fake_b{}_epoch_{}.png'.format(idx, self.start_epoch - 1)))
+            save_image(fake_a, os.path.join(save_dir, 'fake_a{}_epoch_{}.png'.format(idx, self.start_epoch - 1)))
+            save_image(rec_a, os.path.join(save_dir, 'rec_a{}_epoch_{}.png'.format(idx, self.start_epoch - 1)))
+            save_image(rec_b, os.path.join(save_dir, 'rec_b{}_epoch_{}.png'.format(idx, self.start_epoch - 1)))
