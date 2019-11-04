@@ -180,9 +180,9 @@ class CycleGAN(nn.Module):
             raise Exception('correct step flag name not provided !')
 
     def _loss_generators(self, real_a, real_b, fake_b, fake_a, rec_a, rec_b, device):
-        lambda_idt = self._hyperparams['lambda_identity']
-        lambda_a = self._hyperparams['lambda_a']
-        lambda_b = self._hyperparams['lambda_b']
+        lambda_idt = self._hyperparams.get('lambda_identity', 0.5)
+        lambda_a = self._hyperparams.get('lambda_a', 10.0)
+        lambda_b = self._hyperparams.get('lambda_b', 10.0)
 
         # calculate identity loss
         idt_a = self.ab_generator(real_b)
