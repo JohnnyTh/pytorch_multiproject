@@ -69,12 +69,12 @@ class CycleGanTrainer(GenericTrainer):
                     running_metrics['ba_disc_loss'] += ba_disc_loss.item() * img_source.size(0)
                 elif phase == 'test':
                     # save the generated image files
-                    save_dir = os.path.join(self.root, 'resources', '')
-
-                    save_image(fake_b, 'fake_b{}_epoch_{}'.format(idx, epoch))
-                    save_image(fake_a, 'fake_a{}_epoch_{}.'.format(idx, epoch))
-                    save_image(rec_a, 'rec_a{}_epoch_{}'.format(idx, epoch))
-                    save_image(rec_b, 'rec_b{}_epoch_{}'.format(idx, epoch))
+                    save_dir = os.path.join(self.root, 'saved', 'gan')
+                    os.mkdir(save_dir)
+                    save_image(fake_b, os.path.join(save_dir, 'fake_b{}_epoch_{}.png'.format(idx, epoch)))
+                    save_image(fake_a, os.path.join(save_dir, 'fake_a{}_epoch_{}.png'.format(idx, epoch)))
+                    save_image(rec_a, os.path.join(save_dir, 'rec_a{}_epoch_{}.png'.format(idx, epoch)))
+                    save_image(rec_b, os.path.join(save_dir, 'rec_b{}_epoch_{}.png'.format(idx, epoch)))
 
             if phase == 'train':
                 self.scheduler.step('sched_gen')
