@@ -7,7 +7,7 @@ from abc import abstractmethod
 
 class GenericTrainer(BaseTrainer):
 
-    def __init__(self, root, model, criterion, optimizer, scheduler, metrics, epochs, checkpoint=None):
+    def __init__(self, root, model, criterion, optimizer, scheduler, metrics, epochs, save_dir=None, checkpoint=None):
         """ Generic trainer implements train(), _serialize(), and _deserialize methods.
             root (str): project root directory
             model (callable): an instance of custom neural network class inheriting from nn.Module class.
@@ -29,6 +29,13 @@ class GenericTrainer(BaseTrainer):
         self.epochs = epochs
         self.start_epoch = 1
         self.generic_logger = logging.getLogger(os.path.basename(__file__))
+        if save_dir is not None:
+            self.save_dir = save_dir
+        else:
+            self.save_dir = os.path.join(self.root, 'saved')
+        # create a directory for saving the output
+        if not os.path.exists(self.save_dir):
+            os.mkdir(self.save_dir)
         if checkpoint is not None:
             self._deserialize(checkpoint)
 
@@ -58,7 +65,7 @@ class GenericTrainer(BaseTrainer):
             'best_metrics': self.best_metrics
         }
         chkpt = '{}_best.pth'.format(self.name)
-        file_path = os.path.join(self.root, 'saved', chkpt)
+        file_path = os.path.join(self.save_dir, chkpt)
         torch.save(state, file_path)
         self.generic_logger.info('Saving the model at {}'.format(file_path))
 

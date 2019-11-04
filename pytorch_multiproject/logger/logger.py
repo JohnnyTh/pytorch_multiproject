@@ -10,8 +10,8 @@ def main_run(main_func, DEFAULT_CONFIG):
                         help='config file (default: ./<sript_filename>.json)')
     parser.add_argument('-ch', '--checkpoint', default=None, type=str,
                         help='Path to a model checkpoint (.pth file)')
-    parser.add_argument('-l', '--log', default=None, type=str,
-                        help='Path to log file')
+    parser.add_argument('-sv', '--save_dir', default=None, type=str,
+                        help='Path to save folder: save model states and images generated during val phase')
     arguments = parser.parse_args()
     config = json.load(open(arguments.config))
     assert config is not None, 'Default configuration file is not accessible. Please define custom configuration file.'

@@ -17,6 +17,7 @@ from logger.logger import main_run, default_log_config
 # default configuration file with hyperparameters
 DEFAULT_CONFIG = 'train.json'
 
+
 def main(config, args):
     # create an instance of logger
     logger = logging.getLogger(os.path.basename(__file__))
@@ -61,7 +62,8 @@ def main(config, args):
     lr_sched = GanLrScheduler(sched_gen, sched_gen)
 
     trainer = CycleGanTrainer(dataloaders=test_loader, root=ROOT_DIR, model=model, criterion=None, optimizer=optimizer,
-                              scheduler=lr_sched, metrics=None, epochs=1, checkpoint=args.checkpoint)
+                              scheduler=lr_sched, metrics=None, epochs=1,
+                              save_dir=args.save_dir, checkpoint=args.checkpoint)
 
     trainer.test()
 
