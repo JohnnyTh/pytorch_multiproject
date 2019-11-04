@@ -50,7 +50,7 @@ class GanLrScheduler:
 
     def load_state_dict(self, dict_):
         self.sched_gen.load_state_dict(dict_['sched_gen_state'])
-        self.sched_disc.load_state_dict(dict_[''])
+        self.sched_disc.load_state_dict(dict_['sched_disc_state'])
 
 
 class ResBlock(nn.Module):

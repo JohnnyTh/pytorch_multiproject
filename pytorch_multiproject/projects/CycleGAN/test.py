@@ -61,7 +61,7 @@ def main(config, args):
     lr_sched = GanLrScheduler(sched_gen, sched_gen)
 
     trainer = CycleGanTrainer(dataloaders=test_loader, root=ROOT_DIR, model=model, criterion=None, optimizer=optimizer,
-                              scheduler=lr_sched, metrics=None, epochs=None, checkpoint=args.checkpoint)
+                              scheduler=lr_sched, metrics=None, epochs=1, checkpoint=args.checkpoint)
 
     trainer.test()
 

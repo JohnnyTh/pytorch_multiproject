@@ -19,6 +19,10 @@ class CycleGanTrainer(GenericTrainer):
         """
         self.dataloaders = dataloaders
         self.logger = logging.getLogger(os.path.basename(__file__))
+        self.save_dir = save_dir = os.path.join(self.root, 'saved', 'gan')
+        # create a directory for saving the output
+        if not os.path.exists(self.save_dir):
+            os.mkdir(self.save_dir)
 
     def _train_step(self, epoch):
         self.logger.info('Epoch {}/{}'.format(epoch, self.epochs))
@@ -69,12 +73,10 @@ class CycleGanTrainer(GenericTrainer):
                     running_metrics['ba_disc_loss'] += ba_disc_loss.item() * img_source.size(0)
                 elif phase == 'test':
                     # save the generated image files
-                    save_dir = os.path.join(self.root, 'saved', 'gan')
-                    os.mkdir(save_dir)
-                    save_image(fake_b, os.path.join(save_dir, 'fake_b{}_epoch_{}.png'.format(idx, epoch)))
-                    save_image(fake_a, os.path.join(save_dir, 'fake_a{}_epoch_{}.png'.format(idx, epoch)))
-                    save_image(rec_a, os.path.join(save_dir, 'rec_a{}_epoch_{}.png'.format(idx, epoch)))
-                    save_image(rec_b, os.path.join(save_dir, 'rec_b{}_epoch_{}.png'.format(idx, epoch)))
+                    save_image(fake_b, os.path.join(self.save_dir, 'fake_b{}_epoch_{}.png'.format(idx, epoch)))
+                    save_image(fake_a, os.path.join(self.save_dir, 'fake_a{}_epoch_{}.png'.format(idx, epoch)))
+                    save_image(rec_a, os.path.join(self.save_dir, 'rec_a{}_epoch_{}.png'.format(idx, epoch)))
+                    save_image(rec_b, os.path.join(self.save_dir, 'rec_b{}_epoch_{}.png'.format(idx, epoch)))
 
             if phase == 'train':
                 self.scheduler.step('sched_gen')
@@ -108,9 +110,7 @@ class CycleGanTrainer(GenericTrainer):
             fake_b, fake_a, rec_a, rec_b, loss_gen = self.model(img_source, img_target, 'gen_step')
 
             # save the generated image files
-            save_dir = os.path.join(self.root, 'saved', 'gan')
-            os.mkdir(save_dir)
-            save_image(fake_b, os.path.join(save_dir, 'fake_b{}_epoch_{}.png'.format(idx, self.start_epoch - 1)))
-            save_image(fake_a, os.path.join(save_dir, 'fake_a{}_epoch_{}.png'.format(idx, self.start_epoch - 1)))
-            save_image(rec_a, os.path.join(save_dir, 'rec_a{}_epoch_{}.png'.format(idx, self.start_epoch - 1)))
-            save_image(rec_b, os.path.join(save_dir, 'rec_b{}_epoch_{}.png'.format(idx, self.start_epoch - 1)))
+            save_image(fake_b, os.path.join(self.save_dir, 'fake_b{}_epoch_{}.png'.format(idx, self.start_epoch - 1)))
+            save_image(fake_a, os.path.join(self.save_dir, 'fake_a{}_epoch_{}.png'.format(idx, self.start_epoch - 1)))
+            save_image(rec_a, os.path.join(self.save_dir, 'rec_a{}_epoch_{}.png'.format(idx, self.start_epoch - 1)))
+            save_image(rec_b, os.path.join(self.save_dir, 'rec_b{}_epoch_{}.png'.format(idx, self.start_epoch - 1)))
