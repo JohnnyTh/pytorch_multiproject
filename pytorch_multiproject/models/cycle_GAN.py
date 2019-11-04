@@ -11,16 +11,16 @@ class GanOptimizer:
         self.generator_optim = optim_generator
         self.discriminator_optim = optim_discriminator
 
-    def zero_grad(self, optim):
-        if optim == 'optim_gen':
+    def zero_grad(self, optim_):
+        if optim_ == 'optim_gen':
             self.generator_optim.zero_grad()
-        elif optim == 'optim_gen':
+        elif optim_ == 'optim_gen':
             self.discriminator_optim.zero_grad()
 
-    def step(self, optim):
-        if optim == 'optim_gen':
+    def step(self, optim_):
+        if optim_ == 'optim_gen':
             self.generator_optim.step()
-        elif optim == 'optim_gen':
+        elif optim_ == 'optim_gen':
             self.discriminator_optim.step()
 
     def state_dict(self):
@@ -79,7 +79,7 @@ class ResBlock(nn.Module):
 
 class GanGenerator(nn.Module):
 
-    def __init__(self, skip_relu=False):
+    def __init__(self, num_resblocks=9, skip_relu=False):
         super(GanGenerator, self).__init__()
 
         block_initial = [nn.ReflectionPad2d(3),
@@ -95,7 +95,7 @@ class GanGenerator(nn.Module):
                         nn.ReLU(True)
                         ]
 
-        resblocks = [ResBlock(skip_relu=skip_relu)] * 9
+        resblocks = [ResBlock(skip_relu=skip_relu)] * num_resblocks
 
         upsampling = [nn.ConvTranspose2d(256, 128, kernel_size=3, stride=2, padding=1, output_padding=1, bias=True),
                       nn.InstanceNorm2d(128),
@@ -112,8 +112,8 @@ class GanGenerator(nn.Module):
         pipeline = block_initial + downsampling + resblocks + upsampling + block_last
         self.model = nn.Sequential(*pipeline)
 
-    def forward(self, input):
-        return self.model(input)
+    def forward(self, input_):
+        return self.model(input_)
 
 
 class GanDiscriminator(nn.Module):
