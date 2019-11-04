@@ -102,13 +102,13 @@ def main(config):
     scheduler = optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda_)
 
     # create a session of trainer
-    session = AgeGenderTrainer(dataloaders, scheduler, ROOT_DIR, vgg11_age_gender,
+    trainer = AgeGenderTrainer(dataloaders, scheduler, ROOT_DIR, vgg11_age_gender,
                                criterion, optimizer, metrics, epochs)
 
     # run the training session
     logger.info('Training session begins.')
     logger.info('Using device {}'.format(torch.cuda.get_device_name(0)))
-    session.train()
+    trainer.train()
 
 
 if __name__ == '__main__':

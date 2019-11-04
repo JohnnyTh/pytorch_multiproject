@@ -79,10 +79,10 @@ def main(config):
     optimizer = GanOptimizer(optim_gen, optim_disc)
     lr_sched = GanLrScheduler(sched_gen, sched_gen)
 
-    session = CycleGanTrainer(dataloader=loader, root=ROOT_DIR, model=model, criterion=None, optimizer=optimizer,
+    trainer = CycleGanTrainer(dataloader=loader, root=ROOT_DIR, model=model, criterion=None, optimizer=optimizer,
                               scheduler=lr_sched, metrics=metrics, epochs=epochs)
 
-    session.train()
+    trainer.train()
 
 
 if __name__ == '__main__':

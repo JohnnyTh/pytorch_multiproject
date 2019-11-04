@@ -42,12 +42,12 @@ def main(config):
     def f(epoch): return 0.89 ** epoch  # Set a learning rate scheduler
 
     scheduler = optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=f)
-    session = MnistTrainer(dataloaders, scheduler, ROOT_DIR, model, criterion, optimizer, metrics, epochs)
+    trainer = MnistTrainer(dataloaders, scheduler, ROOT_DIR, model, criterion, optimizer, metrics, epochs)
 
     # run the training session
     logger.info('Training session begins.')
     logger.info('Using device {}'.format(torch.cuda.get_device_name(0)))
-    session.train()
+    trainer.train()
 
 
 if __name__ == '__main__':
