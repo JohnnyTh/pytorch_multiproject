@@ -40,7 +40,8 @@ class CycleGanTrainer(GenericTrainer):
             else:
                 self.model.eval()   # Set model to evaluate mode
 
-            for idx, img_source, img_target in enumerate(tqdm(self.dataloaders[phase])):
+            t = tqdm(iter(self.dataloaders[phase]), leave=False, total=len(self.dataloaders[phase]))
+            for idx, img_source, img_target in enumerate(t):
 
                 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
                 img_source = img_source.to(device)
