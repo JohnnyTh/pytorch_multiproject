@@ -41,11 +41,11 @@ class CycleGanTrainer(GenericTrainer):
                 self.model.eval()   # Set model to evaluate mode
 
             t = tqdm(iter(self.dataloaders[phase]), leave=False, total=len(self.dataloaders[phase]))
-            for idx, img_source, img_target in enumerate(t):
+            for idx, images in enumerate(t):
 
                 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-                img_source = img_source.to(device)
-                img_target = img_target.to(device)
+                img_source = images[0].to(device)
+                img_target = images[1].to(device)
                 # forward pass trough generators
                 fake_b, fake_a, rec_a, rec_b, loss_gen = self.model(img_source, img_target, 'gen_step')
 
