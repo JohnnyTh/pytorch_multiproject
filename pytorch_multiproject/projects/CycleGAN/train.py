@@ -21,7 +21,10 @@ DEFAULT_CONFIG = 'train.json'
 def main(config, args):
     # create an instance of logger
     logger = logging.getLogger(os.path.basename(__file__))
-    resources_dir = os.path.join(ROOT_DIR, 'resources', 'horse2zebra')
+    if args.resrouce_dir is not None:
+        resources_dir = args.resrouce_dir
+    else:
+        resources_dir = os.path.join(ROOT_DIR, 'resources', config['resource_dir'])
 
     train_sources = os.path.join(resources_dir, 'trainA')
     train_targets = os.path.join(resources_dir, 'trainB')
@@ -67,7 +70,7 @@ def main(config, args):
     model.apply(normal_weights)
 
     # create optimizers for generators and discriminators
-    optim_gen, optim_disc = model.get_optims(lr=0.0002)
+    optim_gen, optim_disc = model.get_optims(lr=config['lr'])
 
     sched_gen = optim.lr_scheduler.StepLR(optim_gen, step_size=50, gamma=0.1)
     sched_disc = optim.lr_scheduler.StepLR(optim_disc, step_size=50, gamma=0.1)

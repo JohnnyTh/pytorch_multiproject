@@ -10,6 +10,8 @@ def main_run(main_func, DEFAULT_CONFIG):
                         help='config file (default: ./<sript_filename>.json)')
     parser.add_argument('-ch', '--checkpoint', default=None, type=str,
                         help='Path to a model checkpoint (.pth file)')
+    parser.add_argument('-rsd', '--resource_dir', default=None, type=str,
+                        help='Path to a directory with resource files')
     parser.add_argument('-sv', '--save_dir', default=None, type=str,
                         help='Path to save folder: save model states and images generated during val phase')
     arguments = parser.parse_args()
