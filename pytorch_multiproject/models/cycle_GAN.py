@@ -14,14 +14,18 @@ class GanOptimizer:
     def zero_grad(self, optim_):
         if optim_ == 'optim_gen':
             self.generator_optim.zero_grad()
-        elif optim_ == 'optim_gen':
+        elif optim_ == 'optim_disc':
             self.discriminator_optim.zero_grad()
+        else:
+            raise Exception('Provide correct optim name (optim_gen or optim_disc)')
 
     def step(self, optim_):
         if optim_ == 'optim_gen':
             self.generator_optim.step()
-        elif optim_ == 'optim_gen':
+        elif optim_ == 'optim_disc':
             self.discriminator_optim.step()
+        else:
+            raise Exception('Provide correct optim name (optim_gen or optim_disc)')
 
     def state_dict(self):
         return {'optim_gen_state': self.generator_optim.state_dict(),
@@ -43,6 +47,8 @@ class GanLrScheduler:
             self.sched_gen.step()
         elif sched == 'sched_disc':
             self.sched_disc.step()
+        else:
+            raise Exception('Provide correct lr sched name (sched_gen or sched_disc)')
 
     def state_dict(self):
         return {'sched_gen_state': self.sched_gen.state_dict(),
