@@ -71,11 +71,12 @@ class CycleGanTrainer(GenericTrainer):
                     running_metrics['ab_disc_loss'] += ab_disc_loss.item() * img_source.size(0)
                     running_metrics['ba_disc_loss'] += ba_disc_loss.item() * img_source.size(0)
                 elif phase == 'test':
+
                     # save the generated image files
-                    save_image(fake_b, os.path.join(self.save_dir_test, 'fake_b{}.png'.format(idx, epoch)))
-                    save_image(fake_a, os.path.join(self.save_dir_test, 'fake_a{}.png'.format(idx, epoch)))
-                    save_image(rec_a, os.path.join(self.save_dir_test, 'rec_a{}.png'.format(idx, epoch)))
-                    save_image(rec_b, os.path.join(self.save_dir_test, 'rec_b{}.png'.format(idx, epoch)))
+                    images = {'real_a': img_source, 'real_b': img_target,
+                              'fake_b': fake_b, 'fake_a': fake_a,
+                              'rec_a': rec_a, 'rec_b': rec_b}
+                    self._save_img(images, idx)
 
             if phase == 'train':
                 self.scheduler.step('sched_gen')
@@ -109,7 +110,11 @@ class CycleGanTrainer(GenericTrainer):
             fake_b, fake_a, rec_a, rec_b, loss_gen = self.model(img_source, img_target, 'gen_step')
 
             # save the generated image files
-            save_image(fake_b, os.path.join(self.save_dir_test, 'fake_b{}.png'.format(idx, self.start_epoch - 1)))
-            save_image(fake_a, os.path.join(self.save_dir_test, 'fake_a{}.png'.format(idx, self.start_epoch - 1)))
-            save_image(rec_a, os.path.join(self.save_dir_test, 'rec_a{}.png'.format(idx, self.start_epoch - 1)))
-            save_image(rec_b, os.path.join(self.save_dir_test, 'rec_b{}.png'.format(idx, self.start_epoch - 1)))
+            images = {'real_a': img_source, 'real_b': img_target,
+                      'fake_b': fake_b, 'fake_a': fake_a,
+                      'rec_a': rec_a, 'rec_b': rec_b}
+            self._save_img(images, idx)
+
+    def _save_img(self, images, idx):
+        for key in images.keys():
+            save_image(images[key], os.path.join(self.save_dir_test, key+'_{}.jpg'.format(idx)))
