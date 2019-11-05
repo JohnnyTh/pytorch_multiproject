@@ -7,7 +7,7 @@ from sklearn.metrics import classification_report
 
 class AgeGenderTrainer(GenericTrainer):
 
-    def __init__(self,  dataloaders, scheduler=None, *args, **kwargs):
+    def __init__(self,  dataloaders, *args, **kwargs):
         super().__init__(*args, **kwargs)
         """Trainer implementing single training step behavior for AgeGenderModel.
             Args:
@@ -20,7 +20,6 @@ class AgeGenderTrainer(GenericTrainer):
                                        'acc_gender' : 0.0}
         """
         self.dataloaders = dataloaders
-        self.scheduler = scheduler
         self.logger = logging.getLogger(os.path.basename(__file__))
 
     def _train_step(self, epoch):

@@ -57,6 +57,18 @@ class OptTestMock:
         pass
 
 
+class LrSchedMock:
+
+    def step(self):
+        pass
+
+    def state_dict(self):
+        pass
+
+    def load_state_dict(self, *args, **kwargs):
+        pass
+
+
 class DataloaderTestMock:
 
     def __init__(self, n):
@@ -109,6 +121,7 @@ test_data = {
     'criterion': {'gender': AgeLossTestMock(),
                   'age': GenderLossTestMock()},
     'optimizer': OptTestMock(),
+    'scheduler': LrSchedMock(),
     'metrics': {'loss': {'gender': 10.0, 'age': 100.0, 'total': 100.0}, 'acc_gender' : 0.0},
     'epochs': 10,
     'checkpoint': {'start_epoch': 6}
@@ -120,27 +133,35 @@ deserialize_data = {
     'best_metrics': {'loss': {'gender': 10.0, 'age': 100.0, 'total': 100.0}, 'acc_gender' : 0.0},
     'optimizer': {
         'name': OptTestMock().__class__.__name__,
-        'state': 'chkpt_optim'}
+        'state': 'chkpt_optim'},
+    'scheduler': {
+        'name': LrSchedMock().__class__.__name__,
+        'state': 'chkpt_sched'
+    }
 }
 
 
 @patch('torch.Tensor.backward', return_value=None)
+@patch('os.mkdir')
 @patch('trainers.age_gender_trainer.AgeGenderTrainer._serialize', return_value=None)
-def test_train_run(self, _):
+def test_train_run(self, _, __):
     trainer = AgeGenderTrainer(test_data['dataloaders'], root=test_data['root'], model=test_data['model'],
-                           criterion=test_data['criterion'], optimizer=test_data['optimizer'],
-                           metrics=test_data['metrics'], epochs=test_data['epochs'])
+                               criterion=test_data['criterion'], optimizer=test_data['optimizer'],
+                               scheduler=test_data['scheduler'], metrics=test_data['metrics'],
+                               epochs=test_data['epochs'])
     trainer.train()
 
 
+@patch('os.mkdir')
 @patch('torch.Tensor.backward', return_value=None)
 @patch('trainers.age_gender_trainer.AgeGenderTrainer._serialize', return_value=None)
 @patch('torch.load', return_value=deserialize_data)
-def test_train_deserialize_and_run(self, _, __):
+def test_train_deserialize_and_run(self, _, __, ___):
     # Assuming we trained the model from epoch 1 to 5, then saved it and now want to restart
     trainer = AgeGenderTrainer(test_data['dataloaders'], root=test_data['root'], model=test_data['model'],
-                           criterion=test_data['criterion'], optimizer=test_data['optimizer'],
-                           metrics=test_data['metrics'], epochs=test_data['epochs'])
+                               criterion=test_data['criterion'], optimizer=test_data['optimizer'],
+                               scheduler=test_data['scheduler'], metrics=test_data['metrics'],
+                               epochs=test_data['epochs'])
     trainer._deserialize('/does_not_matter')
     assert trainer.start_epoch == 6
     assert trainer.epochs == test_data['epochs'] + 6 + 1
