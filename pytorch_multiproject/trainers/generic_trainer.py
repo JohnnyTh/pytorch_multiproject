@@ -7,7 +7,8 @@ from abc import abstractmethod
 
 class GenericTrainer(BaseTrainer):
 
-    def __init__(self, root, model, criterion, optimizer, scheduler, metrics, epochs, save_dir=None, checkpoint=None):
+    def __init__(self, root, model, criterion, optimizer, scheduler, metrics, epochs,
+                 save_dir=None, checkpoint=None, change_lr=False):
         """ Generic trainer implements train(), _serialize(), and _deserialize methods.
             root (str): project root directory
             model (callable): an instance of custom neural network class inheriting from nn.Module class.
@@ -29,6 +30,8 @@ class GenericTrainer(BaseTrainer):
         self.epochs = epochs
         self.start_epoch = 1
         self.generic_logger = logging.getLogger(os.path.basename(__file__))
+        self.change_lr = change_lr
+
         if save_dir is not None:
             self.save_dir = save_dir
         else:
@@ -36,6 +39,7 @@ class GenericTrainer(BaseTrainer):
         # create a directory for saving the output
         if not os.path.exists(self.save_dir):
             os.mkdir(self.save_dir)
+
         if checkpoint is not None:
             self._deserialize(checkpoint)
 
@@ -76,14 +80,18 @@ class GenericTrainer(BaseTrainer):
         self.epochs = self.epochs + self.start_epoch + 1
         self.model.load_state_dict(checkpoint['model_state'])
         self.best_metrics = checkpoint['best_metrics']
-        # load optimizer state from checkpoint only when optimizer type is not changed.
-        if checkpoint['optimizer']['name'] != self.optimizer.__class__.__name__:
-            self.logger.warning("Warning: Given optimizer type  is different from that of checkpoint. "
-                                "Optimizer parameters not being resumed.")
-        else:
-            self.optimizer.load_state_dict(checkpoint['optimizer']['state'])
-        if checkpoint['scheduler']['name'] != self.scheduler.__class__.__name__:
-            self.logger.warning("Warning: Given scheduler type  is different from that of checkpoint. "
-                                "Optimizer parameters not being resumed.")
-        else:
-            self.scheduler.load_state_dict(checkpoint['scheduler']['state'])
+
+        # if self.change_lr is True we will not load optimizer and lr sched from checkpoint and
+        # instead will continue with  what was defined in train.py
+        if self.change_lr is False:
+            # load optimizer state from checkpoint only when optimizer type is not changed.
+            if checkpoint['optimizer']['name'] != self.optimizer.__class__.__name__:
+                self.logger.warning("Warning: Given optimizer type  is different from that of checkpoint. "
+                                    "Optimizer parameters not being resumed.")
+            else:
+                self.optimizer.load_state_dict(checkpoint['optimizer']['state'])
+            if checkpoint['scheduler']['name'] != self.scheduler.__class__.__name__:
+                self.logger.warning("Warning: Given scheduler type  is different from that of checkpoint. "
+                                    "Optimizer parameters not being resumed.")
+            else:
+                self.scheduler.load_state_dict(checkpoint['scheduler']['state'])

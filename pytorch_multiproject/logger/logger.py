@@ -14,6 +14,9 @@ def main_run(main_func, DEFAULT_CONFIG):
                         help='Path to a directory with resource files')
     parser.add_argument('-sv', '--save_dir', default=None, type=str,
                         help='Path to save folder: save model states and images generated during val phase')
+    parser.add_argument('-chlr', '--change_lr', default=False, type=bool,
+                        help='In case checkpoint is loaded. If False - continue with resumed parameters '
+                             'of optim and lr_sched or else use the ones defined in train.py')
     arguments = parser.parse_args()
     config = json.load(open(arguments.config))
     assert config is not None, 'Default configuration file is not accessible. Please define custom configuration file.'
