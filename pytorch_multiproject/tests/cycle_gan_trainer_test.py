@@ -37,6 +37,9 @@ class ModelTestMock:
     def train(self):
         self.training = True
 
+    def eval(self):
+        self.training = False
+
     def state_dict(self):
         pass
 
@@ -71,7 +74,8 @@ class DataloaderTestMock:
 
 
 test_data = {
-    'dataloader': DataloaderTestMock(100),
+    'dataloaders': {'train': DataloaderTestMock(100),
+                    'val': DataloaderTestMock(100)},
     'root': '/home',
     'model': ModelTestMock(),
     'criterion': None,
@@ -83,12 +87,41 @@ test_data = {
 
 }
 
+deserialize_data = {
+    'epoch': 5,
+    'model_state': 'chkpt_model',
+    'best_metrics': {'loss_gen': 100.0, 'ab_disc_loss': 100.0, 'ba_disc_loss': 100.0},
+    'optimizer': {
+        'name': MagicMock().__class__.__name__,
+        'state': 'chkpt_optim'},
+    'scheduler': {
+        'name': MagicMock().__class__.__name__,
+        'state': 'chkpt_sched'
+    }
+}
 
+@patch('os.mkdir')
 @patch('torch.Tensor.backward', return_value=None)
 @patch('trainers.cycle_gan_trainer.CycleGanTrainer._serialize', return_value=None)
-def test_train_run(self, _):
-    trainer = CycleGanTrainer(dataloader=test_data['dataloader'], root=test_data['root'],
+def test_train_run(self, _, __):
+    trainer = CycleGanTrainer(dataloaders=test_data['dataloaders'], root=test_data['root'],
                               model=test_data['model'], criterion=test_data['criterion'],
                               optimizer=test_data['optimizer'], scheduler=test_data['scheduler'],
                               metrics=test_data['metrics'], epochs=test_data['epochs'])
+    trainer.train()
+
+
+@patch('os.mkdir')
+@patch('torch.Tensor.backward', return_value=None)
+@patch('trainers.cycle_gan_trainer.CycleGanTrainer._serialize', return_value=None)
+@patch('torch.load', return_value=deserialize_data)
+def test_train_deserialize_and_run(self, _, __, ___):
+    # Assuming we trained the model from epoch 1 to 5, then saved it and now want to restart
+    trainer = CycleGanTrainer(dataloaders=test_data['dataloaders'], root=test_data['root'],
+                              model=test_data['model'], criterion=test_data['criterion'],
+                              optimizer=test_data['optimizer'], scheduler=test_data['scheduler'],
+                              metrics=test_data['metrics'], epochs=test_data['epochs'])
+    trainer._deserialize('/does_not_matter')
+    assert trainer.start_epoch == 6
+    assert trainer.epochs == test_data['epochs'] + 6 + 1
     trainer.train()
