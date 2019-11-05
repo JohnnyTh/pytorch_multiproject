@@ -22,8 +22,8 @@ DEFAULT_CONFIG = 'train.json'
 def main(config, args):
     # create an instance of logger
     logger = logging.getLogger(os.path.basename(__file__))
-    if args.resrouce_dir is not None:
-        resources_dir = args.resrouce_dir
+    if args.resource_dir is not None:
+        resources_dir = args.resource_dir
     else:
         resources_dir = os.path.join(ROOT_DIR, 'resources', config['resource_dir'])
 
