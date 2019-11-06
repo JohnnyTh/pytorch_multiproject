@@ -95,3 +95,5 @@ class GenericTrainer(BaseTrainer):
                                     "Optimizer parameters not being resumed.")
             else:
                 self.scheduler.load_state_dict(checkpoint['scheduler']['state'])
+
+        self.logger.info('Resuming training from checkpoint...')
