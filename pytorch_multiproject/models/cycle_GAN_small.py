@@ -64,12 +64,12 @@ class ResBlock(nn.Module):
     def __init__(self, skip_relu):
         super(ResBlock, self).__init__()
         self.block = nn.Sequential(nn.ReflectionPad2d(1),
-                                   nn.Conv2d(64, 64, kernel_size=3, padding=0, bias=True),
-                                   nn.InstanceNorm2d(64),
+                                   nn.Conv2d(128, 128, kernel_size=3, padding=0, bias=True),
+                                   nn.InstanceNorm2d(128),
                                    nn.ReLU(True),
                                    nn.ReflectionPad2d(1),
-                                   nn.Conv2d(64, 64, kernel_size=3, padding=0, bias=True),
-                                   nn.InstanceNorm2d(64)
+                                   nn.Conv2d(128, 128, kernel_size=3, padding=0, bias=True),
+                                   nn.InstanceNorm2d(128)
                                    )
         self.skip_relu = skip_relu
         self.relu = nn.ReLU(True)
