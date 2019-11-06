@@ -89,30 +89,30 @@ class GanGenerator(nn.Module):
         super(GanGenerator, self).__init__()
 
         block_initial = [nn.ReflectionPad2d(3),
-                         nn.Conv2d(3, 16, kernel_size=7, padding=0, bias=True),
-                         nn.InstanceNorm2d(16),
+                         nn.Conv2d(3, 32, kernel_size=7, padding=0, bias=True),
+                         nn.InstanceNorm2d(32),
                          nn.ReLU(True)]
 
-        downsampling = [nn.Conv2d(16, 32, kernel_size=3, stride=2, padding=1, bias=True),
-                        nn.InstanceNorm2d(32),
-                        nn.ReLU(True),
-                        nn.Conv2d(32, 64, kernel_size=3, stride=2, padding=1, bias=True),
+        downsampling = [nn.Conv2d(32, 64, kernel_size=3, stride=2, padding=1, bias=True),
                         nn.InstanceNorm2d(64),
+                        nn.ReLU(True),
+                        nn.Conv2d(64, 128, kernel_size=3, stride=2, padding=1, bias=True),
+                        nn.InstanceNorm2d(128),
                         nn.ReLU(True)
                         ]
 
         resblocks = [ResBlock(skip_relu=skip_relu)] * num_resblocks
 
-        upsampling = [nn.ConvTranspose2d(64, 32, kernel_size=3, stride=2, padding=1, output_padding=1, bias=True),
-                      nn.InstanceNorm2d(32),
+        upsampling = [nn.ConvTranspose2d(128, 64, kernel_size=3, stride=2, padding=1, output_padding=1, bias=True),
+                      nn.InstanceNorm2d(64),
                       nn.ReLU(True),
-                      nn.ConvTranspose2d(32, 16, kernel_size=3, stride=2, padding=1, output_padding=1, bias=True),
-                      nn.InstanceNorm2d(16),
+                      nn.ConvTranspose2d(64, 32, kernel_size=3, stride=2, padding=1, output_padding=1, bias=True),
+                      nn.InstanceNorm2d(32),
                       nn.ReLU(True)
                       ]
 
         block_last = [nn.ReflectionPad2d(3),
-                      nn.Conv2d(16, 3, kernel_size=7, padding=0),
+                      nn.Conv2d(32, 3, kernel_size=7, padding=0),
                       nn.Tanh()]
 
         pipeline = block_initial + downsampling + resblocks + upsampling + block_last
@@ -127,22 +127,22 @@ class GanDiscriminator(nn.Module):
     def __init__(self):
         super(GanDiscriminator, self).__init__()
 
-        self.model = nn.Sequential(nn.Conv2d(3, 16, kernel_size=4, stride=2, padding=1),
-                                   nn.LeakyReLU(0.2, True),
-
-                                   nn.Conv2d(16, 32, kernel_size=4, stride=2, padding=1),
-                                   nn.InstanceNorm2d(32),
+        self.model = nn.Sequential(nn.Conv2d(3, 32, kernel_size=4, stride=2, padding=1),
                                    nn.LeakyReLU(0.2, True),
 
                                    nn.Conv2d(32, 64, kernel_size=4, stride=2, padding=1),
+                                   nn.InstanceNorm2d(32),
+                                   nn.LeakyReLU(0.2, True),
+
+                                   nn.Conv2d(64, 128, kernel_size=4, stride=2, padding=1),
                                    nn.InstanceNorm2d(64),
                                    nn.LeakyReLU(0.2, True),
 
-                                   nn.Conv2d(64, 128, kernel_size=4, stride=1, padding=1),
+                                   nn.Conv2d(128, 256, kernel_size=4, stride=1, padding=1),
                                    nn.InstanceNorm2d(128),
                                    nn.LeakyReLU(0.2, True),
 
-                                   nn.Conv2d(128, 1, kernel_size=4, stride=1, padding=1)
+                                   nn.Conv2d(256, 1, kernel_size=4, stride=1, padding=1)
                                    )
 
     def forward(self, x):
