@@ -117,4 +117,5 @@ class CycleGanTrainer(GenericTrainer):
 
     def _save_img(self, images, idx):
         for key in images.keys():
-            save_image(images[key], os.path.join(self.save_dir_test, key+'_{}.jpg'.format(idx)))
+            save_image(images[key], os.path.join(self.save_dir_test, key+'_{}.png'.format(idx)))
+            self.logger.info('The transformed images have been saved to {}'.format(self.save_dir_test))
