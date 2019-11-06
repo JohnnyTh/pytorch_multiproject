@@ -70,14 +70,14 @@ class CycleGanTrainer(GenericTrainer):
                     running_metrics['loss_gen'] += loss_gen.item() * img_source.size(0)
                     running_metrics['ab_disc_loss'] += ab_disc_loss.item() * img_source.size(0)
                     running_metrics['ba_disc_loss'] += ba_disc_loss.item() * img_source.size(0)
-                elif phase == 'test':
 
+                elif phase == 'val':
                     # save the generated image files
                     images = {'real_a': img_source, 'real_b': img_target,
                               'fake_b': fake_b, 'fake_a': fake_a,
                               'rec_a': rec_a, 'rec_b': rec_b}
                     self._save_img(images, idx)
-                    if idx == len(self.dataloaders[phase] - 1):
+                    if idx == len(self.dataloaders[phase]) - 1:
                         self.logger.info('The transformed images have been saved to {}'.format(self.save_dir_test))
 
             if phase == 'train':

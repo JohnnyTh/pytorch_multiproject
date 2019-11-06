@@ -1,6 +1,7 @@
 import numpy as np
 import random
 
+
 class CycleGanDatasetSmall:
 
     def __init__(self, dataset_one, dataset_two, sample_size, transform=None):
