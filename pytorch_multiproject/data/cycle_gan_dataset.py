@@ -1,4 +1,5 @@
 import os
+import random
 import numpy as np
 from PIL import Image
 from data.generic_dataset import GenericDataset
@@ -24,16 +25,16 @@ class CycleGanDataset(GenericDataset):
 
         source_imgs = [os.path.join(os.path.basename(self._found_dataset[0]['root']), name)
                        for name in self._found_dataset[0]['names']]
-        traget_imgs = [os.path.join(os.path.basename(self._found_dataset[1]['root']), name)
+        target_imgs = [os.path.join(os.path.basename(self._found_dataset[1]['root']), name)
                        for name in self._found_dataset[1]['names']]
 
-        if len(source_imgs) != len(traget_imgs):
-            min_len = min(len(source_imgs), len(traget_imgs))
+        if len(source_imgs) != len(target_imgs):
+            min_len = min(len(source_imgs), len(target_imgs))
             source_imgs = source_imgs[:min_len]
-            traget_imgs = traget_imgs[:min_len]
+            target_imgs = target_imgs[:min_len]
 
         self.source_imgs = source_imgs
-        self.traget_imgs = traget_imgs
+        self.target_imgs = target_imgs
 
     def __len__(self):
         return len(self.source_imgs)
@@ -43,7 +44,11 @@ class CycleGanDataset(GenericDataset):
            Returns unpaired source and target images
         """
         img_name_source = os.path.join(self.root_dir, self.source_imgs[item])
-        img_name_target = os.path.join(self.root_dir, self.traget_imgs[item])
+
+        # second image for pair is selected randomly
+        random_b = random.randint(0, len(self.source_imgs)-1)
+        img_name_target = os.path.join(self.root_dir, self.target_imgs[random_b])
+
         img_source = np.asarray(Image.open(img_name_source))
         img_target = np.asarray(Image.open(img_name_target))
 
