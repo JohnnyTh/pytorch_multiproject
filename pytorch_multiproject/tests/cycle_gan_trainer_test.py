@@ -74,8 +74,8 @@ class DataloaderTestMock:
 
 
 test_data = {
-    'dataloaders': {'train': DataloaderTestMock(100),
-                    'val': DataloaderTestMock(100)},
+    'dataloaders': {'train': DataloaderTestMock(50),
+                    'val': DataloaderTestMock(50)},
     'root': '/home',
     'model': ModelTestMock(),
     'criterion': None,
@@ -100,10 +100,12 @@ deserialize_data = {
     }
 }
 
+
 @patch('os.mkdir')
+@patch('trainers.cycle_gan_trainer.save_image')
 @patch('torch.Tensor.backward', return_value=None)
 @patch('trainers.cycle_gan_trainer.CycleGanTrainer._serialize', return_value=None)
-def test_train_run(self, _, __):
+def test_train_run(self, _, __, ___):
     trainer = CycleGanTrainer(dataloaders=test_data['dataloaders'], root=test_data['root'],
                               model=test_data['model'], criterion=test_data['criterion'],
                               optimizer=test_data['optimizer'], scheduler=test_data['scheduler'],
@@ -112,10 +114,11 @@ def test_train_run(self, _, __):
 
 
 @patch('os.mkdir')
+@patch('trainers.cycle_gan_trainer.save_image')
 @patch('torch.Tensor.backward', return_value=None)
 @patch('trainers.cycle_gan_trainer.CycleGanTrainer._serialize', return_value=None)
 @patch('torch.load', return_value=deserialize_data)
-def test_train_deserialize_and_run(self, _, __, ___):
+def test_train_deserialize_and_run(self, _, __, ___, ____):
     # Assuming we trained the model from epoch 1 to 5, then saved it and now want to restart
     trainer = CycleGanTrainer(dataloaders=test_data['dataloaders'], root=test_data['root'],
                               model=test_data['model'], criterion=test_data['criterion'],
