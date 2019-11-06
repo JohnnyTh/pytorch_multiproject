@@ -23,7 +23,7 @@ class CycleGanDatasetSmall:
 
         img_source = np.asarray(self.dataset_one[item][0])
 
-        random_b = random.randint(0, len(self.sample_size)-1)
+        random_b = random.randint(0, self.sample_size-1)
         img_target = np.asarray(self.dataset_two[random_b][0])
 
         # to deal with grayscale images (1 channel instead of 3)
