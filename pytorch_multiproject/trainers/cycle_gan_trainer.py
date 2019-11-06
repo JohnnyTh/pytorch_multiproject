@@ -77,6 +77,7 @@ class CycleGanTrainer(GenericTrainer):
                               'fake_b': fake_b, 'fake_a': fake_a,
                               'rec_a': rec_a, 'rec_b': rec_b}
                     self._save_img(images, idx)
+                    self.logger.info('The transformed images have been saved to {}'.format(self.save_dir_test))
 
             if phase == 'train':
                 self.scheduler.step('sched_gen')
@@ -114,8 +115,8 @@ class CycleGanTrainer(GenericTrainer):
                       'fake_b': fake_b, 'fake_a': fake_a,
                       'rec_a': rec_a, 'rec_b': rec_b}
             self._save_img(images, idx)
+            self.logger.info('The transformed images have been saved to {}'.format(self.save_dir_test))
 
     def _save_img(self, images, idx):
         for key in images.keys():
             save_image(images[key], os.path.join(self.save_dir_test, key+'_{}.png'.format(idx)))
-            self.logger.info('The transformed images have been saved to {}'.format(self.save_dir_test))
