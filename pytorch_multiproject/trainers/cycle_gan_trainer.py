@@ -26,6 +26,12 @@ class CycleGanTrainer(GenericTrainer):
     def _train_step(self, epoch):
         self.logger.info('Epoch {}/{}'.format(epoch, self.epochs))
         self.logger.info('-' * 10)
+
+        # print parameters of optimizer and scheduler every epoch
+        self.logger.info(str(self.optimizer))
+        if self.scheduler is not None:
+            self.logger.info(str(self.scheduler))
+
         results = {
             'best_performance': False
         }
@@ -80,7 +86,7 @@ class CycleGanTrainer(GenericTrainer):
                     if idx == len(self.dataloaders[phase]) - 1:
                         self.logger.info('The transformed images have been saved to {}'.format(self.save_dir_test))
 
-            if phase == 'train':
+            if phase == 'train' and self.scheduler is not None:
                 self.scheduler.step('sched_gen')
                 self.scheduler.step('sched_disc')
 
