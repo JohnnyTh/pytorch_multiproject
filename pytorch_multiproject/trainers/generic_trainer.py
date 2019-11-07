@@ -103,4 +103,4 @@ class GenericTrainer(BaseTrainer):
                 else:
                     self.scheduler.load_state_dict(checkpoint['scheduler']['state'])
 
-        self.logger.info('Resuming training from checkpoint...')
+        self.logger.info('Resuming from checkpoint...')
