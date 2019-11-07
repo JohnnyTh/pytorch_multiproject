@@ -14,7 +14,7 @@ class GanOptimizer:
     def __str__(self):
         gen = str(self.generator_optim)
         disc = str(self.discriminator_optim)
-        out = 'Generator optim state: {}\nDiscriminator optim state: {}'.format(gen, disc)
+        out = '\nGenerator optim state: {}\nDiscriminator optim state: {}'.format(gen, disc)
         return out
 
     def zero_grad(self, optim_):
@@ -51,7 +51,7 @@ class GanLrScheduler:
     def __str__(self):
         gen = str(self.sched_gen.state_dict())
         disc = str(self.sched_disc.state_dict())
-        out = 'Generator lr_sched state: {}\nDiscriminator lr_sched state: {}'.format(gen, disc)
+        out = '\nGenerator lr_sched state: {}\nDiscriminator lr_sched state: {}'.format(gen, disc)
         return out
 
     def step(self, sched):
