@@ -86,9 +86,11 @@ class CycleGanTrainer(GenericTrainer):
                     if idx == len(self.dataloaders[phase]) - 1:
                         self.logger.info('The transformed images have been saved to {}'.format(self.save_dir_test))
 
-            if phase == 'train' and self.scheduler is not None:
-                self.scheduler.step('sched_gen')
-                self.scheduler.step('sched_disc')
+            if phase == 'train':
+
+                if self.scheduler is not None:
+                    self.scheduler.step('sched_gen')
+                    self.scheduler.step('sched_disc')
 
                 epoch_metrics = {key: running_metrics[key]/len(self.dataloaders[phase].dataset)
                                  for key in running_metrics.keys()}

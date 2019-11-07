@@ -72,20 +72,20 @@ def main(config, args):
     # create optimizers for generators and discriminators
     optim_gen, optim_disc = model.get_optims(lr=config['lr'])
 
-    sched_gen = optim.lr_scheduler.StepLR(optim_gen, step_size=config['lr_step_size'],
-                                          gamma=config['lr_gamma'])
-    sched_disc = optim.lr_scheduler.StepLR(optim_disc, step_size=config['lr_step_size'],
-                                           gamma=config['lr_gamma'])
+    # sched_gen = optim.lr_scheduler.StepLR(optim_gen, step_size=config['lr_step_size'],
+    #                                       gamma=config['lr_gamma'])
+    # sched_disc = optim.lr_scheduler.StepLR(optim_disc, step_size=config['lr_step_size'],
+    #                                        gamma=config['lr_gamma'])
 
     # enable parallel forward pass computation if possible
     if torch.cuda.device_count() > 1:
         model = nn.DataParallel(model)
 
     optimizer = GanOptimizer(optim_gen, optim_disc)
-    lr_sched = GanLrScheduler(sched_gen, sched_gen)
+    # lr_sched = GanLrScheduler(sched_gen, sched_gen)
 
     trainer = CycleGanTrainer(dataloaders=dataloaders, root=ROOT_DIR, model=model, criterion=None, optimizer=optimizer,
-                              scheduler=lr_sched, metrics=metrics, epochs=epochs, save_dir=args.save_dir,
+                              scheduler=None, metrics=metrics, epochs=epochs, save_dir=args.save_dir,
                               checkpoint=args.checkpoint, change_lr=args.change_lr)
 
     trainer.train()
