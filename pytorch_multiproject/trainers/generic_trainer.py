@@ -82,7 +82,7 @@ class GenericTrainer(BaseTrainer):
         # restore the model and other parameters from the checkpoint file ('xxx.pth')
         checkpoint = torch.load(load_path)
         self.start_epoch = checkpoint['epoch'] + 1
-        self.epochs = self.epochs + self.start_epoch + 1
+        self.epochs = self.epochs + self.start_epoch
         self.model.load_state_dict(checkpoint['model_state'])
         self.best_metrics = checkpoint['best_metrics']
 

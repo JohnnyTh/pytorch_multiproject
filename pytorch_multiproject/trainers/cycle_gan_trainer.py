@@ -110,6 +110,7 @@ class CycleGanTrainer(GenericTrainer):
         return results
 
     def test(self):
+        self.logger.info('Running test. The model was restored from {} epoch'.format(self.start_epoch - 1))
         self.model.eval()
         t = tqdm(iter(self.dataloaders), leave=False, total=len(self.dataloaders))
         for idx, images in enumerate(t):
