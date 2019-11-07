@@ -35,6 +35,7 @@ class GenericTrainer(BaseTrainer):
         if save_dir is not None:
             self.save_dir = save_dir
         else:
+            # if custom save dir not provided, save in project folder instead
             self.save_dir = os.path.join(self.root, 'saved')
         # create a directory for saving the output
         if not os.path.exists(self.save_dir):
@@ -57,6 +58,11 @@ class GenericTrainer(BaseTrainer):
 
     def _serialize(self, epoch):
         # save the model and some other parameters
+        if self.scheduler is not None:
+            sched_state = {'name': self.scheduler.__class__.__name__,
+                           'state': self.scheduler.state_dict()}
+        else:
+            sched_state = None
 
         state = {
             'epoch': epoch,
@@ -64,8 +70,7 @@ class GenericTrainer(BaseTrainer):
             'model_state': self.model.state_dict(),
             'optimizer': {'name': self.optimizer.__class__.__name__,
                           'state': self.optimizer.state_dict()},
-            'scheduler': {'name': self.scheduler.__class__.__name__,
-                          'state': self.scheduler.state_dict()},
+            'scheduler': sched_state,
             'best_metrics': self.best_metrics
         }
         chkpt = '{}_best.pth'.format(self.name)
@@ -90,10 +95,12 @@ class GenericTrainer(BaseTrainer):
                                     "Optimizer parameters not being resumed.")
             else:
                 self.optimizer.load_state_dict(checkpoint['optimizer']['state'])
-            if checkpoint['scheduler']['name'] != self.scheduler.__class__.__name__:
-                self.logger.warning("Warning: Given scheduler type  is different from that of checkpoint. "
-                                    "Optimizer parameters not being resumed.")
-            else:
-                self.scheduler.load_state_dict(checkpoint['scheduler']['state'])
+
+            if checkpoint['scheduler'] is not None:
+                if checkpoint['scheduler']['name'] != self.scheduler.__class__.__name__:
+                    self.logger.warning("Warning: Given scheduler type  is different from that of checkpoint. "
+                                        "Optimizer parameters not being resumed.")
+                else:
+                    self.scheduler.load_state_dict(checkpoint['scheduler']['state'])
 
         self.logger.info('Resuming training from checkpoint...')
