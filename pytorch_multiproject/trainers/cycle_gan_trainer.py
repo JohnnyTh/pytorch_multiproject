@@ -104,7 +104,6 @@ class CycleGanTrainer(GenericTrainer):
                 self.best_metrics = epoch_metrics
                 results['best_performance'] = True
 
-
         return results
 
     def test(self):

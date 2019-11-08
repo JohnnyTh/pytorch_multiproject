@@ -53,7 +53,7 @@ def main(config, args):
         'ba_disc_loss': 100.0
     }
     # define number of epochs
-    epochs = config['epochs']
+    epochs = config.get('epochs', 50)
 
     # define generator
     generator = GanGenerator(num_resblocks=6, skip_relu=False)
@@ -70,12 +70,12 @@ def main(config, args):
     model.apply(normal_weights)
 
     # create optimizers for generators and discriminators
-    optim_gen, optim_disc = model.get_optims(lr=config['lr'])
+    optim_gen, optim_disc = model.get_optims(lr=config.get('lr', 0.0002))
 
-    # sched_gen = optim.lr_scheduler.StepLR(optim_gen, step_size=config['lr_step_size'],
-    #                                       gamma=config['lr_gamma'])
-    # sched_disc = optim.lr_scheduler.StepLR(optim_disc, step_size=config['lr_step_size'],
-    #                                        gamma=config['lr_gamma'])
+    # sched_gen = optim.lr_scheduler.StepLR(optim_gen, step_size=config.get('lr_step_size', 1),
+    #                                       gamma=config.get('lr_gamma', 0.925))
+    # sched_disc = optim.lr_scheduler.StepLR(optim_disc, step_size=config.get('lr_step_size', 1),
+    #                                        gamma=config.get('lr_gamma', 0.925))
 
     # enable parallel forward pass computation if possible
     if torch.cuda.device_count() > 1:
