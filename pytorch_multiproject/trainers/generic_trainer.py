@@ -73,7 +73,7 @@ class GenericTrainer(BaseTrainer):
             'scheduler': sched_state,
             'best_metrics': self.best_metrics
         }
-        chkpt = '{}_best.pth'.format(self.name)
+        chkpt = '{}_epoch_{}.pth'.format(self.name, epoch)
         file_path = os.path.join(self.save_dir, chkpt)
         torch.save(state, file_path)
         self.generic_logger.info('Saving the model at {}'.format(file_path))
