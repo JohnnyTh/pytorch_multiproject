@@ -100,12 +100,10 @@ class CycleGanTrainer(GenericTrainer):
                 self.logger.info('AB discriminator loss: {:.4f}'.format(epoch_metrics['ab_disc_loss']))
                 self.logger.info('BA discriminator loss: {:.4f}'.format(epoch_metrics['ba_disc_loss']))
 
-            # set flag to save the model if certain conditions are met
-            if (phase == 'train'
-                and epoch_metrics['loss_gen'] < self.best_metrics['loss_gen']
-            ):
+                # always save the model after each iteration
                 self.best_metrics = epoch_metrics
                 results['best_performance'] = True
+
 
         return results
 
