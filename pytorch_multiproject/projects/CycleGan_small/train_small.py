@@ -34,7 +34,7 @@ def main(config, args):
     svhn_test = SVHN(os.path.join(resources_dir, 'svhn_test'), download=True, split='test')
 
     trans_non_aug = transforms.Compose([transforms.ToPILImage(),
-                                        transforms.Resize((256, 256)),
+                                        transforms.Resize((32, 32)),
                                         transforms.ToTensor()])
 
     # get datasets

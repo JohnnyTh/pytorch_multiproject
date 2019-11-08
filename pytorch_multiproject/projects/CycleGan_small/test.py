@@ -28,7 +28,7 @@ def main(config, args):
     svhn_test = SVHN(os.path.join(resources_dir, 'svhn_test'), download=True, split='test')
 
     trans_non_aug = transforms.Compose([transforms.ToPILImage(),
-                                        transforms.Resize((256, 256)),
+                                        transforms.Resize((32, 32)),
                                         transforms.ToTensor()])
 
     # get datasets
@@ -59,10 +59,10 @@ def main(config, args):
         model = nn.DataParallel(model)
 
     optimizer = GanOptimizer(optim_gen, optim_disc)
-    lr_sched = GanLrScheduler(sched_gen, sched_gen)
+    # lr_sched = GanLrScheduler(sched_gen, sched_gen)
 
     trainer = CycleGanTrainer(dataloaders=test_loader, root=ROOT_DIR, model=model, criterion=None, optimizer=optimizer,
-                              scheduler=lr_sched, metrics=None, epochs=1,
+                              scheduler=None, metrics=None, epochs=1,
                               save_dir=args.save_dir, checkpoint=args.checkpoint)
 
     trainer.test()
