@@ -7,7 +7,7 @@ from abc import abstractmethod
 
 class GenericTrainer(BaseTrainer):
 
-    def __init__(self, root, model, criterion, optimizer, scheduler, metrics, epochs,
+    def __init__(self, root, model, criterion, optimizer, scheduler, metrics, epochs, hyperparams=None,
                  save_dir=None, checkpoint=None, change_lr=False):
         """ Generic trainer implements train(), _serialize(), and _deserialize methods.
             root (str): project root directory
@@ -28,6 +28,9 @@ class GenericTrainer(BaseTrainer):
         self.scheduler = scheduler
         self.best_metrics = metrics
         self.epochs = epochs
+        if hyperparams is None:
+            hyperparams = dict({})
+        self.hyperparams = hyperparams
         self.start_epoch = 1
         self.generic_logger = logging.getLogger(os.path.basename(__file__))
         self.change_lr = change_lr
@@ -86,21 +89,30 @@ class GenericTrainer(BaseTrainer):
         self.model.load_state_dict(checkpoint['model_state'])
         self.best_metrics = checkpoint['best_metrics']
 
-        # if self.change_lr is True we will not load optimizer and lr sched from checkpoint and
-        # instead will continue with  what was defined in train.py
-        if self.change_lr is False:
-            # load optimizer state from checkpoint only when optimizer type is not changed.
-            if checkpoint['optimizer']['name'] != self.optimizer.__class__.__name__:
-                self.logger.warning("Warning: Given optimizer type  is different from that of checkpoint. "
+        if checkpoint['optimizer']['name'] != self.optimizer.__class__.__name__:
+            self.logger.warning("Warning: Given optimizer type  is different from that of checkpoint. "
+                                "Optimizer parameters not being resumed.")
+        else:
+            self.optimizer.load_state_dict(checkpoint['optimizer']['state'])
+
+        if self.change_lr is True:
+            try:
+                iter(self.optimizer)
+                for param_group in self.optimizer:
+                    param_group['lr'] = self.hyperparams.get('lr', 0.0002)
+            # if we are using custom optimizer, it is not iterable
+            except TypeError:
+                if hasattr(self.optimizer, 'change_lr'):
+                    self.optimizer.change_lr(self.hyperparams.get('lr', 0.0002))
+                    self.logger.info('Learning rate has been changed!')
+                else:
+                    raise Exception('required method change_lr not implemented in provided optimizer object')
+
+        if checkpoint['scheduler'] is not None:
+            if checkpoint['scheduler']['name'] != self.scheduler.__class__.__name__:
+                self.logger.warning("Warning: Given scheduler type  is different from that of checkpoint. "
                                     "Optimizer parameters not being resumed.")
             else:
-                self.optimizer.load_state_dict(checkpoint['optimizer']['state'])
-
-            if checkpoint['scheduler'] is not None:
-                if checkpoint['scheduler']['name'] != self.scheduler.__class__.__name__:
-                    self.logger.warning("Warning: Given scheduler type  is different from that of checkpoint. "
-                                        "Optimizer parameters not being resumed.")
-                else:
-                    self.scheduler.load_state_dict(checkpoint['scheduler']['state'])
+                self.scheduler.load_state_dict(checkpoint['scheduler']['state'])
 
         self.logger.info('Resuming from checkpoint...')

@@ -41,6 +41,10 @@ class GanOptimizer:
         self.generator_optim.load_state_dict(dict_['optim_gen_state'])
         self.discriminator_optim.load_state_dict(dict_['optim_disc_state'])
 
+    def change_lr(self, lr):
+        for param_group_1, param_group_2 in zip(self.generator_optim, self.discriminator_optim):
+            param_group_1['lr'] = lr
+            param_group_2['lr'] = lr
 
 class GanLrScheduler:
 
