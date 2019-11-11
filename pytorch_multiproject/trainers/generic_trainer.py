@@ -111,7 +111,7 @@ class GenericTrainer(BaseTrainer):
         if checkpoint['scheduler'] is not None:
             if checkpoint['scheduler']['name'] != self.scheduler.__class__.__name__:
                 self.logger.warning("Warning: Given scheduler type  is different from that of checkpoint. "
-                                    "Optimizer parameters not being resumed.")
+                                    "Scheduler parameters not being resumed.")
             else:
                 self.scheduler.load_state_dict(checkpoint['scheduler']['state'])
 

@@ -9,7 +9,7 @@ import torchvision.transforms as transforms
 from torch import optim
 from torch.utils.data import DataLoader
 from torchvision.datasets import MNIST, SVHN
-from models.cycle_GAN_small import CycleGAN, GanGenerator, GanDiscriminator, GanOptimizer, GanLrScheduler
+from models.cycle_GAN import CycleGAN, GanGeneratorSmall, GanDiscriminatorSmall, GanOptimizer, GanLrScheduler
 from data.cycle_gan_dataset_small import CycleGanDatasetSmall
 from trainers.cycle_gan_trainer import CycleGanTrainer
 from logger.logger import main_run, default_log_config
@@ -38,9 +38,9 @@ def main(config, args):
     test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False, num_workers=4)
 
     # define generator
-    generator = GanGenerator(num_resblocks=6, skip_relu=False)
+    generator = GanGeneratorSmall(num_resblocks=6, skip_relu=False)
     # define discriminator
-    discriminator = GanDiscriminator()
+    discriminator = GanDiscriminatorSmall()
     # define criteria for losses
     gan_loss = nn.MSELoss()
     cycle_loss = nn.L1Loss()
