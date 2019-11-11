@@ -74,7 +74,7 @@ def main(config, args):
 
     # Lr is static during the first 100 epochs and linearly decays until zero over epochs 100-200
     def lambda_rule(epoch):
-        lr_l = max(0, 1.0 - (epoch + 1 - 100) / float(100))
+        lr_l = 1.0 - max(0, (epoch + 1 - 100) / float(100))
         return lr_l
 
     scheduler_gen = optim.lr_scheduler.LambdaLR(optim_gen, lr_lambda=lambda_rule)
