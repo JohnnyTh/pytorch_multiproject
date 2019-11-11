@@ -72,20 +72,23 @@ def main(config, args):
     # create optimizers for generators and discriminators
     optim_gen, optim_disc = model.get_optims(lr=config.get('lr', 0.0002))
 
-    # sched_gen = optim.lr_scheduler.StepLR(optim_gen, step_size=config.get('lr_step_size', 1),
-    #                                       gamma=config.get('lr_gamma', 0.925))
-    # sched_disc = optim.lr_scheduler.StepLR(optim_gen, step_size=config.get('lr_step_size', 1),
-    #                                       gamma=config.get('lr_gamma', 0.925))
+    # Lr is static during the first 100 epochs and linearly decays until zero over epochs 100-200
+    def lambda_rule(epoch):
+        lr_l = max(0, 1.0 - (epoch + 1 - 100) / float(100))
+        return lr_l
+
+    scheduler_gen = optim.lr_scheduler.LambdaLR(optim_gen, lr_lambda=lambda_rule)
+    scheduler_disc = optim.lr_scheduler.LambdaLR(optim_disc, lr_lambda=lambda_rule)
 
     # enable parallel forward pass computation if possible
     if torch.cuda.device_count() > 1:
         model = nn.DataParallel(model)
 
     optimizer = GanOptimizer(optim_gen, optim_disc)
-    # lr_sched = GanLrScheduler(sched_gen, sched_gen)
+    lr_sched = GanLrScheduler(scheduler_gen, scheduler_disc)
 
     trainer = CycleGanTrainer(dataloaders=dataloaders, root=ROOT_DIR, model=model, criterion=None, optimizer=optimizer,
-                              scheduler=None, metrics=metrics, epochs=epochs, save_dir=args.save_dir,
+                              scheduler=lr_sched, metrics=metrics, epochs=epochs, save_dir=args.save_dir,
                               checkpoint=args.checkpoint, change_lr=args.change_lr)
 
     trainer.train()
