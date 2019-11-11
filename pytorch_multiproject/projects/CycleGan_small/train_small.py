@@ -73,7 +73,7 @@ def main(config, args):
     optim_gen, optim_disc = model.get_optims(lr=config.get('lr', 0.0002))
 
     def lambda_rule(epoch):
-        lr_l = max(0, 1.0 - (epoch + 1 - 20) / float(20))
+        lr_l = 1.0 - max(0, (epoch + 1 - 20) / float(20))
         return lr_l
 
     scheduler_gen = optim.lr_scheduler.LambdaLR(optim_gen, lr_lambda=lambda_rule)
