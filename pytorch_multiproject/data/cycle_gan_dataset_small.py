@@ -12,6 +12,7 @@ class CycleGanDatasetSmall:
         self.dataset_one = dataset_one
         self.dataset_two = dataset_two
         self.sample_size = sample_size
+        self.random_indices = self._get_random_indices()
 
     def __len__(self):
         return self.sample_size
@@ -20,10 +21,16 @@ class CycleGanDatasetSmall:
         """
            Returns unpaired source and target images
         """
-
         img_source = np.asarray(self.dataset_one[item][0])
 
-        random_b = random.randint(0, self.sample_size-1)
+        # pop random indices from list until it's depleted
+        try:
+            random_b = self.random_indices.pop()
+        # if list is depleted, one epoch has passed - generate a new list of indices
+        except IndexError:
+            self.random_indices = self._get_random_indices()
+            random_b = self.random_indices.pop()
+
         img_target = np.asarray(self.dataset_two[random_b][0])
 
         # to deal with grayscale images (1 channel instead of 3)
@@ -37,3 +44,8 @@ class CycleGanDatasetSmall:
             img_target = self.transform(img_target)
 
         return img_source, img_target
+
+    def _get_random_indices(self):
+        indices = [i for i in range(self.sample_size)]
+        random.shuffle(indices)
+        return indices
