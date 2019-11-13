@@ -35,7 +35,7 @@ def main(config, args):
     test_dataset = CycleGanDatasetSmall(mnist_test, svhn_test, sample_size=100, transform=trans_non_aug)
 
     # create dataloaders
-    test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False, num_workers=1)
+    test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False, num_workers=0)
 
     # define generator
     generator = GanGeneratorSmall(num_resblocks=9, skip_relu=False)

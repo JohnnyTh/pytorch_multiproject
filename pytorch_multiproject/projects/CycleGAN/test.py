@@ -35,7 +35,7 @@ def main(config, args):
                                    extensions=(('.jpg'),)*2, transform=trans_non_aug)
 
     # create dataloaders
-    test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False, num_workers=4)
+    test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False, num_workers=0)
 
     # define generator
     generator = GanGenerator(num_resblocks=6, skip_relu=False)
