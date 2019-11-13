@@ -1,6 +1,7 @@
-import numpy as np
+import os
+import logging
 import random
-
+import numpy as np
 
 class CycleGanDatasetSmall:
 
@@ -13,6 +14,7 @@ class CycleGanDatasetSmall:
         self.dataset_two = dataset_two
         self.sample_size = sample_size
         self.random_indices = self._get_random_indices()
+        self.logger = logging.getLogger(os.path.basename(__file__))
 
     def __len__(self):
         return self.sample_size
@@ -28,6 +30,7 @@ class CycleGanDatasetSmall:
             random_b = self.random_indices.pop()
         # if list is depleted, one epoch has passed - generate a new list of indices
         except IndexError:
+            self.logger.debug('Random indices depleted, generating a new batch')
             self.random_indices = self._get_random_indices()
             random_b = self.random_indices.pop()
 
