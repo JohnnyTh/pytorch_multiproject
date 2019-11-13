@@ -42,8 +42,8 @@ def main(config, args):
     test_dataset = CycleGanDatasetSmall(mnist_test, svhn_test, sample_size=100, transform=trans_non_aug)
 
     # create dataloaders
-    train_loader = DataLoader(train_dataset, batch_size=1, shuffle=True, num_workers=4)
-    test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False, num_workers=4)
+    train_loader = DataLoader(train_dataset, batch_size=1, shuffle=True, num_workers=1)
+    test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False, num_workers=1)
     dataloaders = {'train': train_loader, 'val': test_loader}
 
     # initialize metrics with very high loss values so that the first iteration of model always overrides them
@@ -53,10 +53,10 @@ def main(config, args):
         'ba_disc_loss': 100.0
     }
     # define number of epochs
-    epochs = config.get('epochs', 50)
+    epochs = config.get('epochs', 40)
 
     # define generator
-    generator = GanGeneratorSmall(num_resblocks=6, skip_relu=False)
+    generator = GanGeneratorSmall(num_resblocks=9, skip_relu=False)
     # define discriminator
     discriminator = GanDiscriminatorSmall()
     # define criteria for losses

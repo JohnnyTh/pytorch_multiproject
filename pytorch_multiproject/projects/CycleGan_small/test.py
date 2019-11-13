@@ -35,10 +35,10 @@ def main(config, args):
     test_dataset = CycleGanDatasetSmall(mnist_test, svhn_test, sample_size=100, transform=trans_non_aug)
 
     # create dataloaders
-    test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False, num_workers=4)
+    test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False, num_workers=1)
 
     # define generator
-    generator = GanGeneratorSmall(num_resblocks=6, skip_relu=False)
+    generator = GanGeneratorSmall(num_resblocks=9, skip_relu=False)
     # define discriminator
     discriminator = GanDiscriminatorSmall()
     # define criteria for losses
@@ -51,15 +51,11 @@ def main(config, args):
     # create optimizers for generators and discriminators
     optim_gen, optim_disc = model.get_optims(lr=0.0002)
 
-    sched_gen = optim.lr_scheduler.StepLR(optim_gen, step_size=30, gamma=0.1)
-    sched_disc = optim.lr_scheduler.StepLR(optim_disc, step_size=30, gamma=0.1)
-
     # enable parallel forward pass computation if possible
     if torch.cuda.device_count() > 1:
         model = nn.DataParallel(model)
 
     optimizer = GanOptimizer(optim_gen, optim_disc)
-    # lr_sched = GanLrScheduler(sched_gen, sched_gen)
 
     trainer = CycleGanTrainer(dataloaders=test_loader, root=ROOT_DIR, model=model, criterion=None, optimizer=optimizer,
                               scheduler=None, metrics=None, epochs=1,
