@@ -56,7 +56,7 @@ def main(config, args):
     epochs = config.get('epochs', 50)
 
     # define generator
-    generator = GanGenerator(num_resblocks=6, skip_relu=False)
+    generator = GanGenerator(num_resblocks=9, skip_relu=False)
     # define discriminator
     discriminator = GanDiscriminator()
     # define criteria for losses
