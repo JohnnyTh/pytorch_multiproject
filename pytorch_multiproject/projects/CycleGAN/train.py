@@ -33,7 +33,8 @@ def main(config, args):
 
     trans_non_aug = transforms.Compose([transforms.ToPILImage(),
                                         transforms.Resize((256, 256)),
-                                        transforms.ToTensor()])
+                                        transforms.ToTensor(),
+                                        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
     # get datasets
     train_dataset = CycleGanDataset(root=resources_dir, data_paths=[train_sources, train_targets],
@@ -53,10 +54,10 @@ def main(config, args):
         'ba_disc_loss': 100.0
     }
     # define number of epochs
-    epochs = config.get('epochs', 50)
+    epochs = config.get('epochs', 200)
 
     # define generator
-    generator = GanGenerator(num_resblocks=9, skip_relu=False)
+    generator = GanGenerator()
     # define discriminator
     discriminator = GanDiscriminator()
     # define criteria for losses

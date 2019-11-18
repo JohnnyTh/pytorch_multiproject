@@ -38,7 +38,7 @@ def main(config, args):
     test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False, num_workers=0)
 
     # define generator
-    generator = GanGeneratorSmall(num_resblocks=9, skip_relu=False)
+    generator = GanGeneratorSmall()
     # define discriminator
     discriminator = GanDiscriminatorSmall()
     # define criteria for losses
@@ -49,7 +49,7 @@ def main(config, args):
     model = CycleGAN(generator, discriminator, gan_loss, cycle_loss, identity_loss, model_hyperparams)
 
     # create optimizers for generators and discriminators
-    optim_gen, optim_disc = model.get_optims(lr=0.0002)
+    optim_gen, optim_disc = model.get_optims(lr=config.get('lr', 0.0002))
 
     # enable parallel forward pass computation if possible
     if torch.cuda.device_count() > 1:

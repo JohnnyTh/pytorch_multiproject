@@ -1,5 +1,6 @@
 import torch
 
+
 class Denormalize(object):
     """Denormalize a tensor image with mean and standard deviation.
 
@@ -12,11 +13,9 @@ class Denormalize(object):
         Tensor: Denormalized Tensor image.
     """
 
-
     def __init__(self, mean, std):
         self.mean = mean
         self.std = std
-
 
     def __call__(self, tensor):
         """

@@ -4,6 +4,7 @@ import torch
 from trainers.generic_trainer import GenericTrainer
 from torchvision.utils import save_image
 from tqdm import tqdm
+from data import Denormalize
 
 
 class CycleGanTrainer(GenericTrainer):
@@ -22,6 +23,7 @@ class CycleGanTrainer(GenericTrainer):
         self.save_dir_test = os.path.join(self.save_dir, 'gan_test')
         if not os.path.exists(self.save_dir_test):
             os.mkdir(self.save_dir_test)
+        self.denormalize = Denormalize(0.5, 0.5)
 
     def _train_step(self, epoch):
         self.logger.info('Epoch {}/{}'.format(epoch, self.epochs))
@@ -126,4 +128,5 @@ class CycleGanTrainer(GenericTrainer):
 
     def _save_img(self, images, idx):
         for key in images.keys():
-            save_image(images[key], os.path.join(self.save_dir_test, key+'_{}.png'.format(idx)))
+            # save denormalized images
+            save_image(self.denormalize(images[key]), os.path.join(self.save_dir_test, key+'_{}.png'.format(idx)))
