@@ -13,9 +13,14 @@ class Denormalize(object):
         Tensor: Denormalized Tensor image.
     """
 
-    def __init__(self, mean, std):
+    def __init__(self, mean=None, std=None):
         self.mean = mean
+        if self.mean is None:
+            self.mean = [0.5, 0.5, 0.5]
+
         self.std = std
+        if self.std is None:
+            self.std = [0.5, 0.5, 0.5]
 
     def __call__(self, tensor):
         """

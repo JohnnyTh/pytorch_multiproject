@@ -13,6 +13,8 @@ from data.cycle_gan_dataset import CycleGanDataset
 from trainers.cycle_gan_trainer import CycleGanTrainer
 from logger.logger import main_run, default_log_config
 from utils import normal_weights
+from data import Denormalize
+
 
 # default configuration file with hyperparameters
 DEFAULT_CONFIG = 'train.json'
@@ -88,9 +90,10 @@ def main(config, args):
     optimizer = GanOptimizer(optim_gen, optim_disc)
     lr_sched = GanLrScheduler(scheduler_gen, scheduler_disc)
 
-    trainer = CycleGanTrainer(dataloaders=dataloaders, root=ROOT_DIR, model=model, criterion=None, optimizer=optimizer,
-                              scheduler=lr_sched, metrics=metrics, epochs=epochs, save_dir=args.save_dir,
-                              checkpoint=args.checkpoint, change_lr=args.change_lr)
+    trainer = CycleGanTrainer(dataloaders=dataloaders, denorm=Denormalize(), root=ROOT_DIR, model=model,
+                              criterion=None, optimizer=optimizer, scheduler=lr_sched, metrics=metrics,
+                              epochs=epochs, save_dir=args.save_dir, checkpoint=args.checkpoint,
+                              change_lr=args.change_lr)
 
     trainer.train()
 

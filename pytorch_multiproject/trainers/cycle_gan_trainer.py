@@ -4,18 +4,18 @@ import torch
 from trainers.generic_trainer import GenericTrainer
 from torchvision.utils import save_image
 from tqdm import tqdm
-from data import Denormalize
 
 
 class CycleGanTrainer(GenericTrainer):
 
-    def __init__(self, dataloaders, *args, **kwargs):
+    def __init__(self, dataloaders, denorm, *args, **kwargs):
         super().__init__(*args, **kwargs)
         """Trainer implementing single training step behavior for AgeGenderModel.
             Args:
                 *args: root, model, criterion, optimizer, metrics, epochs
                 **kwargs: checkpoint (default=None)
                 dataloader ():  DESCRIPTION HERE 
+                denorm (): 
                 scheduler (lr_scheduler): learning rate scheduler
         """
         self.dataloaders = dataloaders
@@ -23,7 +23,7 @@ class CycleGanTrainer(GenericTrainer):
         self.save_dir_test = os.path.join(self.save_dir, 'gan_test')
         if not os.path.exists(self.save_dir_test):
             os.mkdir(self.save_dir_test)
-        self.denormalize = Denormalize(0.5, 0.5)
+        self.denormalize = denorm
 
     def _train_step(self, epoch):
         self.logger.info('Epoch {}/{}'.format(epoch, self.epochs))
