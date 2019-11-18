@@ -109,7 +109,7 @@ def test_initialization(self):
 
 
 def side_effect_serialize(state, file_path):
-    chkpt = '{}_best.pth'.format('MockModel')
+    chkpt = '{}_epoch_{}.pth'.format('MockModel', init_data['epoch'])
     test_path = os.path.join(init_data['root'], 'saved', chkpt)
     assert state['epoch'] == init_data['epoch']
     assert state['model_name'] == 'MockModel'
@@ -138,7 +138,7 @@ def test_deserialize(self, _):
                                metrics=init_data['best_metrics'], epochs=init_data['epochs'])
     test_trainer._deserialize('/does_not_matter')
     assert test_trainer.start_epoch == deserialize_data['epoch'] + 1
-    assert test_trainer.epochs == init_data['epochs'] + test_trainer.start_epoch + 1
+    assert test_trainer.epochs == init_data['epochs'] + test_trainer.start_epoch
     assert test_trainer.model.state_dict() == deserialize_data['model_state']
     assert test_trainer.best_metrics == deserialize_data['best_metrics']
     assert test_trainer.optimizer.state_dict() == deserialize_data['optimizer']['state']

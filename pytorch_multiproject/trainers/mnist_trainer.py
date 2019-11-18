@@ -8,7 +8,7 @@ from trainers.generic_trainer import GenericTrainer
 
 class MnistTrainer(GenericTrainer):
 
-    def __init__(self, dataloaders, scheduler=None, *args,  **kwargs):
+    def __init__(self, dataloaders, *args,  **kwargs):
         super().__init__(*args, **kwargs)
         """Trainer implementing single training step behavior for MnistNet.
             Args:
@@ -18,7 +18,6 @@ class MnistTrainer(GenericTrainer):
                 scheduler (lr_scheduler): learning rate scheduler
         """
         self.dataloaders = dataloaders
-        self.scheduler = scheduler
         self.logger = logging.getLogger(os.path.basename(__file__))
 
     def _train_step(self, epoch):

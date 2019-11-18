@@ -4,11 +4,12 @@ import torch
 from trainers.generic_trainer import GenericTrainer
 from torchvision.utils import save_image
 from tqdm import tqdm
+from data import Denormalize
 
 
 class CycleGanTrainer(GenericTrainer):
 
-    def __init__(self, dataloaders, denorm, *args, **kwargs):
+    def __init__(self, dataloaders, denorm=Denormalize(), *args, **kwargs):
         super().__init__(*args, **kwargs)
         """Trainer implementing single training step behavior for AgeGenderModel.
             Args:

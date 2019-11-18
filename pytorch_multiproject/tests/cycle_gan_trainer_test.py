@@ -126,5 +126,5 @@ def test_train_deserialize_and_run(self, _, __, ___, ____):
                               metrics=test_data['metrics'], epochs=test_data['epochs'])
     trainer._deserialize('/does_not_matter')
     assert trainer.start_epoch == 6
-    assert trainer.epochs == test_data['epochs'] + 6 + 1
+    assert trainer.epochs == test_data['epochs'] + 6
     trainer.train()
