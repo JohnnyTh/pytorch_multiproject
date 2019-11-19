@@ -9,14 +9,21 @@ class GenericTrainer(BaseTrainer):
 
     def __init__(self, root, model, criterion, optimizer, scheduler, metrics, epochs, hyperparams=None,
                  save_dir=None, checkpoint=None, change_lr=False):
-        """ Generic trainer implements train(), _serialize(), and _deserialize methods.
-            root (str): project root directory
+        """ Generic trainer; implements train(), _serialize(), and _deserialize methods.
+            root (str): project root directory.
             model (callable): an instance of custom neural network class inheriting from nn.Module class.
             criterion (callable): a loss function.
-            optimizer (optimizer object): object implementing optimization algorithm
+            optimizer (optimizer object): object implementing optimization algorithm.
+            scheduler (lr_scheduler): learning rate scheduler object, changes lr of the optimizer every time step()
+                                      method is called.
             metrics (dict): dict containing metrics, specific for every custom trainer implementation
             epochs (int): number of training epochs
-            checkpoint (str, optional): checkpoint path to resume training from
+            hyperparams (dict): various hyperparameters we might need inside GenericTrainer
+                                or its custom implementations
+            save_dir (str): dir to save the trained models and generated images
+            checkpoint (str, optional): checkpoint path to resume the training from
+            change_lr (bool): if True, learning rate of the optimizer will be changed to provided value even
+                              if the model is restored from checkpoint. Uses self.hyperparams['lr'] value.
         """
         self.logger = logging.getLogger('trainer')
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -89,14 +96,17 @@ class GenericTrainer(BaseTrainer):
         self.model.load_state_dict(checkpoint['model_state'])
         self.best_metrics = checkpoint['best_metrics']
 
+        # restore optimizer from checkpoint
         if checkpoint['optimizer']['name'] != self.optimizer.__class__.__name__:
             self.logger.warning("Warning: Given optimizer type  is different from that of checkpoint. "
                                 "Optimizer parameters not being resumed.")
         else:
             self.optimizer.load_state_dict(checkpoint['optimizer']['state'])
 
+        # manually adjust the lr of the optimizer
         if self.change_lr is True:
             try:
+                # standard pytorch optimizer is an iterable
                 iter(self.optimizer)
                 for param_group in self.optimizer:
                     param_group['lr'] = self.hyperparams.get('lr', 0.0002)
@@ -108,6 +118,7 @@ class GenericTrainer(BaseTrainer):
                 else:
                     raise Exception('required method change_lr not implemented in provided optimizer object')
 
+        # restore scheduler parameters from the checkpoint
         if checkpoint['scheduler'] is not None:
             if checkpoint['scheduler']['name'] != self.scheduler.__class__.__name__:
                 self.logger.warning("Warning: Given scheduler type  is different from that of checkpoint. "

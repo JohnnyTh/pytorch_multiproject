@@ -28,6 +28,7 @@ class CycleGanDataset(GenericDataset):
         target_imgs = [os.path.join(os.path.basename(self._found_dataset[1]['root']), name)
                        for name in self._found_dataset[1]['names']]
 
+        # slice both datasets based on the minimum length
         if len(source_imgs) != len(target_imgs):
             min_len = min(len(source_imgs), len(target_imgs))
             source_imgs = source_imgs[:min_len]
@@ -58,6 +59,7 @@ class CycleGanDataset(GenericDataset):
         if len(img_target.shape) != 3:
             img_target = np.repeat(img_target[:, :, np.newaxis], 3, axis=2)
 
+        # apply transforms
         if self.transform:
             img_source = self.transform(img_source)
             img_target = self.transform(img_target)

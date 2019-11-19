@@ -8,10 +8,11 @@ class AgeGenderDataset(GenericDataset):
 
     def __init__(self,  full_df, root, *args, transform=None, **kwargs):
         super().__init__(*args, **kwargs)
-        """ 
+        """
         *args: data_paths (str, list or tuple): full path/paths to root dir/dirs from where
-                          the local file paths must be collected
+                          the local file paths must be collected         
                extensions (str or tuple): format of images to be collected ('.jpeg', '.jpg', '.png', etc.)
+        
         root (str): root directory with the resource files
         label_path (str): path to .csv file containing labels
         transform (callable, optional): Optional transform to be applied

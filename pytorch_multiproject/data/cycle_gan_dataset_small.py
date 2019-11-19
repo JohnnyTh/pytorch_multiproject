@@ -3,20 +3,24 @@ import logging
 import random
 import numpy as np
 
+
 class CycleGanDatasetSmall:
 
     def __init__(self, dataset_one, dataset_two, sample_size, transform=None):
+        """Dataset implementation for MNIST to SVHN GAN
+           dataset_one, dataset_two (sequence): datasets with source and target images.
+           sample_size (int): number of samples we want to use from both datasets.
+           transform (callable, optional): Optional transform to be applied on an image.
         """
-           Description here
-        """
-        self.transform = transform
         self.dataset_one = dataset_one
         self.dataset_two = dataset_two
         self.sample_size = sample_size
+        self.transform = transform
         self.random_indices = self._get_random_indices()
         self.logger = logging.getLogger(os.path.basename(__file__))
 
     def __len__(self):
+        # len methods is required for dataloader and defines when for loop stops
         return self.sample_size
 
     def __getitem__(self, item):
@@ -49,6 +53,7 @@ class CycleGanDatasetSmall:
         return img_source, img_target
 
     def _get_random_indices(self):
+        # generates a list of random indices for selection of random image pairs
         indices = [i for i in range(self.sample_size)]
         random.shuffle(indices)
         return indices

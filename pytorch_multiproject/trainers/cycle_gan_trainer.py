@@ -11,22 +11,28 @@ class CycleGanTrainer(GenericTrainer):
 
     def __init__(self, dataloaders, denorm=Denormalize(), *args, **kwargs):
         super().__init__(*args, **kwargs)
-        """Trainer implementing single training step behavior for AgeGenderModel.
+        """Trainer implementing single training step and test behavior for CycleGan and.
             Args:
-                *args: root, model, criterion, optimizer, metrics, epochs
-                **kwargs: checkpoint (default=None)
-                dataloader ():  DESCRIPTION HERE 
-                denorm (): 
-                scheduler (lr_scheduler): learning rate scheduler
+                *args:              root, model, criterion, optimizer, scheduler, metrics, epochs, 
+                                    hyperparams (optional), save_dir (optional), checkpoint (optional), 
+                                    change_lr (optional).
+                **kwargs:           checkpoint (optional).
+                dataloaders (dict): a dict containing 'train'  and 'val' dataloaders.
+                denorm (callable):  an object implementing denormalization. Denorm is done before saving the images
+                                    to restore the visual properties.
         """
-        self.dataloaders = dataloaders
         self.logger = logging.getLogger(os.path.basename(__file__))
+        self.dataloaders = dataloaders
+
+        # create directory for saving the results of val phase and test() method
         self.save_dir_test = os.path.join(self.save_dir, 'gan_test')
         if not os.path.exists(self.save_dir_test):
             os.mkdir(self.save_dir_test)
+
         self.denormalize = denorm
 
     def _train_step(self, epoch):
+        """Behaviour during one pass through the epoch."""
         self.logger.info('Epoch {}/{}'.format(epoch, self.epochs))
         self.logger.info('-' * 10)
 
@@ -50,7 +56,7 @@ class CycleGanTrainer(GenericTrainer):
             if phase == 'train':
                 self.model.train()  # Set model to training mode
             else:
-                self.model.eval()   # Set model to evaluate mode
+                self.model.eval()   # Set model to evaluation mode
 
             t = tqdm(iter(self.dataloaders[phase]), leave=False, total=len(self.dataloaders[phase]))
             for idx, images in enumerate(t):
@@ -86,6 +92,7 @@ class CycleGanTrainer(GenericTrainer):
                               'fake_b': fake_b, 'fake_a': fake_a,
                               'rec_a': rec_a, 'rec_b': rec_b}
                     self._save_img(images, idx)
+                    # print a messeage when the last iteration is done
                     if idx == len(self.dataloaders[phase]) - 1:
                         self.logger.info('The transformed images have been saved to {}'.format(self.save_dir_test))
 
@@ -110,6 +117,7 @@ class CycleGanTrainer(GenericTrainer):
         return results
 
     def test(self):
+        """Runs a forward pass through the generators and saves the output images"""
         self.logger.info('Running test. The model was restored from epoch {}'.format(self.start_epoch - 1))
         self.model.eval()
         t = tqdm(iter(self.dataloaders), leave=False, total=len(self.dataloaders))
@@ -128,6 +136,7 @@ class CycleGanTrainer(GenericTrainer):
         self.logger.info('The transformed images have been saved to {}'.format(self.save_dir_test))
 
     def _save_img(self, images, idx):
+        """Saves the denormalized images in provided directory"""
         for key in images.keys():
             # save denormalized images
             save_image(self.denormalize(images[key]), os.path.join(self.save_dir_test, key+'_{}.png'.format(idx)))
