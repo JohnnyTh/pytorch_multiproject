@@ -128,3 +128,7 @@ def test_train_deserialize_and_run(self, _, __, ___, ____):
     assert trainer.start_epoch == 6
     assert trainer.epochs == test_data['epochs'] + 6
     trainer.train()
+
+
+def test_test_run():
+    pass

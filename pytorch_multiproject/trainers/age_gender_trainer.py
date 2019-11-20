@@ -3,6 +3,7 @@ import logging
 import torch
 from trainers.generic_trainer import GenericTrainer
 from sklearn.metrics import classification_report
+from tqdm import tqdm
 
 
 class AgeGenderTrainer(GenericTrainer):
@@ -14,7 +15,6 @@ class AgeGenderTrainer(GenericTrainer):
                 *args: root, model, criterion, optimizer, metrics, epochs
                 **kwargs: checkpoint (default=None)
                 dataloaders (dict): a dict containing 'train' and 'val' dataloaders
-                scheduler (lr_scheduler): learning rate scheduler
                 
                 Note: best_metrics = { 'loss': {'gender' : 10.0, 'age': 100.0, 'total' : 100.0},
                                        'acc_gender' : 0.0}
@@ -23,7 +23,7 @@ class AgeGenderTrainer(GenericTrainer):
         self.logger = logging.getLogger(os.path.basename(__file__))
 
     def _train_step(self, epoch):
-        self.logger.info('\n\n' +'Epoch {}/{}'.format(epoch, self.epochs))
+        self.logger.info('\n\n\n\n\n\n' +'Epoch {}/{}'.format(epoch, self.epochs))
         self.logger.info('-' * 10)
         results = {
             'best_performance': False
@@ -45,7 +45,8 @@ class AgeGenderTrainer(GenericTrainer):
             y_hat = torch.Tensor([])
             y_true = torch.Tensor([])
 
-            for inputs, labels_gender, labels_age in self.dataloaders[phase]:
+            t = tqdm(iter(self.dataloaders[phase]), leave=False, total=len(self.dataloaders[phase]))
+            for inputs, labels_gender, labels_age in t:
                 inputs = inputs.to(self.device)
                 labels_gender = labels_gender.to(self.device)
                 labels_age = labels_age.to(self.device)
@@ -64,7 +65,9 @@ class AgeGenderTrainer(GenericTrainer):
                     loss_age = self.criterion['age'](outputs_age, labels_age)
                     # Total loss is calculated as a sum of two losses for gender and
                     # age multiplied by respective correction coefficients
-                    loss = 1. * loss_gender + 0.25 * loss_age
+                    lambda_gen = self.hyperparams.get('lambda_gen', 1)
+                    lambda_age = self.hyperparams.get('lambda_age', 1)
+                    loss = lambda_gen * loss_gender + lambda_age * loss_age
 
                     # backward + optimize only if in training phase
                     if phase == 'train':
@@ -110,3 +113,6 @@ class AgeGenderTrainer(GenericTrainer):
                 results['best_performance'] = True
 
         return results
+
+    def test(self):
+        pass

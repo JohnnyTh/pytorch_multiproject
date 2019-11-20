@@ -36,8 +36,8 @@ def main(config, args):
     dataset_df['gender'] = dataset_df['gender'].astype(float)
 
     # split the full df into train and test datasets
-    train_size = 5000
-    test_size = train_size * 0.25
+    train_size = config.get('train_size', 5000)
+    test_size = train_size * config.get('test_share', 0.25)
     train_df = dataset_df.loc[0: train_size]
     test_df = dataset_df.loc[train_size: train_size+test_size]
 
@@ -108,8 +108,9 @@ def main(config, args):
     scheduler = optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda_)
 
     # create a session of trainer
-    session = AgeGenderTrainer(dataloaders, scheduler, ROOT_DIR, vgg11_age_gender,
-                               criterion, optimizer, metrics, epochs, checkpoint=args.checkpoint)
+    session = AgeGenderTrainer(dataloaders, ROOT_DIR, vgg11_age_gender, criterion, optimizer, scheduler,
+                               metrics, epochs, hyperparams=config, save_dir=args.save_dir, checkpoint=args.checkpoint,
+                               change_lr=args.change_lr)
 
     # run the training session
     logger.info('Training session begins.')
