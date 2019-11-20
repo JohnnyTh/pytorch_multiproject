@@ -47,11 +47,6 @@ def main(config, args):
     # get the full balanced dataset based on the length of female dataset
     test_balanced_full = pd.concat((test_female, test_male.iloc[0: len(test_female)]))
 
-    # collect list of folders containing input images
-    data_dirs = [os.path.join(resources_dir, o)
-                 for o in os.listdir(resources_dir)
-                 if os.path.isdir(os.path.join(resources_dir, o))]
-
     # get a random sample from concatenated balanced df
     if test_size <= len(test_balanced_full):
         test_df = test_balanced_full.sample(test_size)
