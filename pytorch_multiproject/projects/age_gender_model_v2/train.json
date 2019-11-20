@@ -1,6 +1,0 @@
-{"train_size": 35000,
-  "test_share": 0.18,
-  "epochs":  20,
-  "learning_rate": 0.001,
-  "num_workers": 2
-}

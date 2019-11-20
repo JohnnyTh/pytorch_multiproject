@@ -23,7 +23,7 @@ class AgeGenderTrainer(GenericTrainer):
         self.logger = logging.getLogger(os.path.basename(__file__))
 
     def _train_step(self, epoch):
-        self.logger.info('\n\n\n\n\n\n' +'Epoch {}/{}'.format(epoch, self.epochs))
+        self.logger.info('\n\n\n\n\n\n' + 'Epoch {}/{}'.format(epoch, self.epochs))
         self.logger.info('-' * 10)
 
         # print parameters of optimizer and scheduler every epoch
