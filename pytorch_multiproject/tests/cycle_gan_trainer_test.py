@@ -130,5 +130,12 @@ def test_train_deserialize_and_run(self, _, __, ___, ____):
     trainer.train()
 
 
-def test_test_run():
-    pass
+@patch('os.mkdir')
+@patch('trainers.cycle_gan_trainer.save_image')
+@patch('torch.load', return_value=deserialize_data)
+def test_test_run(self, _, __):
+    trainer = CycleGanTrainer(dataloaders=test_data['dataloaders']['val'], root=test_data['root'],
+                              model=test_data['model'], criterion=test_data['criterion'],
+                              optimizer=test_data['optimizer'], scheduler=test_data['scheduler'],
+                              metrics=test_data['metrics'], epochs=test_data['epochs'])
+    trainer.test()
