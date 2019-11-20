@@ -36,7 +36,7 @@ def main(config, args):
 
     # split the full df into train and test datasets
     train_size = config.get('train_size', 35000)
-    test_size = train_size * config.get('test_share', 0.18)
+    test_size = int(train_size * config.get('test_share', 0.18))
     train_df = dataset_df.loc[0: train_size]
 
     # grab all the remaining from train split data

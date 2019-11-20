@@ -25,6 +25,12 @@ class AgeGenderTrainer(GenericTrainer):
     def _train_step(self, epoch):
         self.logger.info('\n\n\n\n\n\n' +'Epoch {}/{}'.format(epoch, self.epochs))
         self.logger.info('-' * 10)
+
+        # print parameters of optimizer and scheduler every epoch
+        self.logger.info(str(self.optimizer))
+        if self.scheduler is not None:
+            self.logger.info('Scheduler state: ' + str(self.scheduler.state_dict()))
+
         results = {
             'best_performance': False
         }
