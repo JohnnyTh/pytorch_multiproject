@@ -10,10 +10,9 @@ import torch.optim as optim
 import torchvision.models as models
 import torchvision.transforms as transforms
 from data.gender_age_dataset import AgeGenderDataset
-from models.age_gender_model import AgeGenderModel
+from models.age_gender_model import AgeGenderModelV2
 from trainers.age_gender_trainer import AgeGenderTrainer
 from logger.logger import main_run, default_log_config
-from utils import freeze_unfreeze_model, weights_inint_seq
 
 # default configuration file with hyperparameters
 DEFAULT_CONFIG = 'train.json'
@@ -36,10 +35,31 @@ def main(config, args):
     dataset_df['gender'] = dataset_df['gender'].astype(float)
 
     # split the full df into train and test datasets
-    train_size = config.get('train_size', 5000)
-    test_size = train_size * config.get('test_share', 0.25)
+    train_size = config.get('train_size', 35000)
+    test_size = train_size * config.get('test_share', 0.18)
     train_df = dataset_df.loc[0: train_size]
-    test_df = dataset_df.loc[train_size: train_size+test_size]
+
+    # grab all the remaining from train split data
+    test_imbalanced = dataset_df.iloc[train_size:]
+    # get all the female and male images
+    test_female = test_imbalanced[test_imbalanced['gender'] == 0]
+    test_male = test_imbalanced[test_imbalanced['gender'] == 1]
+    # get the full balanced dataset based on the length of female dataset
+    test_balanced_full = pd.concat((test_female, test_male.iloc[0: len(test_female)]))
+
+    # collect list of folders containing input images
+    data_dirs = [os.path.join(resources_dir, o)
+                 for o in os.listdir(resources_dir)
+                 if os.path.isdir(os.path.join(resources_dir, o))]
+
+    # get a random sample from concatenated balanced df
+    if test_size <= len(test_balanced_full):
+        test_df = test_balanced_full.sample(test_size)
+        test_df.reset_index(drop=True, inplace=True)
+    else:
+        logger.warning('Please decrease the size of test dataset, the are not enough data. '
+                       'The size of test must be below {}'.format(len(test_balanced_full)))
+        raise Exception('Could not create test dataset!')
 
     # collect list of folders containing input images
     data_dirs = [os.path.join(resources_dir, o)
@@ -59,8 +79,10 @@ def main(config, args):
                                     extensions=(('.jpg'),)*len(data_dirs), transform=trans_non_aug)
 
     # create dataloaders
-    trainloader = torch.utils.data.DataLoader(train_dataset, batch_size=64, shuffle=True, num_workers=0)
-    testloader = torch.utils.data.DataLoader(test_dataset, batch_size=64, shuffle=False, num_workers=0)
+    trainloader = torch.utils.data.DataLoader(train_dataset, batch_size=64, shuffle=True,
+                                              num_workers=config.get('num_workers', 0))
+    testloader = torch.utils.data.DataLoader(test_dataset, batch_size=64, shuffle=False,
+                                             num_workers=config.get('num_workers', 0))
     dataloaders = {'train': trainloader, 'val': testloader}
 
     # define metrics
@@ -71,27 +93,10 @@ def main(config, args):
     # define number of epochs
     epochs = config['epochs']
 
-    # Create a model template
-    vgg11_age_gender = AgeGenderModel()
     # Get the pretrained donor model
-    vgg11 = models.vgg11(pretrained=True)
-    # Transfer the features' layer parameters from the donor
-    vgg11_age_gender.features = vgg11.features
-    freeze_unfreeze_model(vgg11_age_gender, 'freeze')
-    # Determine the number of features passed from the last  layer of the frozen feature extractor
-    in_features = vgg11.classifier[0].in_features
-
-    # get new heads for gender and age
-    sequential_gender = vgg11_age_gender.gender_head(in_features)
-    sequential_age = vgg11_age_gender.age_head(in_features)
-
-    # initialize the weights of new layers using Xavier init
-    weights_inint_seq(sequential_gender)
-    weights_inint_seq(sequential_age)
-
-    # attach new heads to the model
-    vgg11_age_gender.classifier_gender = sequential_gender
-    vgg11_age_gender.classifier_age = sequential_age
+    resnet = models.resnet18(pretrained=True)
+    # Create a model using donor
+    resnet_age_gender = AgeGenderModelV2(resnet)
 
     # Binary cross entropy loss for gender prediction
     criterion_gender = nn.BCELoss()
@@ -100,15 +105,15 @@ def main(config, args):
     criterion = {'gender': criterion_gender, 'age': criterion_age}
 
     # setting an optimizer
-    params = list(vgg11_age_gender.classifier_age.parameters()) + list(vgg11_age_gender.classifier_gender.parameters())
+    params = list(resnet_age_gender.classifier_age.parameters()) + list(resnet_age_gender.classifier_gender.parameters())
     optimizer = optim.Adam(params, lr=config['learning_rate'], weight_decay=1e-5)
 
     # Set a learning rate scheduler
-    lambda_ = lambda epoch: 0.89 ** epoch
+    lambda_ = lambda epoch: config.get('lr_sched_lambda', 0.89) ** epoch
     scheduler = optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda_)
 
     # create a session of trainer
-    session = AgeGenderTrainer(dataloaders, ROOT_DIR, vgg11_age_gender, criterion, optimizer, scheduler,
+    session = AgeGenderTrainer(dataloaders, ROOT_DIR, resnet_age_gender, criterion, optimizer, scheduler,
                                metrics, epochs, hyperparams=config, save_dir=args.save_dir, checkpoint=args.checkpoint,
                                change_lr=args.change_lr)
 

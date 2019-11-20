@@ -14,7 +14,6 @@ from models.age_gender_model_v2 import AgeGenderModelV2
 from trainers.age_gender_trainer import AgeGenderTrainer
 from logger.logger import main_run, default_log_config
 
-
 # default configuration file with hyperparameters
 DEFAULT_CONFIG = 'train.json'
 
