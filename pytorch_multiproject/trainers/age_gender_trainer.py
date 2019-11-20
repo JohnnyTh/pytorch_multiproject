@@ -23,7 +23,7 @@ class AgeGenderTrainer(GenericTrainer):
         self.logger = logging.getLogger(os.path.basename(__file__))
 
     def _train_step(self, epoch):
-        self.logger.info('Epoch {}/{}'.format(epoch, self.epochs))
+        self.logger.info('\n\n' +'Epoch {}/{}'.format(epoch, self.epochs))
         self.logger.info('-' * 10)
         results = {
             'best_performance': False
@@ -59,7 +59,6 @@ class AgeGenderTrainer(GenericTrainer):
                 # track history if only in train
                 with torch.set_grad_enabled(phase == 'train'):
                     outputs_gender, outputs_age = self.model(inputs)
-                    # Round the outputs of sigmoid func to obtain predicted class
 
                     loss_gender = self.criterion['gender'](outputs_gender, labels_gender)
                     loss_age = self.criterion['age'](outputs_age, labels_age)
@@ -91,14 +90,13 @@ class AgeGenderTrainer(GenericTrainer):
 
             # Output epoch results
             self.logger.info('>>> {} phase <<<'.format(phase))
-            self.logger.info('Loss (gender): {:.4f} Acc: {:.4f}'.format(epoch_metrics['loss']['gender'],
+            self.logger.info('Gender: loss: {:.4f} acc: {:.4f}'.format(epoch_metrics['loss']['gender'],
                                                              epoch_metrics['acc_gender']))
-            self.logger.info('Loss (age, MAE): {:.4f}'.format(epoch_metrics['loss']['age']))
+            self.logger.info('Age: loss (MAE): {:.4f}'.format(epoch_metrics['loss']['age']))
             self.logger.info('Total Loss: {}'.format(epoch_metrics['loss']['total']))
-            self.logger.info('')
 
-            if epoch % 5 == 0:
-                self.logger.info('         ---- Gender classification report: ----' +
+            if epoch % 1 == 0:
+                self.logger.info('\n' + '         ---- Gender classification report: ----' +
                                  '\n' + classification_report(y_true.detach(), y_hat.detach(), target_names=['Female', 'Male']))
 
             # Check if we got the best performance based on the selected criteria
