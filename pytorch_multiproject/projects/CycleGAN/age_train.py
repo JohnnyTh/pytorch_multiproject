@@ -3,21 +3,21 @@ import os
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(os.path.dirname('__file__'))))
 sys.path.insert(0, ROOT_DIR)
 import logging
+import pandas as pd
 import torch
 import torch.nn as nn
 import torchvision.transforms as transforms
 from torch import optim
 from torch.utils.data import DataLoader
 from models.cycle_GAN import CycleGAN, GanGenerator, GanDiscriminator, GanOptimizer, GanLrScheduler
-from data.cycle_gan_dataset import CycleGanDataset
+from data.cycle_gan_age_dataset import AgeGanDataset
 from trainers.cycle_gan_trainer import CycleGanTrainer
 from logger.logger import main_run, default_log_config
 from utils import normal_weights
 from data import Denormalize
 
-
 # default configuration file with hyperparameters
-DEFAULT_CONFIG = 'train.json'
+DEFAULT_CONFIG = 'age.json'
 
 
 def main(config, args):
@@ -26,12 +26,48 @@ def main(config, args):
     if args.resource_dir is not None:
         resources_dir = args.resource_dir
     else:
-        resources_dir = os.path.join(ROOT_DIR, 'resources', config['resource_dir'])
+        resources_dir = os.path.join(ROOT_DIR, 'resources', 'wiki_crop')
+    label_path = os.path.join(ROOT_DIR, 'resources', 'wiki_crop', 'dataset_info.csv')
 
-    train_sources = os.path.join(resources_dir, 'trainA')
-    train_targets = os.path.join(resources_dir, 'trainB')
-    test_sources = os.path.join(resources_dir, 'testA')
-    test_targets = os.path.join(resources_dir, 'testB')
+    # get df with labels data
+    dataset_df = pd.read_csv(label_path, usecols=[1, 2, 3])
+    dataset_df['gender'] = dataset_df['gender'].astype(float)
+
+    # separate the dataset into old and young subsets
+    old_df = dataset_df[dataset_df['age'] > 60]
+    young_df = dataset_df[dataset_df['age'] < 30]
+
+    # balance dfs based on genders (females are minority)
+    old_g = old_df.groupby('gender')
+    old_df_balanced = old_g.apply(lambda x: x.sample(old_g.size().min())).reset_index(drop=True)
+
+    young_g = young_df.groupby('gender')
+    young_df_balanced = young_g.apply(lambda x: x.sample(young_g.size().min())).reset_index(drop=True)
+
+    train_size = 1000
+    test_size = 100
+
+    # add young/old labels in order to split the concatenated dataset
+    # inside AgeGanDataset
+    old_df_balanced['age_group'] = 'old'
+    young_df_balanced['age_group'] = 'young'
+
+    train_old = old_df_balanced[: train_size]
+    test_old = old_df_balanced[train_size: train_size + test_size]
+
+    # train_young can be much bigger than train_old since the iterations
+    # through the image pairs will be performed until reaching the length of
+    # smallest dataset
+    train_young = young_df_balanced[: -test_size]
+    test_young = young_df_balanced[-test_size:]
+
+    train_df = pd.concat((train_old, train_young))
+    test_df = pd.concat((test_old, test_young))
+
+    # collect list of folders containing input images
+    data_dirs = [os.path.join(resources_dir, o)
+                 for o in os.listdir(resources_dir)
+                 if os.path.isdir(os.path.join(resources_dir, o))]
 
     trans_non_aug = transforms.Compose([transforms.ToPILImage(),
                                         transforms.Resize((256, 256)),
@@ -39,10 +75,15 @@ def main(config, args):
                                         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
     # get datasets
-    train_dataset = CycleGanDataset(root=resources_dir, data_paths=[train_sources, train_targets],
-                                    extensions=(('.jpg'),)*2, transform=trans_non_aug)
-    test_dataset = CycleGanDataset(root=resources_dir, data_paths=[test_sources, test_targets],
-                                   extensions=(('.jpg'),)*2, transform=trans_non_aug)
+    train_dataset = AgeGanDataset(full_df=train_df, root=resources_dir,
+                                  data_paths=data_dirs,
+                                  extensions=(('.jpg'),)*len(data_dirs),
+                                  transform=trans_non_aug)
+
+    test_dataset = AgeGanDataset(full_df = test_df, root=resources_dir,
+                                 data_paths=data_dirs,
+                                 extensions=(('.jpg'),)*len(data_dirs),
+                                 transform=trans_non_aug)
 
     # create dataloaders
     train_loader = DataLoader(train_dataset, batch_size=1, shuffle=True, num_workers=0)
@@ -89,13 +130,7 @@ def main(config, args):
 
     optimizer = GanOptimizer(optim_gen, optim_disc)
     lr_sched = GanLrScheduler(scheduler_gen, scheduler_disc)
-
-    trainer = CycleGanTrainer(dataloaders=dataloaders, denorm=Denormalize(), root=ROOT_DIR, model=model,
-                              criterion=None, optimizer=optimizer, scheduler=lr_sched, metrics=metrics,
-                              epochs=epochs, save_dir=args.save_dir, checkpoint=args.checkpoint,
-                              change_lr=args.change_lr)
-
-    trainer.train()
+    # code to run the model
 
 
 if __name__ == '__main__':

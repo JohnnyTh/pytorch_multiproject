@@ -13,7 +13,7 @@ from trainers.mnist_trainer import MnistTrainer
 from logger.logger import main_run, default_log_config
 
 # default configuration file with hyperparameters
-DEFAULT_CONFIG = 'small_train.json'
+DEFAULT_CONFIG = 'small.json'
 
 
 def main(config):
