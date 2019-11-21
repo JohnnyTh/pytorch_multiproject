@@ -13,7 +13,6 @@ from models.cycle_GAN import CycleGAN, GanGenerator, GanDiscriminator, GanOptimi
 from data.cycle_gan_age_dataset import AgeGanDataset
 from trainers.cycle_gan_trainer import CycleGanTrainer
 from logger.logger import main_run, default_log_config
-from utils import normal_weights
 from data import Denormalize
 
 # default configuration file with hyperparameters
@@ -32,7 +31,6 @@ def main(config, args):
 
     # get df with labels data
     dataset_df = pd.read_csv(label_path, usecols=[1, 2, 3])
-    dataset_df['gender'] = dataset_df['gender'].astype(float)
 
     # separate the dataset into old and young subsets
     old_df = dataset_df[dataset_df['age'] > 60]
@@ -57,16 +55,9 @@ def main(config, args):
     old_df_balanced = old_df_balanced.sample(frac=1, random_state=1).reset_index(drop=True)
     young_df_balanced = young_df_balanced.sample(frac=1, random_state=1).reset_index(drop=True)
 
-    train_old = old_df_balanced[: train_size]
     test_old = old_df_balanced[train_size: train_size + test_size]
-
-    # train_young can be much bigger than train_old since the iterations
-    # through the image pairs will be performed until reaching the length of
-    # smallest dataset
-    train_young = young_df_balanced[: -test_size]
     test_young = young_df_balanced[-test_size:]
 
-    train_df = pd.concat((train_old, train_young))
     test_df = pd.concat((test_old, test_young))
 
     # collect list of folders containing input images
@@ -79,30 +70,12 @@ def main(config, args):
                                         transforms.ToTensor(),
                                         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
-    # get datasets
-    train_dataset = AgeGanDataset(full_df=train_df, root=resources_dir,
-                                  data_paths=data_dirs,
-                                  extensions=(('.jpg'),)*len(data_dirs),
-                                  transform=trans_non_aug)
-
     test_dataset = AgeGanDataset(full_df=test_df, root=resources_dir,
                                  data_paths=data_dirs,
                                  extensions=(('.jpg'),)*len(data_dirs),
                                  transform=trans_non_aug)
 
-    # create dataloaders
-    train_loader = DataLoader(train_dataset, batch_size=1, shuffle=True, num_workers=0)
     test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False, num_workers=0)
-    dataloaders = {'train': train_loader, 'val': test_loader}
-
-    # initialize metrics with very high loss values so that the first iteration of model always overrides them
-    metrics = {
-        'loss_gen': 100.0,
-        'ab_disc_loss': 100.0,
-        'ba_disc_loss': 100.0
-    }
-    # define number of epochs
-    epochs = config.get('epochs', 200)
 
     # define generator
     generator = GanGenerator()
@@ -115,34 +88,21 @@ def main(config, args):
     model_hyperparams = {'lambda_identity': 0.5, 'lambda_a': 10.0, 'lambda_b': 10.0}
     model = CycleGAN(generator, discriminator, gan_loss, cycle_loss, identity_loss, model_hyperparams)
 
-    # initialize with normal weights
-    model.apply(normal_weights)
-
     # create optimizers for generators and discriminators
     optim_gen, optim_disc = model.get_optims(lr=config.get('lr', 0.0002))
-
-    # Lr is static during the first 100 epochs and linearly decays until zero over epochs 100-200
-    def lambda_rule(epoch):
-        lr_l = 1.0 - max(0, (epoch + 1 - 100) / float(100))
-        return lr_l
-
-    scheduler_gen = optim.lr_scheduler.LambdaLR(optim_gen, lr_lambda=lambda_rule)
-    scheduler_disc = optim.lr_scheduler.LambdaLR(optim_disc, lr_lambda=lambda_rule)
 
     # enable parallel forward pass computation if possible
     if torch.cuda.device_count() > 1:
         model = nn.DataParallel(model)
 
     optimizer = GanOptimizer(optim_gen, optim_disc)
-    lr_sched = GanLrScheduler(scheduler_gen, scheduler_disc)
 
-    # code to run the model
-    trainer = CycleGanTrainer(dataloaders=dataloaders, denorm=Denormalize(), root=ROOT_DIR, model=model,
-                              criterion=None, optimizer=optimizer, scheduler=lr_sched, metrics=metrics,
-                              epochs=epochs, save_dir=args.save_dir, checkpoint=args.checkpoint,
-                              change_lr=args.change_lr)
+    trainer = CycleGanTrainer(dataloaders=test_loader, denorm=Denormalize(),
+                              root=ROOT_DIR, model=model, criterion=None, optimizer=optimizer,
+                              scheduler=None, metrics=None, epochs=1,
+                              save_dir=args.save_dir, checkpoint=args.checkpoint)
 
-    trainer.train()
+    trainer.test()
 
 
 if __name__ == '__main__':
