@@ -131,6 +131,12 @@ def main(config, args):
     optimizer = GanOptimizer(optim_gen, optim_disc)
     lr_sched = GanLrScheduler(scheduler_gen, scheduler_disc)
     # code to run the model
+    trainer = CycleGanTrainer(dataloaders=dataloaders, denorm=Denormalize(), root=ROOT_DIR, model=model,
+                              criterion=None, optimizer=optimizer, scheduler=lr_sched, metrics=metrics,
+                              epochs=epochs, save_dir=args.save_dir, checkpoint=args.checkpoint,
+                              change_lr=args.change_lr)
+
+    trainer.train()
 
 
 if __name__ == '__main__':
