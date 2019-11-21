@@ -18,6 +18,7 @@ from data import Denormalize
 
 # default configuration file with hyperparameters
 DEFAULT_CONFIG = 'age.json'
+random_seed = 1
 
 
 def main(config, args):
@@ -51,6 +52,10 @@ def main(config, args):
     # inside AgeGanDataset
     old_df_balanced['age_group'] = 'old'
     young_df_balanced['age_group'] = 'young'
+
+    # shuffle the rows before taking train and test samples
+    old_df_balanced = old_df_balanced.sample(frac=1, random_state=1).reset_index(drop=True)
+    young_df_balanced = young_df_balanced.sample(frac=1, random_state=1).reset_index(drop=True)
 
     train_old = old_df_balanced[: train_size]
     test_old = old_df_balanced[train_size: train_size + test_size]
@@ -130,6 +135,7 @@ def main(config, args):
 
     optimizer = GanOptimizer(optim_gen, optim_disc)
     lr_sched = GanLrScheduler(scheduler_gen, scheduler_disc)
+
     # code to run the model
     trainer = CycleGanTrainer(dataloaders=dataloaders, denorm=Denormalize(), root=ROOT_DIR, model=model,
                               criterion=None, optimizer=optimizer, scheduler=lr_sched, metrics=metrics,
