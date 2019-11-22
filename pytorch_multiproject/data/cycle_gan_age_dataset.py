@@ -7,18 +7,18 @@ from data.generic_dataset import GenericDataset
 
 class AgeGanDataset(GenericDataset):
 
-    def __init__(self, full_df, root, *args, transform=None, **kwargs):
+    def __init__(self, full_df, root,  *args, random_pairs=True, transform=None, **kwargs):
+        """
+        :param full_df: pandas Dataframe, containing image paths and labels.
+        :param root: str, root directory with the resource files.
+        :param args: data_paths (str, list or tuple): full path/paths to root dir/dirs from where
+                            the local file paths must be collected.
+                     extensions (str or tuple): format of images to be collected ('.jpeg', '.jpg', '.png', etc.)
+        :param random_pairs: bool (optional), controls if the pairs of images are picked randomly.
+        :param transform: callable (optinal), optional transform(s) to be applied on image pairs.
+        """
         super().__init__(*args, **kwargs)
-        """
-        *args: data_paths (str, list or tuple): full path/paths to root dir/dirs from where
-                            the local file paths must be collected         
-                extensions (str or tuple): format of images to be collected ('.jpeg', '.jpg', '.png', etc.)
-
-                root (str): root directory with the resource files
-                label_path (str): path to .csv file containing labels
-                transform (callable, optional): Optional transform to be applied
-                            on a sample.
-        """
+        self.random_pairs = random_pairs
         self.transform = transform
         self.root_dir = root
 
@@ -46,10 +46,13 @@ class AgeGanDataset(GenericDataset):
     def __getitem__(self, item):
         old_name = os.path.join(self.root_dir, self.old_df.iloc[item, 0])
 
-        # second image for pair is selected randomly
-        random_young = random.randint(0, len(self.young_df) - 1)
-        young_name = os.path.join(self.root_dir,
-                                  self.young_df.iloc[random_young, 0])
+        if self.random_pairs:
+            # second image for pair is selected randomly
+            random_young = random.randint(0, len(self.young_df) - 1)
+            young_name = os.path.join(self.root_dir,
+                                      self.young_df.iloc[random_young, 0])
+        else:
+            young_name = os.path.join(self.root_dir, self.young_df.iloc[item, 0])
 
         old_img = np.array(Image.open(old_name))
         young_img = np.array(Image.open(young_name))

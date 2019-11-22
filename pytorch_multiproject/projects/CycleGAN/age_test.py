@@ -72,7 +72,7 @@ def main(config, args):
 
     test_dataset = AgeGanDataset(full_df=test_df, root=resources_dir,
                                  data_paths=data_dirs,
-                                 extensions=(('.jpg'),)*len(data_dirs),
+                                 extensions=(('.jpg'),)*len(data_dirs), random_pairs=False,
                                  transform=trans_non_aug)
 
     test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False, num_workers=0)
