@@ -54,8 +54,8 @@ def main(config, args):
     young_df_balanced['age_group'] = 'young'
 
     # shuffle the rows before taking train and test samples
-    old_df_balanced = old_df_balanced.sample(frac=1, random_state=1).reset_index(drop=True)
-    young_df_balanced = young_df_balanced.sample(frac=1, random_state=1).reset_index(drop=True)
+    old_df_balanced = old_df_balanced.sample(frac=1, random_state=random_seed).reset_index(drop=True)
+    young_df_balanced = young_df_balanced.sample(frac=1, random_state=random_seed).reset_index(drop=True)
 
     train_old = old_df_balanced[: train_size]
     test_old = old_df_balanced[train_size: train_size + test_size]
