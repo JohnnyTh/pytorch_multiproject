@@ -38,10 +38,14 @@ def main(config, args):
 
     # balance dfs based on genders (females are minority)
     old_g = old_df.groupby('gender')
-    old_df_balanced = old_g.apply(lambda x: x.sample(old_g.size().min())).reset_index(drop=True)
+    old_df_balanced = (old_g
+                       .apply(lambda x: x.sample(old_g.size().min(), random_state=random_seed))
+                       .reset_index(level=0, drop=True))
 
     young_g = young_df.groupby('gender')
-    young_df_balanced = young_g.apply(lambda x: x.sample(young_g.size().min())).reset_index(drop=True)
+    young_df_balanced = (young_g
+                         .apply(lambda x: x.sample(young_g.size().min(), random_state=random_seed))
+                         .reset_index(level=0, drop=True))
 
     train_size = 1000
     test_size = 100
@@ -52,8 +56,12 @@ def main(config, args):
     young_df_balanced['age_group'] = 'young'
 
     # shuffle the rows before taking train and test samples
-    old_df_balanced = old_df_balanced.sample(frac=1, random_state=random_seed).reset_index(drop=True)
-    young_df_balanced = young_df_balanced.sample(frac=1, random_state=random_seed).reset_index(drop=True)
+    old_df_balanced = (old_df_balanced
+                       .sample(frac=1, random_state=random_seed)
+                       .sort_index())
+    young_df_balanced = (young_df_balanced
+                         .sample(frac=1, random_state=random_seed)
+                         .sort_index())
 
     test_old = old_df_balanced[train_size: train_size + test_size]
     test_young = young_df_balanced[-test_size:]
