@@ -13,7 +13,7 @@ and two discriminators encourage the respective generators learn the correct tra
 <p>The paper introduced cycle consistency loss that imposes additional constraint on the mapping learned by generators 
 that allows usage of unpaired training data.
 
-<p>Tested on several datasets with varying results. 
+<p>Tested on several datasets with varying performance. 
 
 ###Horse - zebra dataset
 One of the datasets, originally suggested by authors. The results in this implementation after 200 epochs of training were as follows:
@@ -22,7 +22,12 @@ One of the datasets, originally suggested by authors. The results in this implem
 </p>
 
 ###MNIST - SVHN dataset
-Description
+This task was done using built-in torchvision MNIST (Modified National Institute of Standards and Technology database) 
+and SVHN (Street View House Numbers) datasets.
+<p align="center">
+ <img src="https://user-images.githubusercontent.com/39649806/69553468-eb9bcc80-0fa8-11ea-9869-cc637ce26293.jpg" alt="torch" width="400"/>
+</p>
+
 
 ###OLD - YOUNG dataset
 Description
