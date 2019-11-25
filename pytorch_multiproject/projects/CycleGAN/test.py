@@ -33,7 +33,7 @@ def main(config, args):
 
     # get datasets
     test_dataset = CycleGanDataset(root=resources_dir, data_paths=[test_sources, test_targets],
-                                   extensions=(('.jpg'),)*2, transform=trans_non_aug)
+                                   extensions=(('.jpg'),)*2, random_pairs=False, transform=trans_non_aug)
 
     # create dataloaders
     test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False, num_workers=0)

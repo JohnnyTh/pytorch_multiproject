@@ -7,7 +7,7 @@ from data.generic_dataset import GenericDataset
 
 class CycleGanDataset(GenericDataset):
 
-    def __init__(self, root, *args, transform=None, **kwargs):
+    def __init__(self, root, *args, random_pairs=True, transform=None, **kwargs):
         super().__init__(*args, **kwargs)
         """
         *args: data_paths (str, list or tuple): full path/paths to root dir/dirs from where
@@ -17,8 +17,9 @@ class CycleGanDataset(GenericDataset):
         transform (callable, optional): Optional transform to be applied
                           on a sample.
         """
-        self.transform = transform
         self.root_dir = root
+        self.random_pairs = random_pairs
+        self.transform = transform
 
         # we assume that self._found_dataset contains two dicts: first one for source images (trainA or testA)
         # second one for target images (trainB or testB)
@@ -46,9 +47,12 @@ class CycleGanDataset(GenericDataset):
         """
         img_name_source = os.path.join(self.root_dir, self.source_imgs[item])
 
-        # second image for pair is selected randomly
-        random_b = random.randint(0, len(self.source_imgs)-1)
-        img_name_target = os.path.join(self.root_dir, self.target_imgs[random_b])
+        if self.random_pairs:
+            # second image for pair is selected randomly
+            random_b = random.randint(0, len(self.source_imgs)-1)
+            img_name_target = os.path.join(self.root_dir, self.target_imgs[random_b])
+        else:
+            img_name_target = os.path.join(self.root_dir, self.target_imgs[item])
 
         img_source = np.asarray(Image.open(img_name_source))
         img_target = np.asarray(Image.open(img_name_target))
