@@ -8,14 +8,14 @@ Cycle GAN is a neural network architecture proposed by Jun-Yan Zhu et al., 2018 
 paper titled "Unpaired Image-to-Image Translation using Cycle-Consistent Adversarial Networks". 
 
 <p>As explained by the authors, CycleGAN consists of two generators (AB and BA) that perform translation of images from domain A to domain B and vice versa 
-and two discriminators encourage the respective generators learn the correct translation.
+and two discriminators that encourage the respective generators learn the correct translation.
 
 <p>The paper introduced cycle consistency loss that imposes additional constraint on the mapping learned by generators 
 that allows usage of unpaired training data.
 
 <p>Tested on several datasets with varying performance. 
 
-###Horse - zebra dataset
+###Horse - Zebra dataset
 One of the datasets, originally suggested by authors. The results in this implementation after 200 epochs of training were as follows:
 <p align="center">
  <img src="https://user-images.githubusercontent.com/39649806/69551713-d4a7ab00-0fa5-11ea-9569-a1eeb1692625.jpg" alt="torch" width="600"/>
@@ -29,5 +29,11 @@ and SVHN (Street View House Numbers) datasets.
 </p>
 
 
-###OLD - YOUNG dataset
-Description
+###Old - Young dataset
+Image-to-Image translation was done on two subsets of human faces (old and young) extracted from 
+[IMDB - WIKI dataset](https://data.vision.ee.ethz.ch/cvl/rrothe/imdb-wiki/). The datasets were preprocessed and 
+balanced by gender prior to training in order to improve the quality of the final results (see the details of preprocessing at
+pytorch_multiproject/utils/age_gender_preprocessing.py).
+<p align="center">
+ <img src="https://user-images.githubusercontent.com/39649806/69608464-2eed4e00-1030-11ea-9ef9-fe1a339627d0.jpg" alt="torch" width="600"/>
+</p>
