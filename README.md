@@ -12,7 +12,7 @@ projects demonstrating usage of these concepts in practice.
 ## Version history:
 ##### Version 0.2.0:
 Implemented CycleGAN for several tasks based on the following [Paper](https://arxiv.org/pdf/1703.10593.pdf). 
-The implementations include unpaired image-to-image translation for horse-zebra, mnist-svhn, and old-young datasets. For more info
+The tasks include unpaired image-to-image translation for horse-zebra, mnist-svhn, and old-young datasets. For more info
 look at the readme file at pytorch_multiproject/CycleGAN in this repo.
 ##### Version 0.1.0:
 Implemented all basic features - basic and generic classes for trainers, unit tests for important modules, 
@@ -24,9 +24,7 @@ for training were taken from IMDB-WIKI dataset (more precisely, only WIKI part).
 [Link to the dataset description](https://data.vision.ee.ethz.ch/cvl/rrothe/imdb-wiki/).
 [Link to the dataset](https://data.vision.ee.ethz.ch/cvl/rrothe/imdb-wiki/static/wiki_crop.tar)
 ##### TODOs:
-* More models and custom implementations of train.py;
-* Improve compatibility with different OS;
-* Add more optional arguments for train.py and fix existing ones (especially checkpoint loading).
+* More models (semantic segmentation, object detection, image denoising, NLP models).
 
 ### Structure: 
 ```
