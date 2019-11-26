@@ -15,13 +15,13 @@ that allows usage of unpaired training data.
 
 <p>Tested on several datasets with varying performance. 
 
-###Horse - Zebra dataset
+### Horse - Zebra dataset
 One of the datasets, originally suggested by authors. The results in this implementation after 200 epochs of training were as follows:
 <p align="center">
  <img src="https://user-images.githubusercontent.com/39649806/69551713-d4a7ab00-0fa5-11ea-9569-a1eeb1692625.jpg" alt="torch" width="600"/>
 </p>
 
-###MNIST - SVHN dataset
+### MNIST - SVHN dataset
 This task was done using built-in torchvision MNIST (Modified National Institute of Standards and Technology database) 
 and SVHN (Street View House Numbers) datasets.
 <p align="center">
@@ -29,7 +29,7 @@ and SVHN (Street View House Numbers) datasets.
 </p>
 
 
-###Old - Young dataset
+### Old - Young dataset
 Image-to-Image translation was done on two subsets of human faces (old and young) extracted from 
 [IMDB - WIKI dataset](https://data.vision.ee.ethz.ch/cvl/rrothe/imdb-wiki/). The datasets were preprocessed and 
 balanced by gender prior to training in order to improve the quality of the final results (see the details of preprocessing at
