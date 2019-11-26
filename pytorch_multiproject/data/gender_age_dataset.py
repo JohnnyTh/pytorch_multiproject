@@ -10,8 +10,9 @@ class AgeGenderDataset(GenericDataset):
         super().__init__(*args, **kwargs)
         """
         *args: data_paths (str, list or tuple): full path/paths to root dir/dirs from where
-                          the local file paths must be collected
+                          the local file paths must be collected         
                extensions (str or tuple): format of images to be collected ('.jpeg', '.jpg', '.png', etc.)
+        
         root (str): root directory with the resource files
         label_path (str): path to .csv file containing labels
         transform (callable, optional): Optional transform to be applied
@@ -29,7 +30,7 @@ class AgeGenderDataset(GenericDataset):
         for name_group in self._found_dataset:
             names.extend([os.path.join(os.path.basename(name_group['root']), name) for name in name_group['names']])
 
-        # replace linux slash with windows  backslash to check intersection of two sets of image paths
+        # normalize the path in order to prevent errors on different OS
         full_df = full_df.copy()
         full_df['image_path'] = full_df['image_path'].apply(lambda val: os.path.normpath(val))
         subset_df = full_df[full_df['image_path'].isin(names)]

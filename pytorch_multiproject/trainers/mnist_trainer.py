@@ -8,7 +8,7 @@ from trainers.generic_trainer import GenericTrainer
 
 class MnistTrainer(GenericTrainer):
 
-    def __init__(self, dataloaders, scheduler=None, *args,  **kwargs):
+    def __init__(self, dataloaders, *args,  **kwargs):
         super().__init__(*args, **kwargs)
         """Trainer implementing single training step behavior for MnistNet.
             Args:
@@ -18,11 +18,10 @@ class MnistTrainer(GenericTrainer):
                 scheduler (lr_scheduler): learning rate scheduler
         """
         self.dataloaders = dataloaders
-        self.scheduler = scheduler
         self.logger = logging.getLogger(os.path.basename(__file__))
 
     def _train_step(self, epoch):
-        self.logger.info('Epoch {}/{}'.format(epoch, self.epochs))
+        self.logger.info('\n\n' +'Epoch {}/{}'.format(epoch, self.epochs))
         self.logger.info('-' * 10)
         results = {
             'best_performance': False
@@ -77,8 +76,8 @@ class MnistTrainer(GenericTrainer):
             self.logger.info('Loss: {:.4f} Error: {:.4f} %'.format(epoch_metrics['loss'], (1 - epoch_metrics['acc'])*100))
             self.logger.info(' ')
 
-            if epoch % 5 == 0:
-                self.logger.info('         ---- Classification report: ----' +
+            if epoch % 1 == 0:
+                self.logger.info('\n' + '         ---- Classification report: ----' +
                                  '\n' + classification_report(y_true, y_hat))
             if (
                 phase == 'val'

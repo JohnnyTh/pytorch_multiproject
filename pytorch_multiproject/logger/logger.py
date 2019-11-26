@@ -3,18 +3,24 @@ import json
 import logging
 from logging.handlers import TimedRotatingFileHandler
 
+
 def main_run(main_func, DEFAULT_CONFIG):
     parser = argparse.ArgumentParser(description='Protocol configuration:')
     parser.add_argument('-c', '--config', default=DEFAULT_CONFIG, type=str,
                         help='config file (default: ./<sript_filename>.json)')
-    parser.add_argument('-s', '--silence', default=False, type=str,
-                        help='Run Training without console outputs')
-    parser.add_argument('-l', '--log', default=None, type=str,
-                        help='Path to log file')
+    parser.add_argument('-ch', '--checkpoint', default=None, type=str,
+                        help='Path to a model checkpoint (.pth file)')
+    parser.add_argument('-rsd', '--resource_dir', default=None, type=str,
+                        help='Path to a directory with resource files')
+    parser.add_argument('-sv', '--save_dir', default=None, type=str,
+                        help='Path to save folder: save model states and images generated during val phase')
+    parser.add_argument('-chlr', '--change_lr', default=False, type=bool,
+                        help='In case checkpoint is loaded. If False - continue with resumed parameters '
+                             'of optim and lr_sched or else use the ones defined in train.py')
     arguments = parser.parse_args()
     config = json.load(open(arguments.config))
     assert config is not None, 'Default configuration file is not accessible. Please define custom configuration file.'
-    main_func(config)
+    main_func(config, arguments)
 
 
 def default_log_config(file_output=None, silence=False, console_level=logging.DEBUG, file_level=logging.DEBUG):

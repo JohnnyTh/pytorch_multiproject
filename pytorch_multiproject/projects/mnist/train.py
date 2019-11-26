@@ -13,7 +13,7 @@ from trainers.mnist_trainer import MnistTrainer
 from logger.logger import main_run, default_log_config
 
 # default configuration file with hyperparameters
-DEFAULT_CONFIG = 'train.json'
+DEFAULT_CONFIG = 'small.json'
 
 
 def main(config):
@@ -42,12 +42,12 @@ def main(config):
     def f(epoch): return 0.89 ** epoch  # Set a learning rate scheduler
 
     scheduler = optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=f)
-    session = MnistTrainer(dataloaders, scheduler, ROOT_DIR, model, criterion, optimizer, metrics, epochs)
+    trainer = MnistTrainer(dataloaders, scheduler, ROOT_DIR, model, criterion, optimizer, metrics, epochs)
 
     # run the training session
     logger.info('Training session begins.')
     logger.info('Using device {}'.format(torch.cuda.get_device_name(0)))
-    session.train()
+    trainer.train()
 
 
 if __name__ == '__main__':
