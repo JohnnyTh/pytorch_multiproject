@@ -1,3 +1,9 @@
 {"epochs":  20,
-  "learning_rate": 0.001
+  "learning_rate": 0.001,
+  "train_size": 35000,
+  "test_share": 0.18,
+  "lambda_gen": 1,
+  "lambda_age": 1,
+  "num_workers": 0,
+  "lr_sched_lambda": 0.89
 }

@@ -3,29 +3,34 @@ import logging
 import torch
 from trainers.generic_trainer import GenericTrainer
 from sklearn.metrics import classification_report
+from tqdm import tqdm
 
 
 class AgeGenderTrainer(GenericTrainer):
 
-    def __init__(self,  dataloaders, scheduler=None, *args, **kwargs):
+    def __init__(self,  dataloaders, *args, **kwargs):
         super().__init__(*args, **kwargs)
         """Trainer implementing single training step behavior for AgeGenderModel.
             Args:
                 *args: root, model, criterion, optimizer, metrics, epochs
                 **kwargs: checkpoint (default=None)
                 dataloaders (dict): a dict containing 'train' and 'val' dataloaders
-                scheduler (lr_scheduler): learning rate scheduler
                 
                 Note: best_metrics = { 'loss': {'gender' : 10.0, 'age': 100.0, 'total' : 100.0},
                                        'acc_gender' : 0.0}
         """
         self.dataloaders = dataloaders
-        self.scheduler = scheduler
         self.logger = logging.getLogger(os.path.basename(__file__))
 
     def _train_step(self, epoch):
-        self.logger.info('Epoch {}/{}'.format(epoch, self.epochs))
+        self.logger.info('\n\n\n\n\n\n' + 'Epoch {}/{}'.format(epoch, self.epochs))
         self.logger.info('-' * 10)
+
+        # print parameters of optimizer and scheduler every epoch
+        self.logger.info(str(self.optimizer))
+        if self.scheduler is not None:
+            self.logger.info('Scheduler state: ' + str(self.scheduler.state_dict()))
+
         results = {
             'best_performance': False
         }
@@ -46,7 +51,8 @@ class AgeGenderTrainer(GenericTrainer):
             y_hat = torch.Tensor([])
             y_true = torch.Tensor([])
 
-            for inputs, labels_gender, labels_age in self.dataloaders[phase]:
+            t = tqdm(iter(self.dataloaders[phase]), leave=False, total=len(self.dataloaders[phase]))
+            for inputs, labels_gender, labels_age in t:
                 inputs = inputs.to(self.device)
                 labels_gender = labels_gender.to(self.device)
                 labels_age = labels_age.to(self.device)
@@ -60,13 +66,14 @@ class AgeGenderTrainer(GenericTrainer):
                 # track history if only in train
                 with torch.set_grad_enabled(phase == 'train'):
                     outputs_gender, outputs_age = self.model(inputs)
-                    # Round the outputs of sigmoid func to obtain predicted class
 
                     loss_gender = self.criterion['gender'](outputs_gender, labels_gender)
                     loss_age = self.criterion['age'](outputs_age, labels_age)
                     # Total loss is calculated as a sum of two losses for gender and
                     # age multiplied by respective correction coefficients
-                    loss = 1. * loss_gender + 0.25 * loss_age
+                    lambda_gen = self.hyperparams.get('lambda_gen', 1)
+                    lambda_age = self.hyperparams.get('lambda_age', 1)
+                    loss = lambda_gen * loss_gender + lambda_age * loss_age
 
                     # backward + optimize only if in training phase
                     if phase == 'train':
@@ -92,14 +99,13 @@ class AgeGenderTrainer(GenericTrainer):
 
             # Output epoch results
             self.logger.info('>>> {} phase <<<'.format(phase))
-            self.logger.info('Loss (gender): {:.4f} Acc: {:.4f}'.format(epoch_metrics['loss']['gender'],
+            self.logger.info('Gender: loss: {:.4f} acc: {:.4f}'.format(epoch_metrics['loss']['gender'],
                                                              epoch_metrics['acc_gender']))
-            self.logger.info('Loss (age, MAE): {:.4f}'.format(epoch_metrics['loss']['age']))
+            self.logger.info('Age: loss (MAE): {:.4f}'.format(epoch_metrics['loss']['age']))
             self.logger.info('Total Loss: {}'.format(epoch_metrics['loss']['total']))
-            self.logger.info('')
 
-            if epoch % 5 == 0:
-                self.logger.info('         ---- Gender classification report: ----' +
+            if epoch % 1 == 0:
+                self.logger.info('\n' + '         ---- Gender classification report: ----' +
                                  '\n' + classification_report(y_true.detach(), y_hat.detach(), target_names=['Female', 'Male']))
 
             # Check if we got the best performance based on the selected criteria
@@ -113,3 +119,6 @@ class AgeGenderTrainer(GenericTrainer):
                 results['best_performance'] = True
 
         return results
+
+    def test(self):
+        pass
