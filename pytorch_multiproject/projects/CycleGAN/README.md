@@ -1,6 +1,6 @@
 # Cycle Generative Adversarial Networks
 <p align="center">
-  <img src="https://user-images.githubusercontent.com/39649806/69546988-6b239e80-0f9d-11ea-9ba0-f84489c5fe13.png" alt="torch" width="600"/>
+  <img src="https://user-images.githubusercontent.com/39649806/69902337-fb465700-1394-11ea-9a9b-de1b582c86ec.png" alt="torch" width="600"/>
 </p>
 
 Implementation of CycleGAN drawing architecture/training details from the [Repo](https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix).
