@@ -59,11 +59,31 @@ class ModelTestMock:
         pass
 
 
+class DatasetMock:
+
+    def __init__(self, n):
+        self.n = n
+
+    def __getitem__(self, item):
+        img = torch.rand(3, 450, 450)
+        target_dict = {'area': torch.rand(2) * 1000,
+                       'boxes': torch.randint(450, (2, 4)),
+                       'image_id': torch.tensor([item]),
+                       'iscrowd': torch.zeros(2),
+                       'labels': torch.ones(2),
+                       'masks': torch.randint(2, (2, 450, 450), dtype=torch.uint8)}
+        return img, target_dict
+
+    def __len__(self):
+        return self.n
+
+
 class DataloaderTestMock:
 
     def __init__(self, n):
         self.n = n
         self.num = 0
+        self.dataset = DatasetMock(n)
 
     def __iter__(self):
         return self
@@ -79,13 +99,13 @@ class DataloaderTestMock:
             img = (torch.rand(3, 450, 450), )
             target_dict = {'area': torch.rand(2)*1000,
                            'boxes': torch.randint(450, (2, 4)),
-                           'image_id': torch.randint(1000, ((1), )),
+                           'image_id': torch.tensor([cur]),
                            'iscrowd': torch.zeros(2),
                            'labels': torch.ones(2),
                            'masks': torch.randint(2, (2, 450, 450))}
             target = (target_dict, )
-
             return tuple([img, target])
+
         else:
             self.num = 0
             raise StopIteration()
@@ -94,13 +114,16 @@ class DataloaderTestMock:
         return self.n
 
 
+mock_optim = MagicMock()
+mock_optim.param_groups.__getitem__.return_value = {'lr': torch.rand(1)}
+
 test_data = {
-    'dataloaders': {'train': DataloaderTestMock(50),
-                    'val': DataloaderTestMock(50)},
+    'dataloaders': {'train': DataloaderTestMock(10),
+                    'val': DataloaderTestMock(10)},
     'root': '/home',
     'model': ModelTestMock(),
     'criterion': None,
-    'optimizer': MagicMock(),
+    'optimizer': mock_optim,
     'scheduler': MagicMock(),
     'metrics': {},
     'epochs': 10,
@@ -113,7 +136,7 @@ deserialize_data = {
     'model_state': 'chkpt_model',
     'best_metrics': {},
     'optimizer': {
-        'name': MagicMock().__class__.__name__,
+        'name': mock_optim.__class__.__name__,
         'state': 'chkpt_optim'},
     'scheduler': {
         'name': MagicMock().__class__.__name__,

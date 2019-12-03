@@ -55,7 +55,7 @@ class MaskRCNNTrainer(GenericTrainer):
             warmup_iters = min(1000, len(self.dataloaders[phase]) - 1)
             lr_scheduler_warmup = warmup_lr_scheduler(self.optimizer, warmup_iters, warmup_factor)
 
-        for image, targets in metric_logger.log_every(self.dataloaders[phase], 10, header):
+        for images, targets in metric_logger.log_every(self.dataloaders[phase], 10, header):
             device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
             images = list(image.to(device) for image in images)
@@ -82,8 +82,8 @@ class MaskRCNNTrainer(GenericTrainer):
             if lr_scheduler_warmup is not None:
                 lr_scheduler_warmup.step()
 
-        metric_logger.update(loss=losses_reduced, **loss_dict_reduced)
-        metric_logger.update(lr=self.optimizer.param_groups[0]["lr"])
+            metric_logger.update(loss=losses_reduced, **loss_dict_reduced)
+            metric_logger.update(lr=self.optimizer.param_groups[0]["lr"])
 
         self.scheduler.step()
 
@@ -120,6 +120,7 @@ class MaskRCNNTrainer(GenericTrainer):
             coco_evaluator.update(res)
             evaluator_time = time.time() - evaluator_time
             metric_logger.update(model_time=model_time, evaluator_time=evaluator_time)
+
         # gather the stats from all processes
         metric_logger.synchronize_between_processes()
         print("Averaged stats:", metric_logger)

@@ -8,6 +8,7 @@ import torch.distributed as dist
 from torch.nn import init
 from collections import defaultdict, deque
 
+
 def same_padding_calc(inp_shape, kernel_shape, stride):
     """
        !Attention - only square image padding calculation implemented!
