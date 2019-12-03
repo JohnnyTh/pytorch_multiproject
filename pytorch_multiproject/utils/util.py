@@ -92,54 +92,6 @@ def apply_weight_init(model, mode, init_gain=0.02):
     model.apply(init_func)
 
 
-class MockGeneratorFoo:
-
-    def __init__(self):
-        """
-        Imitates work of a generator in GAN.
-        Returns a tensor with random values in range 0-1 in the shape (64, 3, 32, 32),
-        imitating batch of 64 32x32 images with 3 channels.
-        """
-        pass
-
-    def __call__(self, real_img):
-        device = real_img.device
-        mock_fake_img = torch.rand((64, 3, 32, 32))
-        return mock_fake_img.to(device)
-
-    @staticmethod
-    def parameters():
-        return [mock.MagicMock()] * 5
-
-    @staticmethod
-    def to(*args):
-        pass
-
-
-class MockDiscriminatorFoo:
-    """
-       Imitates work of a discriminator in GAN.
-       Returns a tensor with random values 0 or 1 in the shape (64, 1),
-       imitating predictictions for batch of 64 images.
-    """
-
-    def __init__(self):
-        pass
-
-    def __call__(self, real_or_fake):
-        device = real_or_fake.device
-        mock_pred = torch.randint(2, (64, 1)).float()
-        return mock_pred.to(device)
-
-    @staticmethod
-    def parameters():
-        return [mock.MagicMock()] * 5
-
-    @staticmethod
-    def to(*args):
-        pass
-
-
 def is_dist_avail_and_initialized():
     if not dist.is_available():
         return False

@@ -4,9 +4,7 @@ ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(os.path.dirname('__fi
 sys.path.insert(0, ROOT_DIR)
 import logging
 import torch
-import torchvision
 import torchvision.transforms as transforms
-from torch import optim
 from models.mask_r_cnn_model import get_mask_r_cnn
 from data.mask_r_cnn_dataset import PennFudanDataset
 from trainers.mask_r_cnn_trainer import MaskRCNNTrainer
