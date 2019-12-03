@@ -1,6 +1,7 @@
 import mock
 import torch
 import torch.nn as nn
+import torch.distributed as dist
 from torch.nn import init
 
 
@@ -136,19 +137,58 @@ class MockDiscriminatorFoo:
         pass
 
 
-def cat_list(images, fill_value=0):
-    # source https://github.com/pytorch/vision/blob/master/references/segmentation/utils.py
-    max_size = tuple(max(s) for s in zip(*[img.shape for img in images]))
-    batch_shape = (len(images),) + max_size
-    batched_imgs = images[0].new(*batch_shape).fill_(fill_value)
-    for img, pad_img in zip(images, batched_imgs):
-        pad_img[..., :img.shape[-2], :img.shape[-1]].copy_(img)
-    return batched_imgs
+def is_dist_avail_and_initialized():
+    if not dist.is_available():
+        return False
+    if not dist.is_initialized():
+        return False
+    return True
+
+
+def get_world_size():
+    if not is_dist_avail_and_initialized():
+        return 1
+    return dist.get_world_size()
+
+
+def reduce_dict(input_dict, average=True):
+    """
+    Args:
+        input_dict (dict): all the values will be reduced
+        average (bool): whether to do average or sum
+    Reduce the values in the dictionary from all processes so that all processes
+    have the averaged results. Returns a dict with the same fields as
+    input_dict, after reduction.
+    """
+    world_size = get_world_size()
+    if world_size < 2:
+        return input_dict
+    with torch.no_grad():
+        names = []
+        values = []
+        # sort the keys so that they are consistent across processes
+        for k in sorted(input_dict.keys()):
+            names.append(k)
+            values.append(input_dict[k])
+        values = torch.stack(values, dim=0)
+        dist.all_reduce(values)
+        if average:
+            values /= world_size
+        reduced_dict = {k: v for k, v in zip(names, values)}
+    return reduced_dict
 
 
 def collate_fn(batch):
-    # source https://github.com/pytorch/vision/blob/master/references/segmentation/utils.py
-    images, targets = list(zip(*batch))
-    batched_imgs = cat_list(images, fill_value=0)
-    batched_targets = cat_list(targets, fill_value=255)
-    return batched_imgs, batched_targets
+    # source https://github.com/pytorch/vision/blob/master/references/detection/utils.py
+    return tuple(zip(*batch))
+
+
+def warmup_lr_scheduler(optimizer, warmup_iters, warmup_factor):
+    # source https://github.com/pytorch/vision/blob/master/references/detection/utils.py
+    def f(x):
+        if x >= warmup_iters:
+            return 1
+        alpha = float(x) / warmup_iters
+        return warmup_factor * (1 - alpha) + alpha
+
+    return torch.optim.lr_scheduler.LambdaLR(optimizer, f)

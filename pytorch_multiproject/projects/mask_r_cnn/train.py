@@ -15,6 +15,7 @@ from utils import collate_fn
 
 # default configuration file with hyperparameters
 DEFAULT_CONFIG = 'train.json'
+torch.manual_seed(0)
 
 
 def main(config, args):
@@ -47,6 +48,7 @@ def main(config, args):
     data_loader_test = torch.utils.data.DataLoader(
         dataset_test, batch_size=1, shuffle=False, num_workers=0,
         collate_fn=collate_fn)
+    dataloaders = {'train': data_loader, 'val': data_loader_test}
 
     model = get_mask_r_cnn(num_classes=2)
     # move model to the right device
@@ -58,8 +60,9 @@ def main(config, args):
     # and a learning rate scheduler
     lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=3, gamma=0.1)
 
-
-    trainer = MaskRCNNTrainer()
+    trainer = MaskRCNNTrainer(dataloaders=dataloaders, root=ROOT_DIR, model=model, criterion=None,
+                              optimizer=optimizer, scheduler=lr_scheduler, metrics={}, epochs=10,
+                              save_dir=args.save_dir, checkpoint=args.checkpoint, change_lr=args.change_lr)
     trainer.train()
 
 
