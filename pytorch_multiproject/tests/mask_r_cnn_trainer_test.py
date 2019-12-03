@@ -17,17 +17,25 @@ class ModelTestMock:
         self.training = True
         self.is_cuda = False
 
-    def __call__(self, images, targets):
-            pass
+    def __call__(self, images, *args):
+        if self.training:
+            losses_dict = {'loss_box_reg': torch.rand(1)*10,
+                           'loss_classifier': torch.rand(1)*10,
+                           'loss_mask': torch.rand(1)*10,
+                           'loss_objectness': torch.rand(1)*10,
+                           'loss_rpn_box_reg': torch.rand(1)*10}
+            return losses_dict
+        else:
+            dict_img_1 = {'boxes': torch.rand((100, 4)) * torch.randint(450, ((1), )),
+                          'labels': torch.ones(100),
+                          'masks': torch.randint(2, (100, 1, 450, 450)),
+                          'scores': torch.FloatTensor(100).uniform_(0.6, 0.95)}
 
-    """ 
-    def __call__(self, real_a, real_b, step_flag,
-                fake_b_disc=None, fake_a_disc=None):
-        if step_flag == 'gen_step':
-            return torch.rand((1, 3, 32, 32)), torch.rand((1, 3, 32, 32)), \
-                   torch.rand((1, 3, 32, 32)), torch.rand((1, 3, 32, 32)), torch.rand(1)*5
-        elif step_flag == 'disc_step':
-            return torch.rand(1)*5, torch.rand(1)*5"""
+            dict_img_2 = {'boxes': torch.rand((100, 4)) * torch.randint(450, ((1),)),
+                          'labels': torch.ones(100),
+                          'masks': torch.randint(2, (100, 1, 450, 450)),
+                          'scores': torch.FloatTensor(100).uniform_(0.6, 0.95)}
+            return [dict_img_1, dict_img_2]
 
     def __next__(self):
         return self
