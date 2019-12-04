@@ -9,6 +9,7 @@ from trainers.generic_trainer import GenericTrainer
 from utils import warmup_lr_scheduler, reduce_dict, MetricLogger, SmoothedValue
 from utils.coco_utils import get_coco_api_from_dataset
 from utils.coco_eval import CocoEvaluator
+from torchvision.utils import save_image
 
 
 class MaskRCNNTrainer(GenericTrainer):
@@ -22,7 +23,7 @@ class MaskRCNNTrainer(GenericTrainer):
         self.logger = logging.getLogger(os.path.basename(__file__))
         self.dataloaders = dataloaders
         # create directory for saving the results of val phase
-        self.save_dir_test = os.path.join(self.save_dir, 'gan_test')
+        self.save_dir_test = os.path.join(self.save_dir, 'mask_r_cnn_test')
         if not os.path.exists(self.save_dir_test):
             os.mkdir(self.save_dir_test)
 
@@ -138,6 +139,38 @@ class MaskRCNNTrainer(GenericTrainer):
         coco_evaluator.summarize()
         torch.set_num_threads(n_threads)
         return coco_evaluator
+
+    @torch.no_grad()
+    def test(self, num_masks=5):
+        self.model.eval()
+        metric_logger = MetricLogger(delimiter="  ")
+        header = 'Test:'
+        cpu_device = torch.device("cpu")
+
+        for idx, data in enumerate(metric_logger.log_every(self.dataloaders, 100, header)):
+            image = data[0]
+            device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+            image = list(img.to(device) for img in image)
+
+            torch.cuda.synchronize()
+            outputs = self.model(image)
+
+            outputs = [{k: v.to(cpu_device) for k, v in t.items()} for t in outputs]
+
+            source_img = image[0].mul(255).permute(1, 2, 0).byte()
+            all_masks = outputs[0]['masks']
+            # unpack the top num_masks of shape N, 1, H, W into a list of 1, H, W masks
+            top_masks = [*all_masks[: num_masks]]
+
+            to_save = {'source_img': source_img, 'mask': top_masks}
+
+            # script that saves the source img and top generated masks
+            for key in to_save.keys():
+                if key == 'source_img':
+                    save_image(to_save[key], os.path.join(self.save_dir_test, key+'_{}.png'.format(idx)))
+                elif key == 'mask':
+                    for num_mask, mask in enumerate(to_save[key]):
+                        save_image(mask, os.path.join(self.save_dir_test, key+'_{}_{}.png'.format(idx, num_mask)))
 
     @staticmethod
     def _get_iou_types(model):
