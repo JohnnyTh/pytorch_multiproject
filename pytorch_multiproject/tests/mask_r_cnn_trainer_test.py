@@ -147,9 +147,10 @@ deserialize_data = {
 
 
 @patch('os.mkdir')
+@patch('trainers.mask_r_cnn_trainer.warmup_lr_scheduler')
 @patch('torch.Tensor.backward', return_value=None)
 @patch('trainers.mask_r_cnn_trainer.MaskRCNNTrainer._serialize', return_value=None)
-def test_train_run(self, _, __):
+def test_train_run(self, _, __, ___):
     trainer = MaskRCNNTrainer(dataloaders=test_data['dataloaders'], root=test_data['root'],
                               model=test_data['model'], criterion=test_data['criterion'],
                               optimizer=test_data['optimizer'], scheduler=test_data['scheduler'],
@@ -171,3 +172,14 @@ def test_train_deserialize_and_run(self, _, __, ___):
     assert trainer.start_epoch == 6
     assert trainer.epochs == test_data['epochs'] + 6
     trainer.train()
+
+
+@patch('os.mkdir')
+@patch('trainers.mask_r_cnn_trainer.save_image')
+@patch('torch.load', return_value=deserialize_data)
+def test_test_run(self, _, __):
+    trainer = MaskRCNNTrainer(dataloaders=test_data['dataloaders']['val'], root=test_data['root'],
+                              model=test_data['model'], criterion=test_data['criterion'],
+                              optimizer=test_data['optimizer'], scheduler=test_data['scheduler'],
+                              metrics=test_data['metrics'], epochs=test_data['epochs'])
+    trainer.test()
