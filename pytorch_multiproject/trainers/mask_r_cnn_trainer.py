@@ -148,21 +148,20 @@ class MaskRCNNTrainer(GenericTrainer):
         cpu_device = torch.device("cpu")
 
         for idx, data in enumerate(metric_logger.log_every(self.dataloaders, 100, header)):
-            image = data[0]
             device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-            image = list(img.to(device) for img in image)
+            # data[0] - images, data[1] - targets
+            image = list(img.to(device) for img in data[0])
 
             torch.cuda.synchronize()
             outputs = self.model(image)
 
             outputs = [{k: v.to(cpu_device) for k, v in t.items()} for t in outputs]
 
-            source_img = image[0].mul(255).permute(1, 2, 0).byte()
             all_masks = outputs[0]['masks']
             # unpack the top num_masks of shape N, 1, H, W into a list of 1, H, W masks
             top_masks = [*all_masks[: num_masks]]
 
-            to_save = {'source_img': source_img, 'mask': top_masks}
+            to_save = {'source_img': image[0], 'mask': top_masks}
 
             # script that saves the source img and top generated masks
             for key in to_save.keys():
