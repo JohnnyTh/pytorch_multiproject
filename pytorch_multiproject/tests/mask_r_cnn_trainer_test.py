@@ -26,14 +26,14 @@ class ModelTestMock:
                            'loss_rpn_box_reg': torch.rand(1)*10}
             return losses_dict
         else:
-            dict_img_1 = {'boxes': torch.rand((100, 4)) * torch.randint(450, ((1), )),
+            dict_img_1 = {'boxes': torch.rand((100, 4)) * torch.randint(250, ((1), )),
                           'labels': torch.ones(100),
-                          'masks': torch.randint(2, (100, 1, 450, 450)),
+                          'masks': torch.randint(2, (100, 1, 250, 250)),
                           'scores': torch.FloatTensor(100).uniform_(0.6, 0.95)}
 
-            dict_img_2 = {'boxes': torch.rand((100, 4)) * torch.randint(450, ((1),)),
+            dict_img_2 = {'boxes': torch.rand((100, 4)) * torch.randint(250, ((1),)),
                           'labels': torch.ones(100),
-                          'masks': torch.randint(2, (100, 1, 450, 450)),
+                          'masks': torch.randint(2, (100, 1, 250, 250)),
                           'scores': torch.FloatTensor(100).uniform_(0.6, 0.95)}
             return [dict_img_1, dict_img_2]
 
@@ -65,13 +65,13 @@ class DatasetMock:
         self.n = n
 
     def __getitem__(self, item):
-        img = torch.rand(3, 450, 450)
+        img = torch.rand(3, 250, 250)
         target_dict = {'area': torch.rand(2) * 1000,
-                       'boxes': torch.randint(450, (2, 4)),
-                       'image_id': torch.tensor([item]),
-                       'iscrowd': torch.zeros(2),
-                       'labels': torch.ones(2),
-                       'masks': torch.randint(2, (2, 450, 450), dtype=torch.uint8)}
+                       'boxes': torch.randint(250, (2, 4), dtype=torch.float32),
+                       'image_id': torch.tensor([item], dtype=torch.int64),
+                       'iscrowd': torch.zeros(2, dtype=torch.uint8),
+                       'labels': torch.ones(2, dtype=torch.int64),
+                       'masks': torch.randint(2, (2, 250, 250), dtype=torch.uint8)}
         return img, target_dict
 
     def __len__(self):
@@ -96,13 +96,13 @@ class DataloaderTestMock:
         if self.num < self.n:
             cur, self.num = self.num, self.num + 1
 
-            img = (torch.rand(3, 450, 450), )
+            img = (torch.rand(3, 250, 250), )
             target_dict = {'area': torch.rand(2)*1000,
-                           'boxes': torch.randint(450, (2, 4)),
-                           'image_id': torch.tensor([cur]),
-                           'iscrowd': torch.zeros(2),
-                           'labels': torch.ones(2),
-                           'masks': torch.randint(2, (2, 450, 450))}
+                           'boxes': torch.randint(250, (2, 4), dtype=torch.float32),
+                           'image_id': torch.tensor([cur], dtype=torch.int64),
+                           'iscrowd': torch.zeros(2, dtype=torch.uint8),
+                           'labels': torch.ones(2, dtype=torch.int64),
+                           'masks': torch.randint(2, (2, 250, 250), dtype=torch.uint8)}
             target = (target_dict, )
             return tuple([img, target])
 
@@ -115,11 +115,12 @@ class DataloaderTestMock:
 
 
 mock_optim = MagicMock()
+# we need to return lr since it is required by metric logger
 mock_optim.param_groups.__getitem__.return_value = {'lr': torch.rand(1)}
 
 test_data = {
-    'dataloaders': {'train': DataloaderTestMock(10),
-                    'val': DataloaderTestMock(10)},
+    'dataloaders': {'train': DataloaderTestMock(5),
+                    'val': DataloaderTestMock(5)},
     'root': '/home',
     'model': ModelTestMock(),
     'criterion': None,
@@ -147,7 +148,7 @@ deserialize_data = {
 
 @patch('os.mkdir')
 @patch('torch.Tensor.backward', return_value=None)
-@patch('trainers.cycle_gan_trainer.CycleGanTrainer._serialize', return_value=None)
+@patch('trainers.mask_r_cnn_trainer.MaskRCNNTrainer._serialize', return_value=None)
 def test_train_run(self, _, __):
     trainer = MaskRCNNTrainer(dataloaders=test_data['dataloaders'], root=test_data['root'],
                               model=test_data['model'], criterion=test_data['criterion'],
@@ -156,15 +157,13 @@ def test_train_run(self, _, __):
     trainer.train()
 
 
-"""
 @patch('os.mkdir')
-@patch('trainers.cycle_gan_trainer.save_image')
 @patch('torch.Tensor.backward', return_value=None)
-@patch('trainers.cycle_gan_trainer.CycleGanTrainer._serialize', return_value=None)
+@patch('trainers.mask_r_cnn_trainer.MaskRCNNTrainer._serialize', return_value=None)
 @patch('torch.load', return_value=deserialize_data)
-def test_train_deserialize_and_run(self, _, __, ___, ____):
+def test_train_deserialize_and_run(self, _, __, ___):
     # Assuming we trained the model from epoch 1 to 5, then saved it and now want to restart
-    trainer = CycleGanTrainer(dataloaders=test_data['dataloaders'], root=test_data['root'],
+    trainer = MaskRCNNTrainer(dataloaders=test_data['dataloaders'], root=test_data['root'],
                               model=test_data['model'], criterion=test_data['criterion'],
                               optimizer=test_data['optimizer'], scheduler=test_data['scheduler'],
                               metrics=test_data['metrics'], epochs=test_data['epochs'])
@@ -172,5 +171,3 @@ def test_train_deserialize_and_run(self, _, __, ___, ____):
     assert trainer.start_epoch == 6
     assert trainer.epochs == test_data['epochs'] + 6
     trainer.train()
-
-"""

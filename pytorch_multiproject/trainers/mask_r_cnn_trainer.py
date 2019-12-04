@@ -31,13 +31,16 @@ class MaskRCNNTrainer(GenericTrainer):
         if self.scheduler is not None:
             self.logger.info(str(self.scheduler))
 
-        # in the current implementation we don't save the trained model
         results = {
             'best_performance': False
         }
 
+        # execute training and validation
         self.train_one_epoch(epoch)
         self.val_one_epoch(epoch)
+
+        # in the current implementation we save the trained model after each epoch
+        results.update({'best_performance': True})
 
         return results
 
