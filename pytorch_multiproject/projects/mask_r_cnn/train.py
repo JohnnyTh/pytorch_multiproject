@@ -54,12 +54,12 @@ def main(config, args):
 
     # construct an optimizer
     params = [p for p in model.parameters() if p.requires_grad]
-    optimizer = torch.optim.SGD(params, lr=0.005, momentum=0.9, weight_decay=0.0005)
+    optimizer = torch.optim.SGD(params, lr=config.get('lr', 0.005), momentum=0.9, weight_decay=0.0005)
     # and a learning rate scheduler
     lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=3, gamma=0.1)
 
     trainer = MaskRCNNTrainer(dataloaders=dataloaders, root=ROOT_DIR, model=model, criterion=None,
-                              optimizer=optimizer, scheduler=lr_scheduler, metrics={}, epochs=10,
+                              optimizer=optimizer, scheduler=lr_scheduler, metrics={}, epochs=config.get('epochs', 10),
                               save_dir=args.save_dir, checkpoint=args.checkpoint, change_lr=args.change_lr)
     trainer.train()
 
