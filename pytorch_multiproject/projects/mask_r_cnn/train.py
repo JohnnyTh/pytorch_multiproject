@@ -4,12 +4,12 @@ ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(os.path.dirname('__fi
 sys.path.insert(0, ROOT_DIR)
 import logging
 import torch
-import torchvision.transforms as transforms
 from models.mask_r_cnn_model import get_mask_r_cnn
 from data.mask_r_cnn_dataset import PennFudanDataset
 from trainers.mask_r_cnn_trainer import MaskRCNNTrainer
 from logger.logger import main_run, default_log_config
 from utils import collate_fn
+import data.custom_transforms as T
 
 # default configuration file with hyperparameters
 DEFAULT_CONFIG = 'train.json'
@@ -31,7 +31,7 @@ def main(config, args):
     masks = os.path.join(resources_dir, 'PedMasks')
 
     dataset = PennFudanDataset(root=resources_dir, data_paths=[images, masks], extensions=(('.png'), )*2,
-                               transforms=transforms.ToTensor())
+                               transforms=T.ToTensor())
 
     # split the dataset in train and test set
     indices = torch.randperm(len(dataset)).tolist()
