@@ -25,7 +25,7 @@ def main(config, args):
     if args.resource_dir is not None:
         resources_dir = args.resource_dir
     else:
-        resources_dir = os.path.join(ROOT_DIR, 'resources', config['resource_dir'])
+        resources_dir = os.path.join(ROOT_DIR, 'resources', config.get('resource_dir', 'PennFudanPed'))
 
     images = os.path.join(resources_dir, 'PNGImages')
     masks = os.path.join(resources_dir, 'PedMasks')
