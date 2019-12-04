@@ -56,7 +56,8 @@ class MaskRCNNTrainer(GenericTrainer):
         header = 'Epoch: [{}]'.format(epoch)
 
         lr_scheduler_warmup = None
-        if epoch == 0:
+        # the first epoch is 1 not 0
+        if epoch == 1:
             warmup_factor = 1. / 1000
             warmup_iters = min(1000, len(self.dataloaders[phase]) - 1)
             lr_scheduler_warmup = warmup_lr_scheduler(self.optimizer, warmup_iters, warmup_factor)
