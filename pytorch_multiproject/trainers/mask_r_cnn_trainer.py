@@ -16,6 +16,9 @@ class MaskRCNNTrainer(GenericTrainer):
     def __init__(self, dataloaders, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        # to supress debug messages from PIL module
+        self.pil_logger = logging.getLogger('PIL')
+        self.pil_logger.setLevel(logging.INFO)
         self.logger = logging.getLogger(os.path.basename(__file__))
         self.dataloaders = dataloaders
         # create directory for saving the results of val phase
