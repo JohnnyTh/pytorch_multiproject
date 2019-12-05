@@ -62,16 +62,13 @@ class MaskRCNNTrainer(GenericTrainer):
         return results
 
     def train_one_epoch(self, epoch):
-
-        self.logger.info('Starting train phase')
         # print training results every x iterations
         print_freq = 10
-        self.model.train()
         phase = 'train'
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-        # metric_logger = MetricLogger(delimiter="  ")
-        # metric_logger.add_meter('lr', SmoothedValue(window_size=1, fmt='{value:.6f}'))
-        # header = 'Epoch: [{}]'.format(epoch)
+        self.logger.info('Starting train phase')
+        self.model.train()
 
         lr_scheduler_warmup = None
         # the first epoch is 1 not 0
@@ -83,7 +80,6 @@ class MaskRCNNTrainer(GenericTrainer):
         t = tqdm(iter(self.dataloaders[phase]), leave=False, total=len(self.dataloaders[phase]))
         for idx, data in enumerate(t):
             images, targets = data
-            device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
             images = list(image.to(device) for image in images)
             targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
@@ -109,70 +105,40 @@ class MaskRCNNTrainer(GenericTrainer):
                 print_data = [epoch, self.epochs, self.optimizer.param_groups[0]["lr"], loss_value, loss_dict_str]
                 self.logger.info('Epoch {}/{}   optim_lr: {:.6f},   loss: {:.6f}    {}'.format(*print_data))
 
-            # metric_logger.update(loss=losses_reduced, **loss_dict_reduced)
-            # metric_logger.update(lr=self.optimizer.param_groups[0]["lr"])
-
         self.scheduler.step()
 
     @torch.no_grad()
     def val_one_epoch(self, epoch):
-        self.logger.info('Starting val phase')
-
-        self.model.eval()  # Set model to evaluation mode
         phase = 'val'
-
-        # n_threads = torch.get_num_threads()
-        # torch.set_num_threads(1)
         cpu_device = torch.device("cpu")
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-        # metric_logger = MetricLogger(delimiter="  ")
-        # header = 'Test:'
-
-        # coco = get_coco_api_from_dataset(self.dataloaders[phase].dataset)
-        # iou_types = self._get_iou_types(self.model)
-        # coco_evaluator = CocoEvaluator(coco, iou_types)
+        self.logger.info('Starting val phase')
+        self.model.eval()  # Set model to evaluation mode
 
         t = tqdm(iter(self.dataloaders[phase]), leave=False, total=len(self.dataloaders[phase]))
         for image, targets in t:
-            device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
             image = list(img.to(device) for img in image)
             targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
 
-            # torch.cuda.synchronize()
-            # model_time = time.time()
             outputs = self.model(image)
 
             outputs = [{k: v.to(cpu_device) for k, v in t.items()} for t in outputs]
-            # model_time = time.time() - model_time
-
             res = {target["image_id"].item(): output for target, output in zip(targets, outputs)}
 
-            # evaluator_time = time.time()
-            # coco_evaluator.update(res)
-            # evaluator_time = time.time() - evaluator_time
-            # metric_logger.update(model_time=model_time, evaluator_time=evaluator_time)
+            # collect the results from one iteration here
 
-        # gather the stats from all processes
-        # metric_logger.synchronize_between_processes()
-        # print("Averaged stats:", metric_logger)
-        # coco_evaluator.synchronize_between_processes()
-
-        # accumulate predictions from all images
-        # coco_evaluator.accumulate()
-        # coco_evaluator.summarize()
-        # torch.set_num_threads(n_threads)
+        # compute the mAP summary here
 
     @torch.no_grad()
     def test(self, num_masks=5):
-        self.model.eval()
-
-        # metric_logger = MetricLogger(delimiter="  ")
-        # header = 'Test:'
         cpu_device = torch.device("cpu")
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+        self.model.eval()
 
         t = tqdm(iter(self.dataloaders), leave=False, total=len(self.dataloaders))
         for idx, data in enumerate(t):
-            device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
             # data[0] - images, data[1] - targets
             image = list(img.to(device) for img in data[0])
 
