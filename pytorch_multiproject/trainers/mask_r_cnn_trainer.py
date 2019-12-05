@@ -105,8 +105,9 @@ class MaskRCNNTrainer(GenericTrainer):
                 lr_scheduler_warmup.step()
 
             if idx % print_freq == 0:
-                print_data = [epoch, self.epochs, self.optimizer.param_groups[0]["lr"], loss_value, loss_dict]
-                self.logger.info('Epoch {}/{}   optim_lr: {:.6f},   loss: {:.6f}    {:.6f}'.format(*print_data))
+                loss_dict_str = {key: '{:.6f}'.format(value) for key, value in loss_dict.items()}
+                print_data = [epoch, self.epochs, self.optimizer.param_groups[0]["lr"], loss_value, loss_dict_str]
+                self.logger.info('Epoch {}/{}   optim_lr: {:.6f},   loss: {:.6f}    {}'.format(*print_data))
 
             # metric_logger.update(loss=losses_reduced, **loss_dict_reduced)
             # metric_logger.update(lr=self.optimizer.param_groups[0]["lr"])
