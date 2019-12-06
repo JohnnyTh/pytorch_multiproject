@@ -6,12 +6,9 @@ import torch
 import torchvision
 from trainers.generic_trainer import GenericTrainer
 from utils import warmup_lr_scheduler
+from utils.detection_evaluator import DetectionEvaluator
 from torchvision.utils import save_image
 from tqdm import tqdm
-# import time
-# from utils import reduce_dict, MetricLogger, SmoothedValue
-# from utils.coco_utils import get_coco_api_from_dataset
-# from utils.coco_eval import CocoEvaluator
 
 
 class MaskRCNNTrainer(GenericTrainer):
@@ -110,23 +107,23 @@ class MaskRCNNTrainer(GenericTrainer):
     @torch.no_grad()
     def val_one_epoch(self, epoch):
         phase = 'val'
-        cpu_device = torch.device("cpu")
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        evaluator = DetectionEvaluator()
 
         self.logger.info('Starting val phase')
         self.model.eval()  # Set model to evaluation mode
 
         t = tqdm(iter(self.dataloaders[phase]), leave=False, total=len(self.dataloaders[phase]))
-        for image, targets in t:
-            image = list(img.to(device) for img in image)
-            targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
+        for images, targets in t:
+            images = list(image.to(device) for image in images)
+            outputs = self.model(images)
 
-            outputs = self.model(image)
-
-            outputs = [{k: v.to(cpu_device) for k, v in t.items()} for t in outputs]
-            res = {target["image_id"].item(): output for target, output in zip(targets, outputs)}
+            # move results for evaluation to cpu
+            targets = {k: v.to('cpu') for k, v in targets[0].items()}
+            outputs = {k: v.to('cpu') for k, v in outputs[0].items()}
 
             # collect the results from one iteration here
+            evaluator.accumulate(targets, outputs)
 
         # compute the mAP summary here
 
