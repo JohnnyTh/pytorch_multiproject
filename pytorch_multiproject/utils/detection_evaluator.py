@@ -26,40 +26,60 @@ class DetectionEvaluator:
 
         for score_type in score_types:
             if score_type == 'bbox':
-                self.bbox_score()
+                return self.bbox_score()
             elif score_type == 'mask':
-                self.mask_score()
+                return self.mask_score()
             else:
                 raise Exception('{} score type not supported'.format(score_type))
 
-    def bbox_score(self):
+    def bbox_score(self, iou_threshold=0.5, score_threshold=0.6):
 
+        metrics = {'true_positive': 0, 'false_positive': 0}
         for targets, predictions in self.data:
             bboxes_targets = targets['boxes']
-            # bboxes_t_areas = targets['area']
 
             bboxes_pred = predictions['boxes']
             bboxes_pred_score = predictions['scores']
 
             # apply non-max suppression to predictions
-            bboxes_pred_suppr, bbox_pred_scores_suppr = self.non_max_suppr_binary(bboxes_pred_score, bboxes_pred)
+            bboxes_pred_suppr, bbox_pred_scores_suppr = self.non_max_suppr_binary(bboxes_pred_score, bboxes_pred,
+                                                                                  score_threshold, iou_threshold)
 
             # since number of predicted boxes is usually different from the number of true boxes,
             # we can create all the possible combinations of true and predicted bbox coordinates for iou calculations
-            targets_predictions_comb = np.hstack([np.repeat(bboxes_targets, bboxes_pred_suppr.shape[0], axis=0),
-                                                  np.tile(bboxes_pred_suppr, (bboxes_targets.shape[0], 1))])
+            targets_predictions_comb = np.hstack([np.repeat(bboxes_pred_suppr, bboxes_targets.shape[0], axis=0),
+                                                  np.tile(bboxes_targets, (bboxes_pred_suppr.shape[0], 1))])
 
-            iou = self.intersection_over_union(targets_predictions_comb[:, :4], targets_predictions_comb[:, 4:])
+            self.logger.debug(str(targets_predictions_comb))
+            iou = self.batch_iou(targets_predictions_comb[:, :4], targets_predictions_comb[:, 4:])
 
+            self.logger.debug(str(iou))
+            iou = np.vsplit(iou.reshape(bboxes_pred_suppr.shape[0], -1), bboxes_pred_suppr.shape[0])
+            self.logger.debug(str(iou))
+
+            # get maximum iou score for each prediction made
+            max_score = [i.max() for i in iou]
+
+            self.logger.debug(str(max_score))
+            self.logger.debug('\n\n')
+
+            # if prediction scores > threshold - true positive
+            for prediction_score in max_score:
+                if prediction_score > iou_threshold:
+                    metrics['true_positive'] += 1
+                else:
+                    metrics['false_positive'] += 1
+        precision = metrics['true_positive'] / (metrics['true_positive'] + metrics['false_positive'])
+        return precision
 
     def mask_score(self):
         pass
 
-    def non_max_suppr_binary(self, bboxes_pred_score, bboxes_pred, base_threshold=0.6):
+    def non_max_suppr_binary(self, bboxes_pred_score, bboxes_pred, score_threshold, iou_threshold):
         # binary classification version of non-max suppression
 
         # firstly we discard all bbox predictions where class prob < base_treshold
-        selected_idx = np.argwhere(bboxes_pred_score > base_threshold).flatten()
+        selected_idx = np.argwhere(bboxes_pred_score > score_threshold).flatten()
         selected_bboxes = bboxes_pred[selected_idx]
         selected_scores = bboxes_pred_score[selected_idx]
 
@@ -86,7 +106,7 @@ class DetectionEvaluator:
 
                 for idx, remain_box in enumerate(selected_bboxes):
                     iou = self.intersection_over_union(top_bbox, remain_box)
-                    if iou > 0.5:
+                    if iou > iou_threshold:
                         duplicate_boxes_idx.append(idx)
 
                 # drop duplicate boxes with high intersection if any are found
