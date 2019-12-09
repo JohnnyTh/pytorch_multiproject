@@ -36,13 +36,13 @@ class DetectionEvaluator:
 
         for targets, predictions in self.data:
             bboxes_targets = targets['boxes']
-            bboxes_t_areas = targets['area']
+            # bboxes_t_areas = targets['area']
 
             bboxes_pred = predictions['boxes']
             bboxes_pred_score = predictions['scores']
 
             # apply non-max suppression to predictions
-            bboxes_pred_suppr = self.non_max_suppr_binary(bboxes_pred_score, bboxes_pred)
+            bboxes_pred_suppr, bbox_pred_scores_suppr = self.non_max_suppr_binary(bboxes_pred_score, bboxes_pred)
 
             # compute bounding box scores in comparison with
 
@@ -57,15 +57,19 @@ class DetectionEvaluator:
         selected_bboxes = bboxes_pred[selected_idx]
         selected_scores = bboxes_pred_score[selected_idx]
 
-        out = []
+        out_bboxes = []
+        out_scores = []
         # continue iterations until the list of scores is depleted
         while len(selected_scores) > 0:
             highest_score_idx = np.argmax(selected_scores)
-            selected_scores = np.delete(selected_scores, highest_score_idx)
 
+            top_score = selected_scores[highest_score_idx]
             top_bbox = selected_bboxes[highest_score_idx]
+
+            selected_scores = np.delete(selected_scores, highest_score_idx)
             selected_bboxes = np.delete(selected_bboxes, highest_score_idx, axis=0)
 
+            # to prevent selected_bboxes matrix from collapsing into a vector
             if len(selected_bboxes.shape) == 1:
                 selected_bboxes = np.expand_dims(selected_bboxes, 0)
 
@@ -73,19 +77,23 @@ class DetectionEvaluator:
             # since there are no items left to compare it against
             if len(selected_scores) > 0:
                 duplicate_boxes_idx = []
+
                 for idx, remain_box in enumerate(selected_bboxes):
                     iou = self.intersection_over_union(top_bbox, remain_box)
                     if iou > 0.5:
                         duplicate_boxes_idx.append(idx)
+
                 # drop duplicate boxes with high intersection if any are found
                 selected_scores = np.delete(selected_scores, duplicate_boxes_idx)
                 selected_bboxes = np.delete(selected_bboxes, duplicate_boxes_idx, axis=0)
 
-            out.append(top_bbox)
+            out_bboxes.append(top_bbox)
+            out_scores.append(top_score)
 
         # stack the collected results
-        res = np.stack(out)
-        return res
+        res_bbox = np.stack(out_bboxes)
+        res_scores = np.stack(out_scores)
+        return res_bbox, res_scores
 
     @staticmethod
     def intersection_over_union(bbox_1, bbox_2):
