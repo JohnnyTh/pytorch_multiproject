@@ -24,6 +24,13 @@ iou = {'1_2': 16/99,
        '5_1': 6/94,
        '6_7': 5/36}
 
+batched_target = np.array([test_bboxes['box_1'], test_bboxes['box_4'], test_bboxes['box_6']])
+batched_pred = np.array([test_bboxes['box_2'], test_bboxes['box_3'], test_bboxes['box_5'], test_bboxes['box_7']])
+batched_iou = np.array([[16/99], [0], [6/94], [0], [0], [10/99], [0], [0], [0], [0], [0], [5/36]])
+
+targets_predictions_comb = np.hstack([np.repeat(batched_target, batched_pred.shape[0], axis=0),
+                                      np.tile(batched_pred, (batched_target.shape[0], 1))])
+
 
 def test_iou():
     test_evaluator = DetectionEvaluator()
@@ -32,3 +39,8 @@ def test_iou():
     assert test_evaluator.intersection_over_union(test_bboxes['box_4'], test_bboxes['box_3']) == iou['4_3']
     assert test_evaluator.intersection_over_union(test_bboxes['box_5'], test_bboxes['box_1']) == iou['5_1']
     assert test_evaluator.intersection_over_union(test_bboxes['box_6'], test_bboxes['box_7']) == iou['6_7']
+
+
+def test_iou_batched():
+    test_evaluator = DetectionEvaluator()
+    assert test_evaluator.batch_iou(targets_predictions_comb[:, :4], targets_predictions_comb[:, 4:]).all() == batched_iou.all()

@@ -44,7 +44,13 @@ class DetectionEvaluator:
             # apply non-max suppression to predictions
             bboxes_pred_suppr, bbox_pred_scores_suppr = self.non_max_suppr_binary(bboxes_pred_score, bboxes_pred)
 
-            # compute bounding box scores in comparison with
+            # since number of predicted boxes is usually different from the number of true boxes,
+            # we can create all the possible combinations of true and predicted bbox coordinates for iou calculations
+            targets_predictions_comb = np.hstack([np.repeat(bboxes_targets, bboxes_pred_suppr.shape[0], axis=0),
+                                                  np.tile(bboxes_pred_suppr, (bboxes_targets.shape[0], 1))])
+
+            iou = self.intersection_over_union(targets_predictions_comb[:, :4], targets_predictions_comb[:, 4:])
+
 
     def mask_score(self):
         pass
@@ -117,6 +123,37 @@ class DetectionEvaluator:
             return 0.0
 
         intersect_area = (x_right - x_left + 1) * (y_bottom - y_top + 1)
+        bbox_1_area = (bbox_1_x1 - bbox_1_x0 + 1) * (bbox_1_y1 - bbox_1_y0 + 1)
+        bbox_2_area = (bbox_2_x1 - bbox_2_x0 + 1) * (bbox_2_y1 - bbox_2_y0 + 1)
+
+        iou = intersect_area / (bbox_1_area + bbox_2_area - intersect_area)
+        return iou
+
+    @staticmethod
+    def batch_iou(bbox_array_1, bbox_array_2):
+        bbox_1_x0 = bbox_array_1[:, 0]
+        bbox_1_y0 = bbox_array_1[:, 1]
+        bbox_1_x1 = bbox_array_1[:, 2]
+        bbox_1_y1 = bbox_array_1[:, 3]
+
+        bbox_2_x0 = bbox_array_2[:, 0]
+        bbox_2_y0 = bbox_array_2[:, 1]
+        bbox_2_x1 = bbox_array_2[:, 2]
+        bbox_2_y1 = bbox_array_2[:, 3]
+
+        # determine the coordinates of the intersection rectangle
+        x_left = np.maximum(bbox_1_x0, bbox_2_x0)
+        y_top = np.maximum(bbox_1_y0, bbox_2_y0)
+        x_right = np.minimum(bbox_1_x1, bbox_2_x1)
+        y_bottom = np.minimum(bbox_1_y1, bbox_2_y1)
+
+        width = x_right - x_left + 1
+        height = y_bottom - y_top + 1
+
+        width[width < 0] = 0
+        height[height < 0] = 0
+
+        intersect_area = height * width
         bbox_1_area = (bbox_1_x1 - bbox_1_x0 + 1) * (bbox_1_y1 - bbox_1_y0 + 1)
         bbox_2_area = (bbox_2_x1 - bbox_2_x0 + 1) * (bbox_2_y1 - bbox_2_y0 + 1)
 
