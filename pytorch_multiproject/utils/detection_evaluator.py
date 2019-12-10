@@ -50,25 +50,33 @@ class DetectionEvaluator:
             targets_predictions_comb = np.hstack([np.repeat(bboxes_pred_suppr, bboxes_targets.shape[0], axis=0),
                                                   np.tile(bboxes_targets, (bboxes_pred_suppr.shape[0], 1))])
 
-            self.logger.debug(str(targets_predictions_comb))
+            self.logger.debug(targets_predictions_comb)
             iou = self.batch_iou(targets_predictions_comb[:, :4], targets_predictions_comb[:, 4:])
 
-            self.logger.debug(str(iou))
-            iou = np.vsplit(iou.reshape(bboxes_pred_suppr.shape[0], -1), bboxes_pred_suppr.shape[0])
-            self.logger.debug(str(iou))
+            self.logger.debug(iou)
+            # rearrange iou into separate groups - one group for each prediction
+            # corresponding to ious of each predictions with all the ground truth (or target) bboxes
+            iou = np.hsplit(iou, bboxes_pred_suppr.shape[0])
+            self.logger.debug(iou)
 
-            # get maximum iou score for each prediction made
-            max_score = [i.max() for i in iou]
+            # get maximum iou score index for each prediction made
+            max_score_idx = [iou_group.argmax() for iou_group in iou]
 
-            self.logger.debug(str(max_score))
-            self.logger.debug('\n\n')
+            self.logger.debug(max_score_idx)
 
             # if prediction scores > threshold - true positive
-            for prediction_score in max_score:
-                if prediction_score > iou_threshold:
+            # to make sure that more than one predictions on the same ground truth
+            # bbox with iou > threshold count as false positives, we add guessed_bboxes list that stores all
+            # the indices of groudn truth bboxes that have already been guessed.
+            guessed_bboxes = []
+            for idx, iou_group in zip(max_score_idx, iou):
+                if iou_group[idx] > iou_threshold and idx not in guessed_bboxes:
+                    guessed_bboxes.append(idx)
                     metrics['true_positive'] += 1
                 else:
                     metrics['false_positive'] += 1
+            self.logger.debug('guessed bboxes: '+str(guessed_bboxes))
+        self.logger.debug('\n\n')
         precision = metrics['true_positive'] / (metrics['true_positive'] + metrics['false_positive'])
         return precision
 
