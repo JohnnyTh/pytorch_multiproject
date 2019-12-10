@@ -1,7 +1,7 @@
-from PIL import Image
+import os
 import numpy as np
+from PIL import Image
 from random import randrange
-
 
 class MaskSaver:
 
@@ -45,7 +45,8 @@ class MaskSaver:
                 mask_prep = Image.fromarray(mask)
                 # combine the mask and the image
                 image_prep = Image.alpha_composite(image_prep, mask_prep)
-            image_prep.save('Test_img_mask_{}_{}'.format(epoch, idx))
+            save_addr = os.path.join(self.save_dir, 'Test_img_mask_{}_{}'.format(epoch, idx))
+            image_prep.save(save_addr, 'PNG')
 
     @staticmethod
     def generate_color_scheme():

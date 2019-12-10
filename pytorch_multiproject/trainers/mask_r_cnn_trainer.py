@@ -124,7 +124,7 @@ class MaskRCNNTrainer(GenericTrainer):
             targets = {k: v.to('cpu') for k, v in targets[0].items()}
             outputs = {k: v.to('cpu') for k, v in outputs[0].items()}
 
-            save_img = images[0].mul(255).permute(1, 2, 0).byte().numpy()
+            save_img = images[0].mul(255).permute(1, 2, 0).byte().cpu().numpy()
             masks = outputs['masks'].mul(255).byte().numpy()
 
             # collect the results from one iteration here
