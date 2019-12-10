@@ -36,7 +36,7 @@ class DetectionEvaluator:
 
         metrics = {'true_positive': 0, 'false_positive': 0}
         for targets, predictions in self.data:
-            bboxes_targets = targets['boxes']
+            bboxes_targets = targets['boxes'].numpy()
 
             bboxes_pred = predictions['boxes']
             bboxes_pred_score = predictions['scores']

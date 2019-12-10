@@ -126,6 +126,9 @@ class MaskRCNNTrainer(GenericTrainer):
             evaluator.accumulate(targets, outputs)
 
         # compute the mAP summary here
+        iou_threshold = 0.5
+        mean_avg_precision = evaluator.bbox_score(iou_threshold=iou_threshold)
+        self.logger.info('Mean average precision with IoU threshold {}: {}'.format(iou_threshold, mean_avg_precision))
 
     @torch.no_grad()
     def test(self, num_masks=5):
