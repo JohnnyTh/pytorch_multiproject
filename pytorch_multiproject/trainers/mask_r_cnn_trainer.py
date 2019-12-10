@@ -7,6 +7,7 @@ import torchvision
 from trainers.generic_trainer import GenericTrainer
 from utils import warmup_lr_scheduler
 from utils.detection_evaluator import DetectionEvaluator
+from utils.mask_saver import MaskSaver
 from torchvision.utils import save_image
 from tqdm import tqdm
 
@@ -109,6 +110,7 @@ class MaskRCNNTrainer(GenericTrainer):
         phase = 'val'
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         evaluator = DetectionEvaluator()
+        mask_saver = MaskSaver(save_dir=self.save_dir_test)
 
         self.logger.info('Starting val phase')
         self.model.eval()  # Set model to evaluation mode
@@ -122,13 +124,21 @@ class MaskRCNNTrainer(GenericTrainer):
             targets = {k: v.to('cpu') for k, v in targets[0].items()}
             outputs = {k: v.to('cpu') for k, v in outputs[0].items()}
 
+            save_img = images[0].mul(255).permute(1, 2, 0).byte().numpy()
+            masks = outputs['masks'].mul(255).byte().numpy()
+
             # collect the results from one iteration here
             evaluator.accumulate(targets, outputs)
+            mask_saver.accumulate(save_img, masks)
 
         # compute the mAP summary here
         iou_threshold = 0.5
         mean_avg_precision = evaluator.bbox_score(iou_threshold=iou_threshold)
         self.logger.info('Mean average precision with IoU threshold {}: {}'.format(iou_threshold, mean_avg_precision))
+
+        # generate and save masked images
+        mask_saver.generate_masked_img(mask_draw_precision=0.4, opacity=0.4)
+        self.logger.info('Masked image have been saved to {}'.format(self.save_dir_test))
 
     @torch.no_grad()
     def test(self, num_masks=5):

@@ -1,7 +1,7 @@
 import os
 import logging
 import numpy as np
-
+from random import sample
 
 class DetectionEvaluator:
 
@@ -67,7 +67,7 @@ class DetectionEvaluator:
             # if prediction scores > threshold - true positive
             # to make sure that more than one predictions on the same ground truth
             # bbox with iou > threshold count as false positives, we add guessed_bboxes list that stores all
-            # the indices of groudn truth bboxes that have already been guessed.
+            # the indices of ground truth bboxes that have already been guessed.
             guessed_bboxes = []
             for idx, iou_group in zip(max_score_idx, iou):
                 if iou_group[idx] > iou_threshold and idx not in guessed_bboxes:
