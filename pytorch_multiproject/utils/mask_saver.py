@@ -20,7 +20,7 @@ class MaskSaver:
                 position = randrange(self.bufffer_size)
                 self.data[position] = [image, mask]
 
-    def generate_masked_img(self, mask_draw_precision=0.4, opacity=0.4):
+    def generate_masked_img(self, epoch, mask_draw_precision=0.4, opacity=0.4):
         for idx, data in enumerate(self.data):
             image, masks = data
             image_prep = Image.fromarray(image)
@@ -45,7 +45,7 @@ class MaskSaver:
                 mask_prep = Image.fromarray(mask)
                 # combine the mask and the image
                 image_prep = Image.alpha_composite(image_prep, mask_prep)
-            image_prep.save('Test_img_mask_{}'.format(idx))
+            image_prep.save('Test_img_mask_{}_{}'.format(epoch, idx))
 
     @staticmethod
     def generate_color_scheme():

@@ -137,8 +137,8 @@ class MaskRCNNTrainer(GenericTrainer):
         self.logger.info('Mean average precision with IoU threshold {}: {}'.format(iou_threshold, mean_avg_precision))
 
         # generate and save masked images
-        mask_saver.generate_masked_img(mask_draw_precision=0.4, opacity=0.4)
-        self.logger.info('Masked image have been saved to {}'.format(self.save_dir_test))
+        mask_saver.generate_masked_img(epoch=epoch, mask_draw_precision=0.4, opacity=0.4)
+        self.logger.info('Masked images have been saved to {}'.format(self.save_dir_test))
 
     @torch.no_grad()
     def test(self, num_masks=5):
