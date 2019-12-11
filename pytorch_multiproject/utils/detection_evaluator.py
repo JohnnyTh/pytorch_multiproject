@@ -80,7 +80,6 @@ class DetectionEvaluator:
             self.logger.debug('collected_tps:'+str(true_positive))
             self.logger.debug('collected_fps:' + str(false_positive))
 
-
         accum_tp = np.cumsum(true_positive)
         accum_fp = np.cumsum(false_positive)
 

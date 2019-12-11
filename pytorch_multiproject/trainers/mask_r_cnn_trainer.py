@@ -133,8 +133,12 @@ class MaskRCNNTrainer(GenericTrainer):
 
         # compute the mAP summary here
         iou_threshold = 0.5
-        mean_avg_precision = evaluator.bbox_score(iou_threshold=iou_threshold)
-        self.logger.info('Mean average precision with IoU threshold {}: {}'.format(iou_threshold, mean_avg_precision))
+        non_max_iou_thresh = 0.4
+        score_thresh = 0.6
+        avg_precision = evaluator.bbox_score(iou_threshold=iou_threshold,
+                                             non_max_iou_thresh=non_max_iou_thresh,
+                                             score_threshold=score_thresh)
+        self.logger.info('Average precision with IoU threshold {}: {}'.format(iou_threshold, avg_precision))
 
         # generate and save masked images
         mask_saver.generate_masked_img(epoch=epoch, mask_draw_precision=0.4, opacity=0.4)
