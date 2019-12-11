@@ -116,7 +116,7 @@ class DataloaderTestMock:
 
 mock_optim = MagicMock()
 # we need to return lr since it is required by metric logger
-mock_optim.param_groups.__getitem__.return_value = {'lr': torch.rand(1)}
+mock_optim.param_groups.__getitem__.return_value = {'lr': torch.rand(1).item()}
 
 test_data = {
     'dataloaders': {'train': DataloaderTestMock(5),
@@ -150,7 +150,8 @@ deserialize_data = {
 @patch('trainers.mask_r_cnn_trainer.warmup_lr_scheduler')
 @patch('torch.Tensor.backward', return_value=None)
 @patch('trainers.mask_r_cnn_trainer.MaskRCNNTrainer._serialize', return_value=None)
-def test_train_run(self, _, __, ___):
+@patch('trainers.mask_r_cnn_trainer.MaskSaver')
+def test_train_run(self, _, __, ___, ____):
     trainer = MaskRCNNTrainer(dataloaders=test_data['dataloaders'], root=test_data['root'],
                               model=test_data['model'], criterion=test_data['criterion'],
                               optimizer=test_data['optimizer'], scheduler=test_data['scheduler'],
@@ -162,7 +163,8 @@ def test_train_run(self, _, __, ___):
 @patch('torch.Tensor.backward', return_value=None)
 @patch('trainers.mask_r_cnn_trainer.MaskRCNNTrainer._serialize', return_value=None)
 @patch('torch.load', return_value=deserialize_data)
-def test_train_deserialize_and_run(self, _, __, ___):
+@patch('trainers.mask_r_cnn_trainer.MaskSaver')
+def test_train_deserialize_and_run(self, _, __, ___, ____):
     # Assuming we trained the model from epoch 1 to 5, then saved it and now want to restart
     trainer = MaskRCNNTrainer(dataloaders=test_data['dataloaders'], root=test_data['root'],
                               model=test_data['model'], criterion=test_data['criterion'],
