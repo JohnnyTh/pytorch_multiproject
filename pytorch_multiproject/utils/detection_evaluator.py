@@ -3,6 +3,7 @@ import logging
 import numpy as np
 from random import sample
 
+
 class DetectionEvaluator:
 
     def __init__(self):
@@ -20,65 +21,70 @@ class DetectionEvaluator:
         """
         self.data.append([targets, predictions])
 
-    def calculate_scores(self, score_types=None):
-        if score_types is None:
-            score_types = ['bbox']
+    def bbox_score(self, iou_threshold=0.5, non_max_iou_thresh=0.5, score_threshold=0.6):
 
-        for score_type in score_types:
-            if score_type == 'bbox':
-                return self.bbox_score()
-            elif score_type == 'mask':
-                return self.mask_score()
-            else:
-                raise Exception('{} score type not supported'.format(score_type))
+        true_positive = np.array([])
+        false_positive = np.array([])
+        num_ground_truths = 0
 
-    def bbox_score(self, iou_threshold=0.5, score_threshold=0.6):
-
-        metrics = {'true_positive': 0, 'false_positive': 0}
         for targets, predictions in self.data:
-            bboxes_targets = targets['boxes'].numpy()
+            bboxes_targets = targets['boxes']
+            if not isinstance(bboxes_targets, np.ndarray):
+                bboxes_targets = bboxes_targets.numpy()
 
             bboxes_pred = predictions['boxes']
             bboxes_pred_score = predictions['scores']
 
             # apply non-max suppression to predictions
             bboxes_pred_suppr, bbox_pred_scores_suppr = self.non_max_suppr_binary(bboxes_pred_score, bboxes_pred,
-                                                                                  score_threshold, iou_threshold)
+                                                                                  score_threshold, non_max_iou_thresh)
 
-            # since number of predicted boxes is usually different from the number of true boxes,
-            # we can create all the possible combinations of true and predicted bbox coordinates for iou calculations
+            # since number of predicted boxes is usually different from the number of true boxes, we need
+            # to create all the possible combinations of true and predicted bbox coordinates for iou calculations
             targets_predictions_comb = np.hstack([np.repeat(bboxes_pred_suppr, bboxes_targets.shape[0], axis=0),
                                                   np.tile(bboxes_targets, (bboxes_pred_suppr.shape[0], 1))])
 
             self.logger.debug(targets_predictions_comb)
+            # compute ious for all the possible combinations of predcitions and targets
             iou = self.batch_iou(targets_predictions_comb[:, :4], targets_predictions_comb[:, 4:])
 
             self.logger.debug(iou)
             # rearrange iou into separate groups - one group for each prediction
-            # corresponding to ious of each predictions with all the ground truth (or target) bboxes
+            # corresponding to ious of each prediction with all the ground truth (or target) bboxes
             iou = np.hsplit(iou, bboxes_pred_suppr.shape[0])
             self.logger.debug(iou)
 
-            # get maximum iou score index for each prediction made
-            max_score_idx = [iou_group.argmax() for iou_group in iou]
+            # intermediate containers to accumulate true and false positives during one iteration
+            # note that length of container corresponds to the number of predictions
+            true_pos_iter = np.zeros(len(iou))
+            false_pos_iter = np.zeros(len(iou))
 
-            self.logger.debug(max_score_idx)
+            # collect the number of ground truths in each target - prediction pair for recall calculation
+            num_ground_truths += bboxes_targets.shape[0]
 
-            # if prediction scores > threshold - true positive
-            # to make sure that more than one predictions on the same ground truth
-            # bbox with iou > threshold count as false positives, we add guessed_bboxes list that stores all
-            # the indices of ground truth bboxes that have already been guessed.
             guessed_bboxes = []
-            for idx, iou_group in zip(max_score_idx, iou):
-                if iou_group[idx] > iou_threshold and idx not in guessed_bboxes:
-                    guessed_bboxes.append(idx)
-                    metrics['true_positive'] += 1
-                else:
-                    metrics['false_positive'] += 1
-            self.logger.debug('guessed bboxes: '+str(guessed_bboxes))
+            for group_idx, iou_group in enumerate(iou):
+                for target_idx, iou in enumerate(iou_group):
+                    if iou > iou_threshold and target_idx not in guessed_bboxes:
+                        guessed_bboxes.append(target_idx)
+                        true_pos_iter[group_idx] += 1
+                    else:
+                        false_pos_iter[group_idx] += 1
+
+            self.logger.debug('guessed bboxes: ' + str(guessed_bboxes))
+            true_positive = np.append(true_positive, true_pos_iter)
+            false_positive = np.append(false_positive, false_pos_iter)
+
+            self.logger.debug('collected_tps:'+str(true_positive))
+            self.logger.debug('collected_fps:' + str(false_positive))
         self.logger.debug('\n\n')
-        precision = metrics['true_positive'] / (metrics['true_positive'] + metrics['false_positive'])
-        return precision
+
+        accum_tp = np.cumsum(true_positive)
+        accum_fp = np.cumsum(false_positive)
+
+        precision = np.divide(accum_tp, (accum_tp + accum_fp))
+        recall = accum_tp / num_ground_truths
+        return precision, recall
 
     def mask_score(self):
         pass

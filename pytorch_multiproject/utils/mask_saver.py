@@ -3,6 +3,7 @@ import numpy as np
 from PIL import Image
 from random import randrange
 
+
 class MaskSaver:
 
     def __init__(self, save_dir, buffer_size=10, ):
