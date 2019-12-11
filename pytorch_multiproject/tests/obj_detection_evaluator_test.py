@@ -27,6 +27,12 @@ iou = {'1_2': 16/99,
        '5_1': 6/94,
        '6_7': 5/36}
 
+# precomputed average precision
+AP1 = (0.5-0) * 1
+AP2 = (0.75-0.5)*0.3333
+AP3 = (1-0.75)*0
+AP = AP1 + AP2 + AP3
+
 # targets, predictions
 evaluator_data = [[{'boxes': np.array([test_bboxes['box_1'],
                                        test_bboxes['box_8']])},
@@ -68,5 +74,5 @@ def test_iou_batched():
 def test_box_score(caplog):
     test_evaluator = DetectionEvaluator()
     test_evaluator.data = evaluator_data
-    out = test_evaluator.bbox_score(iou_threshold=0.12, score_threshold=0.6)
-    assert out == (2/6)
+    avg_precision = test_evaluator.bbox_score(iou_threshold=0.12, score_threshold=0.6)
+    assert round(avg_precision, 4) == round(AP, 4)
