@@ -55,13 +55,15 @@ class DetectionEvaluator:
             self.logger.debug(iou)
 
             # intermediate containers to accumulate true and false positives during one iteration
-            # note that length of container corresponds to the number of predictions
+            # note that length of one container corresponds to the number of predictions
             true_pos_iter = np.zeros(len(iou))
             false_pos_iter = np.zeros(len(iou))
 
             # collect the number of ground truths in each target - prediction pair for recall calculation
             num_ground_truths += bboxes_targets.shape[0]
 
+            # iterate trough groups in calculated ious. One group corresponds to ious of one prediction with all
+            # the targets.
             guessed_bboxes = []
             for group_idx, iou_group in enumerate(iou):
                 for target_idx, iou in enumerate(iou_group):
@@ -77,14 +79,20 @@ class DetectionEvaluator:
 
             self.logger.debug('collected_tps:'+str(true_positive))
             self.logger.debug('collected_fps:' + str(false_positive))
-        self.logger.debug('\n\n')
+
 
         accum_tp = np.cumsum(true_positive)
         accum_fp = np.cumsum(false_positive)
 
         precision = np.divide(accum_tp, (accum_tp + accum_fp))
         recall = accum_tp / num_ground_truths
-        return precision, recall
+        self.logger.debug('Precision :'+str(precision))
+        self.logger.debug('Recall :'+str(recall))
+
+        avg_precision = self.get_average_precision(precision, recall)
+
+        self.logger.debug('\n\n')
+        return avg_precision
 
     def mask_score(self):
         pass
@@ -134,6 +142,37 @@ class DetectionEvaluator:
         res_bbox = np.stack(out_bboxes)
         res_scores = np.stack(out_scores)
         return res_bbox, res_scores
+
+    @staticmethod
+    def get_average_precision(precision, recall):
+
+        m_precision = list()
+        m_precision.append(0)
+        [m_precision.append(value) for value in precision]
+        m_precision.append(0)
+
+        m_recall = list()
+        m_recall.append(0)
+        [m_recall.append(value) for value in recall]
+        m_recall.append(1)
+
+        # interpolate precision by going backwards and overwriting all encountered precision values
+        # with the largest found value
+        for i in range(len(m_precision) - 1, 0, -1):
+            m_precision[i - 1] = max(m_precision[i - 1], m_precision[i])
+
+        # locate indices of steps in recall value list (places where recall values change)
+        ii = []
+        for i in range(len(m_recall) - 1):
+            if m_recall[1:][i] != m_recall[0:-1][i]:
+                ii.append(i + 1)
+
+        # compute avg precision as an area of interpolated precision - recall squares
+        avg_precision = 0
+        for i in ii:
+            avg_precision = avg_precision + (m_recall[i] - m_recall[i - 1]) * m_precision[i]
+
+        return avg_precision
 
     @staticmethod
     def intersection_over_union(bbox_1, bbox_2):
