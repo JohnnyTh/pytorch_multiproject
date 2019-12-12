@@ -88,10 +88,10 @@ class DetectionEvaluator:
         self.logger.debug('Precision :'+str(precision))
         self.logger.debug('Recall :'+str(recall))
 
-        avg_precision = self.get_average_precision(precision, recall)
+        avg_precision, prec_interp, m_recall = self.get_average_precision(precision, recall)
 
         self.logger.debug('\n\n')
-        return avg_precision
+        return avg_precision, prec_interp, m_recall, precision, recall
 
     def mask_score(self):
         pass
@@ -161,17 +161,17 @@ class DetectionEvaluator:
             m_precision[i - 1] = max(m_precision[i - 1], m_precision[i])
 
         # locate indices of steps in recall value list (places where recall values change)
-        ii = []
+        recall_deltas_idx = []
         for i in range(len(m_recall) - 1):
             if m_recall[1:][i] != m_recall[0:-1][i]:
-                ii.append(i + 1)
+                recall_deltas_idx.append(i + 1)
 
         # compute avg precision as an area of interpolated precision - recall squares
         avg_precision = 0
-        for i in ii:
+        for i in recall_deltas_idx:
             avg_precision = avg_precision + (m_recall[i] - m_recall[i - 1]) * m_precision[i]
 
-        return avg_precision
+        return avg_precision, m_precision, m_recall
 
     @staticmethod
     def intersection_over_union(bbox_1, bbox_2):
