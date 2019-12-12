@@ -56,7 +56,7 @@ def main(config, args):
     trainer = MaskRCNNTrainer(dataloaders=data_loader_test, root=ROOT_DIR, model=model, criterion=None,
                               optimizer=optimizer, scheduler=lr_scheduler, metrics={}, epochs=1,
                               save_dir=args.save_dir, checkpoint=args.checkpoint, change_lr=args.change_lr)
-    trainer.test()
+    trainer.val_one_epoch(epoch=1)
 
 
 if __name__ == '__main__':

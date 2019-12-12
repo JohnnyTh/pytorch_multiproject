@@ -29,6 +29,7 @@ class MaskSaver:
             if idx_group.dtype != int:
                 idx_group = idx_group.astype(int)
             masks = masks[idx_group]
+
             for mask in masks:
                 colors = self.generate_color_scheme()
                 # firstly generate 3 color channels and alpha channel
