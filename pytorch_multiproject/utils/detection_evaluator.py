@@ -75,9 +75,9 @@ class DetectionEvaluator:
             # the targets.
             guessed_bboxes = []
             for group_idx, iou_group in enumerate(iou):
-                for target_idx, iou in enumerate(iou_group):
 
-                    guessed = False
+                guessed = False
+                for target_idx, iou in enumerate(iou_group):
                     if iou > iou_threshold and target_idx not in guessed_bboxes:
                         guessed_bboxes.append(target_idx)
                         true_pos_iter[group_idx] += 1
