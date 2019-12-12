@@ -106,10 +106,10 @@ class MaskRCNNTrainer(GenericTrainer):
         self.scheduler.step()
 
     @torch.no_grad()
-    def val_one_epoch(self, epoch):
+    def val_one_epoch(self, epoch, draw_bbox=True):
         phase = 'val'
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        evaluator = DetectionEvaluator()
+        evaluator = DetectionEvaluator(save_dir=self.save_dir_test)
         mask_saver = MaskSaver(save_dir=self.save_dir_test)
 
         self.logger.info('Starting val phase')
@@ -128,7 +128,7 @@ class MaskRCNNTrainer(GenericTrainer):
             masks = outputs['masks'].mul(255).byte().numpy()
 
             # collect the results from one iteration here
-            evaluator.accumulate(targets, outputs)
+            evaluator.accumulate(save_img, targets, outputs)
             mask_saver.accumulate(save_img, masks)
 
         # compute the mAP summary here
@@ -139,6 +139,9 @@ class MaskRCNNTrainer(GenericTrainer):
             iou_threshold=iou_threshold,
             non_max_iou_thresh=non_max_iou_thresh,
             score_threshold=score_thresh)
+
+        if draw_bbox:
+            evaluator.draw_bbox(epoch=epoch)
 
         self.logger.info('Average precision with IoU threshold {}: {}'.format(iou_threshold, avg_precision))
         self.logger.info('Accumulated precision: {}'.format(precision))

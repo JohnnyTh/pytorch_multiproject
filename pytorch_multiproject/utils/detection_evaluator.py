@@ -1,25 +1,28 @@
 import os
 import logging
 import numpy as np
-from random import sample
+from PIL import Image
+from PIL import ImageDraw
 
 
 class DetectionEvaluator:
 
-    def __init__(self):
+    def __init__(self, save_dir):
         """
            To calculate the object detection scores, we accumulate ground truth labels (targets) and
            predictions of our model during the val phase, then compute the necessary metrics (e.g. bounding box mAP)
         """
         self.logger = logging.getLogger(os.path.basename(__file__))
         self.data = []
+        self.bboxes_suppressed = None
+        self.save_dir = save_dir
 
-    def accumulate(self, targets, predictions):
+    def accumulate(self, save_img, targets, predictions):
         """
         targets (dict):
         predictions (dict):
         """
-        self.data.append([targets, predictions])
+        self.data.append([save_img, targets, predictions])
 
     def bbox_score(self, iou_threshold=0.5, non_max_iou_thresh=0.5, score_threshold=0.6):
 
@@ -28,7 +31,7 @@ class DetectionEvaluator:
         false_positive = np.array([])
         num_ground_truths = 0
 
-        for targets, predictions in self.data:
+        for _, targets, predictions in self.data:
             bboxes_targets = targets['boxes']
             bboxes_pred = predictions['boxes']
             bboxes_pred_score = predictions['scores']
@@ -43,6 +46,7 @@ class DetectionEvaluator:
             # apply non-max suppression to predictions
             bboxes_pred_suppr, _, idx = self.non_max_suppr_binary(bboxes_pred_score, bboxes_pred,
                                                                   score_threshold, non_max_iou_thresh)
+            self.bboxes_suppressed = bboxes_pred_suppr
             remaning_idx.append(idx)
             # since number of predicted boxes is usually different from the number of true boxes, we need
             # to create all the possible combinations of true and predicted bbox coordinates for iou calculations
@@ -97,6 +101,29 @@ class DetectionEvaluator:
 
         self.logger.debug('\n\n')
         return avg_precision, precision[-1], recall[-1], remaning_idx
+
+    def draw_bbox(self, epoch):
+
+        i = 0
+        for data, pred_bboxes in zip(self.data, self.bboxes_suppressed):
+            image, targets, _ = data
+            bboxes_targets = targets['boxes']
+
+            if not isinstance(bboxes_targets, np.ndarray):
+                bboxes_targets = bboxes_targets.numpy()
+
+            image_prep = Image.fromarray(image)
+            draw = ImageDraw.Draw(image_prep)
+
+            for target_bbox in bboxes_targets:
+                draw.rectangle(target_bbox, fill='green')
+
+            for single_pred in pred_bboxes:
+                draw.rectangle(single_pred, fill='red')
+
+            save_addr = os.path.join(self.save_dir, 'Test_img_bbox_{}_{}'.format(epoch, i))
+            image_prep.save(save_addr, 'PNG')
+            i += 1
 
     def mask_score(self):
         pass

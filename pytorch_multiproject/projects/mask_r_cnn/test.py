@@ -36,7 +36,7 @@ def main(config, args):
 
     # split the dataset in train and test set
     indices = torch.randperm(len(dataset)).tolist()
-    dataset_test = torch.utils.data.Subset(dataset, indices[-50:])
+    dataset_test = torch.utils.data.Subset(dataset, indices[-20:])
 
     # define val dataloader
     data_loader_test = torch.utils.data.DataLoader(
