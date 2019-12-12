@@ -14,7 +14,7 @@ class DetectionEvaluator:
         """
         self.logger = logging.getLogger(os.path.basename(__file__))
         self.data = []
-        self.bboxes_suppressed = None
+        self.bboxes_suppressed = []
         self.save_dir = save_dir
 
     def accumulate(self, save_img, targets, predictions):
@@ -46,7 +46,7 @@ class DetectionEvaluator:
             # apply non-max suppression to predictions
             bboxes_pred_suppr, _, idx = self.non_max_suppr_binary(bboxes_pred_score, bboxes_pred,
                                                                   score_threshold, non_max_iou_thresh)
-            self.bboxes_suppressed = bboxes_pred_suppr
+            self.bboxes_suppressed.append(bboxes_pred_suppr)
             remaning_idx.append(idx)
             # since number of predicted boxes is usually different from the number of true boxes, we need
             # to create all the possible combinations of true and predicted bbox coordinates for iou calculations
@@ -76,10 +76,16 @@ class DetectionEvaluator:
             guessed_bboxes = []
             for group_idx, iou_group in enumerate(iou):
                 for target_idx, iou in enumerate(iou_group):
+
+                    guessed = False
                     if iou > iou_threshold and target_idx not in guessed_bboxes:
                         guessed_bboxes.append(target_idx)
                         true_pos_iter[group_idx] += 1
-                    else:
+                        guessed = True
+
+                    # if the prediction guessed no bboxes and we are at the end of the list
+                    # count it as fp
+                    if guessed is False and target_idx == (len(iou_group) - 1):
                         false_pos_iter[group_idx] += 1
 
             self.logger.debug('guessed bboxes: ' + str(guessed_bboxes))
@@ -116,12 +122,14 @@ class DetectionEvaluator:
             draw = ImageDraw.Draw(image_prep)
 
             for target_bbox in bboxes_targets:
-                draw.rectangle(target_bbox, fill='green')
+                draw.rectangle((tuple(target_bbox[:2]), tuple(target_bbox[2:])),
+                               outline='green')
 
             for single_pred in pred_bboxes:
-                draw.rectangle(single_pred, fill='red')
+                draw.rectangle((tuple(single_pred[:2]), tuple(single_pred[2:])),
+                               outline='red')
 
-            save_addr = os.path.join(self.save_dir, 'Test_img_bbox_{}_{}'.format(epoch, i))
+            save_addr = os.path.join(self.save_dir, 'Test_bbox_{}_{}'.format(epoch, i))
             image_prep.save(save_addr, 'PNG')
             i += 1
 
