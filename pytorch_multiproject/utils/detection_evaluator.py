@@ -30,11 +30,15 @@ class DetectionEvaluator:
 
         for targets, predictions in self.data:
             bboxes_targets = targets['boxes']
-            if not isinstance(bboxes_targets, np.ndarray):
-                bboxes_targets = bboxes_targets.numpy()
-
             bboxes_pred = predictions['boxes']
             bboxes_pred_score = predictions['scores']
+
+            if not isinstance(bboxes_targets, np.ndarray):
+                bboxes_targets = bboxes_targets.numpy()
+            if not isinstance(bboxes_pred, np.ndarray):
+                bboxes_pred = bboxes_pred.numpy()
+            if not isinstance(bboxes_pred_score, np.ndarray):
+                bboxes_pred_score = bboxes_pred_score.numpy()
 
             # apply non-max suppression to predictions
             bboxes_pred_suppr, _, idx = self.non_max_suppr_binary(bboxes_pred_score, bboxes_pred,
@@ -100,7 +104,7 @@ class DetectionEvaluator:
     def non_max_suppr_binary(self, bboxes_pred_score, bboxes_pred, score_threshold, iou_threshold):
         # binary classification version of non-max suppression
 
-        remaining_idx = np.indices(bboxes_pred_score.shape)
+        remaining_idx = np.arange(bboxes_pred_score.shape[0])
         # firstly we discard all bbox predictions where class prob < base_treshold
         selected_idx = np.argwhere(bboxes_pred_score > score_threshold).flatten()
         selected_bboxes = bboxes_pred[selected_idx]
@@ -142,8 +146,8 @@ class DetectionEvaluator:
                 selected_bboxes = np.delete(selected_bboxes, duplicate_boxes_idx, axis=0)
                 remaining_idx = np.delete(remaining_idx, duplicate_boxes_idx)
 
-            out_bboxes = np.append(out_bboxes, top_bbox)
             out_scores = np.append(out_scores, top_score)
+            out_bboxes = np.append(out_bboxes, top_bbox, axis=0)
             out_idx = np.append(out_idx, top_idx)
 
         return out_bboxes, out_scores, out_idx
