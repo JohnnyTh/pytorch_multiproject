@@ -36,12 +36,15 @@ class MaskSaver:
                 mask = np.repeat(mask, 4, axis=0)
                 # replace ones at each color channel with respective color if mask probability > mask_draw_precision
                 # and zero out the values below mask_draw_precision
-                for color in range(len(colors)):
-                    mask[color][mask[color] > int(255*mask_draw_precision)] = colors[color]
-                    mask[color][mask[color] < int(255 * mask_draw_precision)] = 0
+                for channel in range(len(colors)):
+                    bool_mask_keep = mask[channel] >= int(254*mask_draw_precision)
+                    bool_mask_erase = mask[channel] < int(254*mask_draw_precision)
+
+                    mask[channel][bool_mask_keep] = colors[channel]
+                    mask[channel][bool_mask_erase] = 0
                 # fill alpha channel values using R channel as a reference
-                mask[3][mask[0] > 0] = int(255*opacity)
-                mask[3][mask[0] < 0] = 0
+                mask[3, :, :][mask[0, :, :] > 0] = int(255*opacity)
+                mask[3, :, :][mask[0, :, :] == 0] = 0
 
                 # convert the mask into H, W, C format
                 mask = np.transpose(mask, (1, 2, 0))
@@ -54,4 +57,4 @@ class MaskSaver:
 
     @staticmethod
     def generate_color_scheme():
-        return np.random.choice(range(256), size=3)
+        return np.random.choice(range(255), size=3)
