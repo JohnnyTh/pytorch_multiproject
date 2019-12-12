@@ -147,7 +147,7 @@ class DetectionEvaluator:
                 remaining_idx = np.delete(remaining_idx, duplicate_boxes_idx)
 
             out_scores = np.append(out_scores, top_score)
-            out_bboxes = np.append(out_bboxes, top_bbox, axis=0)
+            out_bboxes = np.append(out_bboxes, top_bbox.reshape(1, -1), axis=0)
             out_idx = np.append(out_idx, top_idx)
 
         return out_bboxes, out_scores, out_idx
