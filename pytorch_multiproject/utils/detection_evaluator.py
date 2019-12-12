@@ -23,6 +23,7 @@ class DetectionEvaluator:
 
     def bbox_score(self, iou_threshold=0.5, non_max_iou_thresh=0.5, score_threshold=0.6):
 
+        remaning_idx = []
         true_positive = np.array([])
         false_positive = np.array([])
         num_ground_truths = 0
@@ -36,9 +37,9 @@ class DetectionEvaluator:
             bboxes_pred_score = predictions['scores']
 
             # apply non-max suppression to predictions
-            bboxes_pred_suppr, bbox_pred_scores_suppr = self.non_max_suppr_binary(bboxes_pred_score, bboxes_pred,
-                                                                                  score_threshold, non_max_iou_thresh)
-
+            bboxes_pred_suppr, _, idx = self.non_max_suppr_binary(bboxes_pred_score, bboxes_pred,
+                                                                  score_threshold, non_max_iou_thresh)
+            remaning_idx.append(idx)
             # since number of predicted boxes is usually different from the number of true boxes, we need
             # to create all the possible combinations of true and predicted bbox coordinates for iou calculations
             targets_predictions_comb = np.hstack([np.repeat(bboxes_pred_suppr, bboxes_targets.shape[0], axis=0),
@@ -88,10 +89,10 @@ class DetectionEvaluator:
         self.logger.debug('Precision :'+str(precision))
         self.logger.debug('Recall :'+str(recall))
 
-        avg_precision, prec_interp, m_recall = self.get_average_precision(precision, recall)
+        avg_precision, _, _ = self.get_average_precision(precision, recall)
 
         self.logger.debug('\n\n')
-        return avg_precision, prec_interp, m_recall, precision, recall
+        return avg_precision, precision[-1], recall[-1], remaning_idx
 
     def mask_score(self):
         pass
@@ -99,22 +100,28 @@ class DetectionEvaluator:
     def non_max_suppr_binary(self, bboxes_pred_score, bboxes_pred, score_threshold, iou_threshold):
         # binary classification version of non-max suppression
 
+        remaining_idx = np.indices(bboxes_pred_score.shape)
         # firstly we discard all bbox predictions where class prob < base_treshold
         selected_idx = np.argwhere(bboxes_pred_score > score_threshold).flatten()
         selected_bboxes = bboxes_pred[selected_idx]
         selected_scores = bboxes_pred_score[selected_idx]
+        remaining_idx = remaining_idx[selected_idx]
 
-        out_bboxes = []
-        out_scores = []
+        out_bboxes = np.empty((0, 4))
+        out_scores = np.array([])
+        out_idx = np.array([])
+
         # continue iterations until the list of scores is depleted
         while len(selected_scores) > 0:
             highest_score_idx = np.argmax(selected_scores)
 
             top_score = selected_scores[highest_score_idx]
             top_bbox = selected_bboxes[highest_score_idx]
+            top_idx = remaining_idx[highest_score_idx]
 
             selected_scores = np.delete(selected_scores, highest_score_idx)
             selected_bboxes = np.delete(selected_bboxes, highest_score_idx, axis=0)
+            remaining_idx = np.delete(remaining_idx, highest_score_idx)
 
             # to prevent selected_bboxes matrix from collapsing into a vector
             if len(selected_bboxes.shape) == 1:
@@ -133,14 +140,13 @@ class DetectionEvaluator:
                 # drop duplicate boxes with high intersection if any are found
                 selected_scores = np.delete(selected_scores, duplicate_boxes_idx)
                 selected_bboxes = np.delete(selected_bboxes, duplicate_boxes_idx, axis=0)
+                remaining_idx = np.delete(remaining_idx, duplicate_boxes_idx)
 
-            out_bboxes.append(top_bbox)
-            out_scores.append(top_score)
+            out_bboxes = np.append(out_bboxes, top_bbox)
+            out_scores = np.append(out_scores, top_score)
+            out_idx = np.append(out_idx, top_idx)
 
-        # stack the collected results
-        res_bbox = np.stack(out_bboxes)
-        res_scores = np.stack(out_scores)
-        return res_bbox, res_scores
+        return out_bboxes, out_scores, out_idx
 
     @staticmethod
     def get_average_precision(precision, recall):

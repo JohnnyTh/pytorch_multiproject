@@ -6,27 +6,27 @@ from random import randrange
 
 class MaskSaver:
 
-    def __init__(self, save_dir, buffer_size=10, ):
+    def __init__(self, save_dir, buffer_size=10):
         self.data = []
         self.save_dir = save_dir
-        self.bufffer_size = buffer_size
+        self.buffer_size = buffer_size
 
     def accumulate(self, image, mask):
-        if len(self.data) < self.bufffer_size:
+        if len(self.data) < self.buffer_size:
             self.data.append([image, mask])
-
         else:
-            # when the buffer is full, replace random element inside with chance 30%
-            if randrange(1, 100) < 30:
-                position = randrange(self.bufffer_size)
-                self.data[position] = [image, mask]
+            pass
 
-    def generate_masked_img(self, epoch, mask_draw_precision=0.4, opacity=0.4):
+    def generate_masked_img(self, epoch, selected_boxes_ind, mask_draw_precision=0.4, opacity=0.4):
         for idx, data in enumerate(self.data):
-            image, masks = data
+            image, masks, _ = data
+            idx_group = selected_boxes_ind[idx]
             image_prep = Image.fromarray(image)
             # add alpha channel to the original image
             image_prep.putalpha(255)
+
+            # pick only those masks that correspond to the bounding boxes after non-max suppression
+            masks = masks[idx_group]
             for mask in masks:
                 colors = self.generate_color_scheme()
                 # firstly generate 3 color channels and alpha channel

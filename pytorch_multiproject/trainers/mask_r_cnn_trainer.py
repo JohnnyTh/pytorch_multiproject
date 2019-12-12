@@ -135,18 +135,17 @@ class MaskRCNNTrainer(GenericTrainer):
         iou_threshold = 0.5
         non_max_iou_thresh = 0.4
         score_thresh = 0.6
-        avg_precision, prec_interp, m_recall, precision, _ = evaluator.bbox_score(
+        avg_precision, precision, recall, selected_boxes = evaluator.bbox_score(
             iou_threshold=iou_threshold,
             non_max_iou_thresh=non_max_iou_thresh,
             score_threshold=score_thresh)
 
         self.logger.info('Average precision with IoU threshold {}: {}'.format(iou_threshold, avg_precision))
         self.logger.info('Accumulated precision: {}'.format(precision))
-        self.logger.info('Interpolated precision: {}'.format(prec_interp))
-        self.logger.info('Recall: {}'.format(m_recall))
+        self.logger.info('Accumulated Recall: {}'.format(recall))
 
         # generate and save masked images
-        mask_saver.generate_masked_img(epoch=epoch, mask_draw_precision=0.4, opacity=0.4)
+        mask_saver.generate_masked_img(epoch, selected_boxes, mask_draw_precision=0.4, opacity=0.4)
         self.logger.info('Masked images have been saved to {}'.format(self.save_dir_test))
 
     @torch.no_grad()
