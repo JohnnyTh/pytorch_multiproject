@@ -19,13 +19,15 @@ class MaskSaver:
 
     def generate_masked_img(self, epoch, selected_boxes_ind, mask_draw_precision=0.4, opacity=0.4):
         for idx, data in enumerate(self.data):
-            image, masks, _ = data
+            image, masks = data
             idx_group = selected_boxes_ind[idx]
             image_prep = Image.fromarray(image)
             # add alpha channel to the original image
             image_prep.putalpha(255)
 
             # pick only those masks that correspond to the bounding boxes after non-max suppression
+            if idx_group.dtype != int:
+                idx_group = idx_group.astype(int)
             masks = masks[idx_group]
             for mask in masks:
                 colors = self.generate_color_scheme()
