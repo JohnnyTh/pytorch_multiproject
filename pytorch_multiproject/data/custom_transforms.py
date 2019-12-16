@@ -1,6 +1,9 @@
 import torch
 import random
+from PIL import Image
+import torchvision.transforms as transforms
 from torchvision.transforms import functional as F
+
 
 class Denormalize(object):
     """Denormalize a tensor image with mean and standard deviation.
@@ -53,13 +56,55 @@ def _flip_coco_person_keypoints(kps, width):
 
 
 class Compose(object):
-    def __init__(self, transforms):
-        self.transforms = transforms
+    def __init__(self, transform):
+        self.transforms = transform
 
     def __call__(self, image, target):
         for t in self.transforms:
             image, target = t(image, target)
         return image, target
+
+
+class ResizeBboxImg(object):
+
+    def __init__(self, size, interpolation=Image.BILINEAR):
+        self.size = size
+        self.interpolation = interpolation
+
+    def __call__(self, img, target):
+        # get height and width of image before resizing
+        w_old, h_old = img.size
+        img = F.resize(img, self.size, self.interpolation)
+        # get height and width of image after resizing
+        w_new, h_new = img.size
+
+        # get scale factors for horizontal and vertical dimensions
+        w_scale = w_new/w_old
+        h_scale = h_new/h_old
+        # note that single bbox format is [x0, y0, x1, y1]
+        bbox = target['boxes']
+        # multiply x0, x1 by horizontal scale factor
+        bbox[:, 0:3:2] = bbox[:, 0:3:2] * w_scale
+        # multiply y0, y1 by vertical scale factor
+        bbox[:, 1:4:2] = bbox[:, 1:4:2] * h_scale
+        target['boxes'] = bbox
+
+        if 'masks' in target:
+            masks = target['masks']
+            if len(masks.shape) == 3:
+
+                transformed_masks = []
+                for mask in masks:
+                    mask = transforms.ToPILImage(mask)
+                    mask = transforms.Resize(mask, self.size)
+                    mask = transforms.ToTensor(mask)
+                    transformed_masks.append(mask)
+
+                transformed_masks = torch.stack(transformed_masks)
+                target['masks'] = transformed_masks
+            else:
+                raise Exception('Please provide masks of correct shape: N, H, W')
+        return img, target
 
 
 class RandomHorizontalFlip(object):
