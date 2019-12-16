@@ -95,9 +95,9 @@ class ResizeBboxImg(object):
 
                 transformed_masks = []
                 for mask in masks:
-                    mask = transforms.ToPILImage(mask)
-                    mask = transforms.Resize(mask, self.size)
-                    mask = transforms.ToTensor(mask)
+                    mask = F.to_pil_image(mask)
+                    mask = F.resize(mask, self.size, self.interpolation)
+                    mask = F.to_tensor(mask)
                     transformed_masks.append(mask)
 
                 transformed_masks = torch.stack(transformed_masks)
