@@ -9,7 +9,7 @@ from data.mask_r_cnn_dataset import PennFudanDataset
 from trainers.mask_r_cnn_trainer import MaskRCNNTrainer
 from logger.logger import main_run, default_log_config
 from utils import collate_fn
-import data.custom_transforms as T
+import data.custom_transforms as t_custom
 
 # default configuration file with hyperparameters
 DEFAULT_CONFIG = 'train.json'
@@ -32,7 +32,7 @@ def main(config, args):
     masks = os.path.join(resources_dir, 'PedMasks')
 
     dataset = PennFudanDataset(root=resources_dir, data_paths=[images, masks], extensions=(('.png'), )*2,
-                               transforms=T.ToTensor())
+                               transforms=t_custom.ToTensor())
 
     # split the dataset in train and test set
     indices = torch.randperm(len(dataset)).tolist()
