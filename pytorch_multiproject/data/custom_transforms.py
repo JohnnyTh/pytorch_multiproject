@@ -44,7 +44,7 @@ class Denormalize(object):
 
 # code below taken from https://github.com/pytorch/vision/blob/master/references/detection/transforms.py
 
-
+# Why do you need handling keypounts at all for now?
 def _flip_coco_person_keypoints(kps, width):
     flip_inds = [0, 2, 1, 4, 3, 6, 5, 8, 7, 10, 9, 12, 11, 14, 13, 16, 15]
     flipped_data = kps[:, flip_inds]
@@ -54,7 +54,7 @@ def _flip_coco_person_keypoints(kps, width):
     flipped_data[inds] = 0
     return flipped_data
 
-
+# Have you tested it with standart transforms from torchvision? Is it work? What to change to make it compatible with standart transforms
 class Compose(object):
     def __init__(self, transform):
         self.transforms = transform
@@ -104,7 +104,7 @@ class ResizeBboxImg(object):
                 transformed_masks = torch.stack(transformed_masks)
                 target['masks'] = transformed_masks
             else:
-                raise Exception('Please provide masks of correct shape: N, H, W')
+                raise Exception('Please provide masks of correct shape: N, H, W') # you cant just call the exception, but has to name the error. in this case ValueError. Check your implementations for this constrains
         return img, target
 
 
