@@ -30,13 +30,14 @@ iou = {'1_2': 16/99,
 
 TP = np.array([1, 1, 0, 0, 0, 0, 1])
 FP = np.array([0, 0, 1, 1, 1, 1, 0])
+# we have 4 targets as can be seen from the first dict in each element in evaluator_data
 num_targets = 4
 tp_accum = np.cumsum(TP)
 fp_accum = np.cumsum(FP)
 prec_precomp = np.divide(tp_accum, (tp_accum+fp_accum))
 recall_precomp = tp_accum/num_targets
 
-# precomputed average precision
+# precomputed average interpolated precision
 AP1 = (0.5-0) * 1
 AP2 = (0.75-0.5)*prec_precomp[-1]
 AP3 = (1-0.75)*0

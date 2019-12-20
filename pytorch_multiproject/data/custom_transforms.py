@@ -42,36 +42,63 @@ class Denormalize(object):
 
         return tensor
 
-# code below taken from https://github.com/pytorch/vision/blob/master/references/detection/transforms.py
 
-# Why do you need handling keypounts at all for now?
-def _flip_coco_person_keypoints(kps, width):
-    flip_inds = [0, 2, 1, 4, 3, 6, 5, 8, 7, 10, 9, 12, 11, 14, 13, 16, 15]
-    flipped_data = kps[:, flip_inds]
-    flipped_data[..., 0] = width - flipped_data[..., 0]
-    # Maintain COCO convention that if visibility == 0, then x, y = 0
-    inds = flipped_data[..., 2] == 0
-    flipped_data[inds] = 0
-    return flipped_data
-
-# Have you tested it with standart transforms from torchvision? Is it work? What to change to make it compatible with standart transforms
 class Compose(object):
     def __init__(self, transform):
         self.transforms = transform
 
-    def __call__(self, image, target):
-        for t in self.transforms:
-            image, target = t(image, target)
-        return image, target
+    def __call__(self, image, target=None):
+        """Applies a sequence of transforms to an image and to a dict (optional) with bounding boxes, masks etc.
+
+        Parameters
+        ----------
+        image (Tensor) - Tensor image of shape (C, H, W)
+        target (optional, dict) - contains coordinates of bounding boxes, mask tensors etc. that need to be transformed
+               alongside with the image.
+
+        Returns
+        -------
+        image, target(optional) - transformed image and dict with masks, bounding boxes, etc.
+        """
+        if target is not None:
+            for t in self.transforms:
+                image, target = t(image, target)
+            return image, target
+
+        else:
+            for t in self.transforms:
+                image = t(image)
+            return image
 
 
 class ResizeBboxImg(object):
 
     def __init__(self, size, interpolation=Image.BILINEAR):
+        """
+        Parameters
+        ----------
+        size (sequence or int): Desired output size. If size is a sequence like
+            (h, w), output size will be matched to this. If size is an int,
+            smaller edge of the image will be matched to this number.
+            i.e, if height > width, then image will be rescaled to
+            (size * height / width, size)
+        interpolation (int, optional): Desired interpolation. Default is
+            "PIL.Image.BILINEAR"
+        """
         self.size = size
         self.interpolation = interpolation
 
     def __call__(self, img, target):
+        """
+        Parameters
+        ----------
+        img (Tensor) - Image Tensor  of size (C, H, W)
+        target (dict) - contains masks and coordinates of bounding boxes that need to be resized
+
+        Returns
+        -------
+        img, target - resized image and its bboxes, masks.
+        """
         # get height and width of image before resizing
         w_old, h_old = img.size
         img = F.resize(img, self.size, self.interpolation)
@@ -104,10 +131,11 @@ class ResizeBboxImg(object):
                 transformed_masks = torch.stack(transformed_masks)
                 target['masks'] = transformed_masks
             else:
-                raise Exception('Please provide masks of correct shape: N, H, W') # you cant just call the exception, but has to name the error. in this case ValueError. Check your implementations for this constrains
+                raise ValueError('Please provide masks of correct shape: N, H, W')
         return img, target
 
 
+# code below taken from https://github.com/pytorch/vision/blob/master/references/detection/transforms.py
 class RandomHorizontalFlip(object):
     def __init__(self, prob):
         self.prob = prob
@@ -121,10 +149,6 @@ class RandomHorizontalFlip(object):
             target["boxes"] = bbox
             if "masks" in target:
                 target["masks"] = target["masks"].flip(-1)
-            if "keypoints" in target:
-                keypoints = target["keypoints"]
-                keypoints = _flip_coco_person_keypoints(keypoints, width)
-                target["keypoints"] = keypoints
         return image, target
 
 
@@ -132,5 +156,4 @@ class ToTensor(object):
     def __call__(self, image, target):
         image = F.to_tensor(image)
         return image, target
-
 # end of copied code from https://github.com/pytorch/vision/blob/master/references/detection/transforms.py

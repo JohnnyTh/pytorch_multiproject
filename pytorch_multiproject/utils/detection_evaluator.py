@@ -134,7 +134,7 @@ class DetectionEvaluator:
             i += 1
 
     def mask_score(self):
-        pass
+        raise NotImplementedError
 
     def non_max_suppr_binary(self, bboxes_pred_score, bboxes_pred, score_threshold, iou_threshold):
         # binary classification version of non-max suppression
