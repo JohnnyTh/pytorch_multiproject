@@ -28,7 +28,7 @@ class GanOptimizer:
         elif optim_ == 'optim_disc':
             self.discriminator_optim.zero_grad()
         else:
-            raise Exception('Provide correct optim name (optim_gen or optim_disc)')
+            raise ValueError('Provide correct optim name (optim_gen or optim_disc)')
 
     def step(self, optim_):
         # updates the model's parameters for generators or discriminators
@@ -37,7 +37,7 @@ class GanOptimizer:
         elif optim_ == 'optim_disc':
             self.discriminator_optim.step()
         else:
-            raise Exception('Provide correct optim name (optim_gen or optim_disc)')
+            raise ValueError('Provide correct optim name (optim_gen or optim_disc)')
 
     def state_dict(self):
         # get a dictionary with optim parameters for model serialization
@@ -79,7 +79,7 @@ class GanLrScheduler:
         elif sched == 'sched_disc':
             self.sched_disc.step()
         else:
-            raise Exception('Provide correct lr sched name (sched_gen or sched_disc)')
+            raise ValueError('Provide correct lr sched name (sched_gen or sched_disc)')
 
     def state_dict(self):
         # get a dictionary with scheduler parameters for model serialization
@@ -348,7 +348,7 @@ class CycleGAN(nn.Module):
             self._set_requires_grad([self.ab_discriminator, self.ba_discriminator], True)
             return self._loss_discriminators(real_a, real_b, fake_b_disc, fake_a_disc, device)
         else:
-            raise Exception('correct step flag name not provided !')
+            raise ValueError('correct step flag name not provided !')
 
     def _loss_generators(self, real_a, real_b, fake_b, fake_a, rec_a, rec_b, device):
         """
