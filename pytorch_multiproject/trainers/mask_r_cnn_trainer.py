@@ -3,11 +3,9 @@ import sys
 import math
 import logging
 import torch
-import torchvision
 from trainers.generic_trainer import GenericTrainer
 from utils import warmup_lr_scheduler
 from utils.detection_evaluator import DetectionEvaluator
-from utils.mask_saver import MaskSaver
 from torchvision.utils import save_image
 from tqdm import tqdm
 
@@ -15,6 +13,15 @@ from tqdm import tqdm
 class MaskRCNNTrainer(GenericTrainer):
 
     def __init__(self, dataloaders, val_phase_freq=1, *args, **kwargs):
+        """
+
+        Parameters
+        ----------
+        dataloaders
+        val_phase_freq
+        args
+        kwargs
+        """
         super().__init__(*args, **kwargs)
 
         # to suppress debug messages from PIL module
@@ -32,7 +39,12 @@ class MaskRCNNTrainer(GenericTrainer):
             os.mkdir(self.save_dir_test)
 
     def _train_step(self, epoch):
-        """Behaviour during one pass through the epoch."""
+        """Behaviour during one pass through the epoch.
+
+        Parameters
+        ----------
+        epoch
+        """
 
         # print parameters of optimizer and scheduler every epoch
         self.logger.info(str(self.optimizer))
@@ -60,6 +72,12 @@ class MaskRCNNTrainer(GenericTrainer):
         return results
 
     def train_one_epoch(self, epoch):
+        """
+
+        Parameters
+        ----------
+        epoch
+        """
         # print training results every x iterations
         print_freq = 10
         phase = 'train'
@@ -107,10 +125,16 @@ class MaskRCNNTrainer(GenericTrainer):
 
     @torch.no_grad()
     def val_one_epoch(self, epoch, draw_bbox=True):
+        """
+
+        Parameters
+        ----------
+        epoch
+        draw_bbox
+        """
         phase = 'val'
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         evaluator = DetectionEvaluator(save_dir=self.save_dir_test)
-        mask_saver = MaskSaver(save_dir=self.save_dir_test)
 
         self.logger.info('Starting val phase')
         self.model.eval()  # Set model to evaluation mode
@@ -124,12 +148,11 @@ class MaskRCNNTrainer(GenericTrainer):
             targets = {k: v.to('cpu') for k, v in targets[0].items()}
             outputs = {k: v.to('cpu') for k, v in outputs[0].items()}
 
+            # denormalize image, convert its shape into H, W, C to prepare it for PIL manipulations
             save_img = images[0].mul(255).permute(1, 2, 0).byte().cpu().numpy()
-            masks = outputs['masks'].mul(255).byte().numpy()
 
             # collect the results from one iteration here
             evaluator.accumulate(save_img, targets, outputs)
-            mask_saver.accumulate(save_img, masks)
 
         # compute the mAP summary here
         iou_threshold = 0.5
@@ -140,19 +163,22 @@ class MaskRCNNTrainer(GenericTrainer):
             non_max_iou_thresh=non_max_iou_thresh,
             score_threshold=score_thresh)
 
-        if draw_bbox:
-            evaluator.draw_bbox(epoch=epoch)
-
         self.logger.info('Average precision with IoU threshold {}: {}'.format(iou_threshold, avg_precision))
         self.logger.info('Accumulated precision: {}'.format(precision))
         self.logger.info('Accumulated Recall: {}'.format(recall))
 
         # generate and save masked images
-        mask_saver.generate_masked_img(epoch, selected_boxes, mask_draw_precision=0.4, opacity=0.4)
-        self.logger.info('Masked images have been saved to {}'.format(self.save_dir_test))
+        evaluator.save_bboxes_masks(epoch, selected_boxes, mask_draw_precision=0.4, opacity=0.4)
+        self.logger.info('Masked images + bboxes have been saved to {}'.format(self.save_dir_test))
 
     @torch.no_grad()
     def test(self, num_masks=5):
+        """
+        Runs a test on a trained model and saves a selected number of generated masks
+        Parameters
+        ----------
+        num_masks
+        """
         cpu_device = torch.device("cpu")
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -182,14 +208,3 @@ class MaskRCNNTrainer(GenericTrainer):
                     for num_mask, mask in enumerate(to_save[key]):
                         save_image(mask, os.path.join(self.save_dir_test, key+'_{}_{}.png'.format(idx, num_mask)))
 
-    @staticmethod
-    def _get_iou_types(model):
-        model_without_ddp = model
-        if isinstance(model, torch.nn.parallel.DistributedDataParallel):
-            model_without_ddp = model.module
-        iou_types = ["bbox"]
-        if isinstance(model_without_ddp, torchvision.models.detection.MaskRCNN):
-            iou_types.append("segm")
-        if isinstance(model_without_ddp, torchvision.models.detection.KeypointRCNN):
-            iou_types.append("keypoints")
-        return iou_types

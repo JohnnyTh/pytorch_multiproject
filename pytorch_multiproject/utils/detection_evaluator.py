@@ -9,23 +9,42 @@ class DetectionEvaluator:
 
     def __init__(self, save_dir):
         """
-           To calculate the object detection scores, we accumulate ground truth labels (targets) and
+        To calculate the object detection scores, we accumulate ground truth labels (targets) and
            predictions of our model during the val phase, then compute the necessary metrics (e.g. bounding box mAP)
+
+        Parameters
+        ----------
+        save_dir
+
         """
         self.logger = logging.getLogger(os.path.basename(__file__))
         self.data = []
-        self.bboxes_suppressed = []
         self.save_dir = save_dir
 
     def accumulate(self, save_img, targets, predictions):
         """
+
+        Parameters
+        ----------
+        save_img (numpy.ndarray):
         targets (dict):
         predictions (dict):
         """
         self.data.append([save_img, targets, predictions])
 
     def bbox_score(self, iou_threshold=0.5, non_max_iou_thresh=0.5, score_threshold=0.6):
+        """
 
+        Parameters
+        ----------
+        iou_threshold
+        non_max_iou_thresh
+        score_threshold
+
+        Returns
+        -------
+
+        """
         remaning_idx = []
         true_positive = np.array([])
         false_positive = np.array([])
@@ -46,7 +65,6 @@ class DetectionEvaluator:
             # apply non-max suppression to predictions
             bboxes_pred_suppr, _, idx = self.non_max_suppr_binary(bboxes_pred_score, bboxes_pred,
                                                                   score_threshold, non_max_iou_thresh)
-            self.bboxes_suppressed.append(bboxes_pred_suppr)
             remaning_idx.append(idx)
             # since number of predicted boxes is usually different from the number of true boxes, we need
             # to create all the possible combinations of true and predicted bbox coordinates for iou calculations
@@ -108,36 +126,27 @@ class DetectionEvaluator:
         self.logger.debug('\n\n')
         return avg_precision, precision[-1], recall[-1], remaning_idx
 
-    def draw_bbox(self, epoch):
-
-        i = 0
-        for data, pred_bboxes in zip(self.data, self.bboxes_suppressed):
-            image, targets, _ = data
-            bboxes_targets = targets['boxes']
-
-            if not isinstance(bboxes_targets, np.ndarray):
-                bboxes_targets = bboxes_targets.numpy()
-
-            image_prep = Image.fromarray(image)
-            draw = ImageDraw.Draw(image_prep)
-
-            for target_bbox in bboxes_targets:
-                draw.rectangle((tuple(target_bbox[:2]), tuple(target_bbox[2:])),
-                               outline='green')
-
-            for single_pred in pred_bboxes:
-                draw.rectangle((tuple(single_pred[:2]), tuple(single_pred[2:])),
-                               outline='red')
-
-            save_addr = os.path.join(self.save_dir, 'Test_bbox_{}_{}'.format(epoch, i))
-            image_prep.save(save_addr, 'PNG')
-            i += 1
-
     def mask_score(self):
+        """
+            Calculates the mAP score for the generated masks.
+        """
         raise NotImplementedError
 
     def non_max_suppr_binary(self, bboxes_pred_score, bboxes_pred, score_threshold, iou_threshold):
-        # binary classification version of non-max suppression
+        """
+        Binary classification version of non-max suppression
+
+        Parameters
+        ----------
+        bboxes_pred_score
+        bboxes_pred
+        score_threshold
+        iou_threshold
+
+        Returns
+        -------
+
+        """
 
         remaining_idx = np.arange(bboxes_pred_score.shape[0])
         # firstly we discard all bbox predictions where class prob < base_treshold
@@ -187,9 +196,125 @@ class DetectionEvaluator:
 
         return out_bboxes, out_scores, out_idx
 
+    def save_bboxes_masks(self, epoch, selected_boxes_ind, mask_draw_precision, opacity):
+        """
+        Draws bounding boxes and masks on top of the original image and saves the result.
+        Parameters
+        ----------
+        epoch (int): epoch number
+        selected_boxes_ind (list): a list of lists containing indexes of selected bounding boxes
+                    (after non-max suppression) for each image.
+        mask_draw_precision (float, 0. to 1.): confidence score, above which the mask will be drawn
+                    (each pixel in predicted mask is assigned a confidence score ranging from 0 to 1)
+        opacity (float, 0. to 1.):  mask opacity, 0 - completely transparent, 1 - completely opaque
+        """
+
+        image_prep_list = list(self.draw_bbox(selected_boxes_ind))
+        image_prep_list = list(self.generate_masked_img(image_prep_list,
+                                                        selected_boxes_ind,
+                                                        mask_draw_precision,
+                                                        opacity))
+
+        for idx, image in enumerate(image_prep_list):
+            save_addr = os.path.join(self.save_dir, 'Test_img_{}_{}'.format(epoch, idx))
+            image.save(save_addr, 'PNG')
+
+    def draw_bbox(self, selected_boxes_ind):
+        """
+            Generator method.
+            Draws bounding boxes on top of original image (green - ground truth, red - predicted bounding box).
+            Yields resulting images
+            Parameters
+            ----------
+            selected_boxes_ind (list).
+        """
+        for idx, data in enumerate(self.data):
+            image, targets, predictions = data
+
+            # select only bboxes remaining after suppression
+            idx_group = selected_boxes_ind[idx]
+            pred_bboxes = predictions['boxes'][idx_group]
+
+            targets_bboxes = targets['boxes']
+
+            if not isinstance(targets_bboxes, np.ndarray):
+                targets_bboxes = targets_bboxes.numpy()
+
+            image_prep = Image.fromarray(image)
+            draw = ImageDraw.Draw(image_prep)
+
+            for target_bbox in targets_bboxes:
+                draw.rectangle((tuple(target_bbox[:2]), tuple(target_bbox[2:])),
+                               outline='green')
+
+            for single_pred in pred_bboxes:
+                draw.rectangle((tuple(single_pred[:2]), tuple(single_pred[2:])),
+                               outline='red')
+            yield image_prep
+
+    def generate_masked_img(self, image_prep_list, selected_boxes_ind, mask_draw_precision=0.4, opacity=0.4):
+        """
+        Generator method.
+        Overlays all the generated masks on top of the original image. Yields resulting images.
+        Parameters
+        ----------
+        selected_boxes_ind (list), mask_draw_precision (float, 0. to 1.), opacity (float, 0. to 1.).
+        """
+        for idx, data in enumerate(self.data):
+            image = image_prep_list[idx]
+            masks = data[2]['masks'].mul(255).byte().numpy()
+
+            idx_group = selected_boxes_ind[idx]
+            image_prep = Image.fromarray(image)
+            # add alpha channel to the original image
+            image_prep.putalpha(255)
+
+            if idx_group.dtype != int:
+                idx_group = idx_group.astype(int)
+            # pick only those masks that correspond to the bounding boxes after non-max suppression
+            masks = masks[idx_group]
+
+            for mask in masks:
+                colors = self.generate_color_scheme()
+                # firstly generate 3 color channels and alpha channel
+                mask = np.repeat(mask, 4, axis=0)
+                # replace ones at each color channel with respective color if mask probability > mask_draw_precision
+                # and zero out the values below mask_draw_precision
+                for channel in range(len(colors)):
+                    bool_mask_keep = mask[channel] >= int(255*mask_draw_precision)
+                    bool_mask_erase = mask[channel] < int(255*mask_draw_precision)
+
+                    mask[channel][bool_mask_keep] = colors[channel]
+                    mask[channel][bool_mask_erase] = 0
+                # fill alpha channel values using R channel as a reference
+                mask[3, :, :][mask[0, :, :] > 0] = int(255*opacity)
+                mask[3, :, :][mask[0, :, :] == 0] = 0
+
+                # convert the mask into H, W, C format
+                mask = np.transpose(mask, (1, 2, 0))
+                # convert the prepared mask into PIL Image object
+                mask_prep = Image.fromarray(mask)
+                # combine the mask and the image
+                image_prep = Image.alpha_composite(image_prep, mask_prep)
+            yield image_prep
+
+    @staticmethod
+    def generate_color_scheme():
+        return np.random.choice(range(255), size=3)
+
     @staticmethod
     def get_average_precision(precision, recall):
+        """
 
+        Parameters
+        ----------
+        precision
+        recall
+
+        Returns
+        -------
+
+        """
         m_precision = list()
         m_precision.append(0)
         [m_precision.append(value) for value in precision]
@@ -220,6 +345,17 @@ class DetectionEvaluator:
 
     @staticmethod
     def intersection_over_union(bbox_1, bbox_2):
+        """
+
+        Parameters
+        ----------
+        bbox_1
+        bbox_2
+
+        Returns
+        -------
+
+        """
         bbox_1_x0 = bbox_1[0]
         bbox_1_y0 = bbox_1[1]
         bbox_1_x1 = bbox_1[2]
@@ -248,6 +384,17 @@ class DetectionEvaluator:
 
     @staticmethod
     def batch_iou(bbox_array_1, bbox_array_2):
+        """
+
+        Parameters
+        ----------
+        bbox_array_1
+        bbox_array_2
+
+        Returns
+        -------
+
+        """
         bbox_1_x0 = bbox_array_1[:, 0]
         bbox_1_y0 = bbox_array_1[:, 1]
         bbox_1_x1 = bbox_array_1[:, 2]
