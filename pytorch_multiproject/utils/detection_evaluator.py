@@ -265,7 +265,12 @@ class DetectionEvaluator:
             masks = data[2]['masks'].mul(255).byte().numpy()
 
             idx_group = selected_boxes_ind[idx]
-            image_prep = Image.fromarray(image)
+            if isinstance(image, np.ndarray):
+                image_prep = Image.fromarray(image)
+            elif isinstance(image, Image.Image):
+                image_prep = image
+            else:
+                raise TypeError('The provided image type must be PIL image of numpy.ndarray')
             # add alpha channel to the original image
             image_prep.putalpha(255)
 
