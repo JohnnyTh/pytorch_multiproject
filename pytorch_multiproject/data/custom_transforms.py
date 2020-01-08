@@ -235,8 +235,8 @@ class RandomResizedCropBbox:
         bbox[:, 3][bbox[:, 3] > i + h] = h
 
         # get scale factors for horizontal and vertical dimensions
-        w_scale = w_new/h
-        h_scale = h_new/w
+        w_scale = w_new/w
+        h_scale = h_new/h
         bbox[:, 0:3:2] = bbox[:, 0:3:2] * w_scale
         # multiply y0, y1 by vertical scale factor
         bbox[:, 1:4:2] = bbox[:, 1:4:2] * h_scale
