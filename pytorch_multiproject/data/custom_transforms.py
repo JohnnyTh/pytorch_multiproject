@@ -1,7 +1,8 @@
+import math
+import warnings
 import torch
 import random
 from PIL import Image
-import torchvision.transforms as transforms
 from torchvision.transforms import functional as F
 
 
@@ -88,7 +89,7 @@ class ResizeBboxImg(object):
         self.size = size
         self.interpolation = interpolation
 
-    def __call__(self, img, target):
+    def __call__(self, image, target):
         """
         Parameters
         ----------
@@ -100,10 +101,10 @@ class ResizeBboxImg(object):
         img, target - resized image and its bboxes, masks.
         """
         # get height and width of image before resizing
-        w_old, h_old = img.size
-        img = F.resize(img, self.size, self.interpolation)
+        w_old, h_old = image.size
+        image = F.resize(image, self.size, self.interpolation)
         # get height and width of image after resizing
-        w_new, h_new = img.size
+        w_new, h_new = image.size
 
         # get scale factors for horizontal and vertical dimensions
         w_scale = w_new/w_old
@@ -132,7 +133,133 @@ class ResizeBboxImg(object):
                 target['masks'] = transformed_masks
             else:
                 raise ValueError('Please provide masks of correct shape: N, H, W')
-        return img, target
+        return image, target
+
+
+class RandomResizedCropBbox:
+    """ Based on https://pytorch.org/docs/stable/_modules/torchvision/transforms/transforms.html#RandomCrop
+    Crop the given PIL Image to random size and aspect ratio.
+    Additionally corrects the size of the bounding boxes and masks
+
+    A crop of random size (default: of 0.08 to 1.0) of the original size and a random
+    aspect ratio (default: of 3/4 to 4/3) of the original aspect ratio is made. This crop
+    is finally resized to given size.
+    This is popularly used to train the Inception networks.
+
+    Args:
+        size: expected output size of each edge
+        scale: range of size of the origin size cropped
+        ratio: range of aspect ratio of the origin aspect ratio cropped
+        interpolation: Default: PIL.Image.BILINEAR
+    """
+    def __init__(self, size, scale=(0.08, 1.0), ratio=(3. / 4., 4. / 3.),
+                 interpolation=Image.BILINEAR):
+        if isinstance(size, tuple):
+            self.size = size
+        else:
+            self.size = (size, size)
+        if (scale[0] > scale[1]) or (ratio[0] > ratio[1]):
+            warnings.warn("range should be of kind (min, max)")
+
+        self.interpolation = interpolation
+        self.scale = scale
+        self.ratio = ratio
+    
+    @staticmethod
+    def get_params(image, scale, ratio):
+        """Get parameters for ``crop`` for a random sized crop.
+
+        Args:
+            image (PIL Image): Image to be cropped.
+            scale (tuple): range of size of the origin size cropped
+            ratio (tuple): range of aspect ratio of the origin aspect ratio cropped
+
+        Returns:
+            tuple: params (i, j, h, w) to be passed to ``crop`` for a random
+                sized crop.
+        """
+        width, height = image.size
+        area = height * width
+
+        for attempt in range(10):
+            target_area = random.uniform(*scale) * area
+            log_ratio = (math.log(ratio[0]), math.log(ratio[1]))
+            aspect_ratio = math.exp(random.uniform(*log_ratio))
+
+            w = int(round(math.sqrt(target_area * aspect_ratio)))
+            h = int(round(math.sqrt(target_area / aspect_ratio)))
+
+            if 0 < w <= width and 0 < h <= height:
+                i = random.randint(0, height - h)
+                j = random.randint(0, width - w)
+                return i, j, h, w
+
+        # Fallback to central crop
+        in_ratio = float(width) / float(height)
+        if in_ratio < min(ratio):
+            w = width
+            h = int(round(w / min(ratio)))
+        elif in_ratio > max(ratio):
+            h = height
+            w = int(round(h * max(ratio)))
+        else:  # whole image
+            w = width
+            h = height
+        i = (height - h) // 2
+        j = (width - w) // 2
+        return i, j, h, w
+    
+    def __call__(self, image, target):
+        """
+        Args:
+            image (PIL Image): Image to be cropped and resized.
+            target (dict): contains masks and coordinates of bounding boxes to be cropped and resized
+
+        Returns:
+            PIL Image: Randomly cropped and resized image.
+        """
+        w_old, h_old = image.size
+        i, j, h, w = self.get_params(image, self.scale, self.ratio)
+        image = F.resized_crop(image, i, j, h, w, self.size, self.interpolation)
+        # get height and width of image after resizing
+        w_new, h_new = image.size
+
+        # note that single bbox format is [x0, y0, x1, y1]
+        bbox = target['boxes']
+        # correct x0
+        bbox[:, 0][bbox[:, 0] < j] = j
+        # correct y0
+        bbox[:, 1][bbox[:, 1] < i] = i
+        # correct x1
+        bbox[:, 2][bbox[:, 2] > j + w] = j + w
+        # correct y1
+        bbox[:, 3][bbox[:, 3] > i + h] = i + h
+
+        # get scale factors for horizontal and vertical dimensions
+        w_scale = w_new/w_old
+        h_scale = h_new/h_old
+        bbox[:, 0:3:2] = bbox[:, 0:3:2] * w_scale
+        # multiply y0, y1 by vertical scale factor
+        bbox[:, 1:4:2] = bbox[:, 1:4:2] * h_scale
+        target['boxes'] = bbox
+
+        if 'masks' in target:
+            masks = target['masks']
+            if len(masks.shape) == 3:
+
+                transformed_masks = []
+                for mask in masks:
+                    mask = F.to_pil_image(mask.mul(255))
+                    mask = F.resized_crop(mask, i, j, h, w, self.size, self.interpolation)
+                    mask = F.to_tensor(mask)
+                    mask = mask.to(dtype=torch.uint8)
+                    transformed_masks.append(mask)
+
+                transformed_masks = torch.stack(transformed_masks)
+                target['masks'] = transformed_masks
+            else:
+                raise ValueError('Please provide masks of correct shape: N, H, W')
+        return image, target
 
 
 # code below taken from https://github.com/pytorch/vision/blob/master/references/detection/transforms.py
