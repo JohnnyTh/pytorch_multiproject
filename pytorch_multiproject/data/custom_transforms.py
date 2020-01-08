@@ -125,7 +125,7 @@ class ResizeBboxImg(object):
                 for mask in masks:
                     mask = F.to_pil_image(mask.mul(255))
                     mask = F.resize(mask, self.size, self.interpolation)
-                    mask = F.to_tensor(mask)
+                    mask = F.to_tensor(mask).squeeze()
                     mask = mask.to(dtype=torch.uint8)
                     transformed_masks.append(mask)
 
@@ -251,7 +251,7 @@ class RandomResizedCropBbox:
                 for mask in masks:
                     mask = F.to_pil_image(mask.mul(255))
                     mask = F.resized_crop(mask, i, j, h, w, self.size, self.interpolation)
-                    mask = F.to_tensor(mask)
+                    mask = F.to_tensor(mask).squeeze()
                     mask = mask.to(dtype=torch.uint8)
                     transformed_masks.append(mask)
 
