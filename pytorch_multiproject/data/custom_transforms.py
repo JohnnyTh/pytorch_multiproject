@@ -227,13 +227,13 @@ class RandomResizedCropBbox:
         # note that single bbox format is [x0, y0, x1, y1]
         bbox = target['boxes']
         # correct x0
-        bbox[:, 0][bbox[:, 0] < j] = j
+        bbox[:, 0][bbox[:, 0] < j] = 0
         # correct y0
-        bbox[:, 1][bbox[:, 1] < i] = i
+        bbox[:, 1][bbox[:, 1] < i] = 0
         # correct x1
-        bbox[:, 2][bbox[:, 2] > j + w] = j + w
+        bbox[:, 2][bbox[:, 2] > j + w] = w
         # correct y1
-        bbox[:, 3][bbox[:, 3] > i + h] = i + h
+        bbox[:, 3][bbox[:, 3] > i + h] = h
 
         # get scale factors for horizontal and vertical dimensions
         w_scale = w_new/w_old
