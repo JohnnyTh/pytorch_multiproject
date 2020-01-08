@@ -196,7 +196,7 @@ class DetectionEvaluator:
 
         return out_bboxes, out_scores, out_idx
 
-    def save_bboxes_masks(self, epoch, selected_boxes_ind, mask_draw_precision, opacity):
+    def save_bboxes_masks(self, epoch, selected_boxes_ind=None, mask_draw_precision=0.4, opacity=0.4):
         """
         Draws bounding boxes and masks on top of the original image and saves the result.
         Parameters
@@ -219,7 +219,7 @@ class DetectionEvaluator:
             save_addr = os.path.join(self.save_dir, 'Test_img_{}_{}'.format(epoch, idx))
             image.save(save_addr, 'PNG')
 
-    def draw_bbox(self, selected_boxes_ind):
+    def draw_bbox(self, selected_boxes_ind=None):
         """
             Generator method.
             Draws bounding boxes on top of original image (green - ground truth, red - predicted bounding box).
@@ -231,9 +231,11 @@ class DetectionEvaluator:
         for idx, data in enumerate(self.data):
             image, targets, predictions = data
 
+            pred_bboxes = predictions['boxes']
             # select only bboxes remaining after suppression
-            idx_group = selected_boxes_ind[idx]
-            pred_bboxes = predictions['boxes'][idx_group]
+            if selected_boxes_ind is not None:
+                idx_group = selected_boxes_ind[idx]
+                pred_bboxes = pred_bboxes[idx_group]
 
             targets_bboxes = targets['boxes']
 
@@ -252,7 +254,7 @@ class DetectionEvaluator:
                                outline='red')
             yield image_prep
 
-    def generate_masked_img(self, image_prep_list, selected_boxes_ind, mask_draw_precision=0.4, opacity=0.4):
+    def generate_masked_img(self, image_prep_list, selected_boxes_ind=None, mask_draw_precision=0.4, opacity=0.4):
         """
         Generator method.
         Overlays all the generated masks on top of the original image. Yields resulting images.
@@ -264,7 +266,6 @@ class DetectionEvaluator:
             image = image_prep_list[idx]
             masks = data[2]['masks'].mul(255).byte().numpy()
 
-            idx_group = selected_boxes_ind[idx]
             if isinstance(image, np.ndarray):
                 image_prep = Image.fromarray(image)
             elif isinstance(image, Image.Image):
@@ -274,10 +275,12 @@ class DetectionEvaluator:
             # add alpha channel to the original image
             image_prep.putalpha(255)
 
-            if idx_group.dtype != int:
-                idx_group = idx_group.astype(int)
-            # pick only those masks that correspond to the bounding boxes after non-max suppression
-            masks = masks[idx_group]
+            if selected_boxes_ind is not None:
+                idx_group = selected_boxes_ind[idx]
+                if idx_group.dtype != int:
+                    idx_group = idx_group.astype(int)
+                # pick only those masks that correspond to the bounding boxes after non-max suppression
+                masks = masks[idx_group]
 
             for mask in masks:
                 colors = self.generate_color_scheme()
