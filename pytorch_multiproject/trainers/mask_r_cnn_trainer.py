@@ -159,7 +159,7 @@ class MaskRCNNTrainer(GenericTrainer):
             evaluator.accumulate(save_img, targets, outputs)
 
         # compute the mAP summary here
-        iou_threshold = 0.5
+        iou_threshold = 0.75
         non_max_iou_thresh = 0.4
         score_thresh = 0.6
         avg_precision, precision, recall, selected_boxes = evaluator.bbox_score(
