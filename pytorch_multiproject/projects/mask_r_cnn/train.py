@@ -32,7 +32,9 @@ def main(config, args):
     masks = os.path.join(resources_dir, 'PedMasks')
 
     transform_1 = t_custom.Compose([t_custom.ToTensor(), t_custom.RandomHorizontalFlip(0.5)])
-    transform_2 = t_custom.Compose([t_custom.RandomCropBbox(), t_custom.ToTensor()])
+    transform_2 = t_custom.Compose([t_custom.RandomCropBbox(scale=(0.7, 0.95)),
+                                    t_custom.ColorJitterBbox(0.4, 0.4, 0.4),
+                                    t_custom.ToTensor()])
 
     dataset = PennFudanDataset(root=resources_dir, data_paths=[images, masks], extensions=(('.png'),) * 2,
                                transforms=transform_1)
