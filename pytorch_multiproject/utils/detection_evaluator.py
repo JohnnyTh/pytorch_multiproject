@@ -265,6 +265,11 @@ class DetectionEvaluator:
         for idx, data in enumerate(self.data):
             image = image_prep_list[idx]
             masks = data[2]['masks'].mul(255).byte().numpy()
+            # expand (H, W) masks
+            if len(masks.shape) == 2:
+                masks = masks[np.newaxis, np.newaxis, :, :]
+            elif len(masks.shape) == 3:
+                masks = masks[:, np.newaxis, :, :]
 
             if isinstance(image, np.ndarray):
                 image_prep = Image.fromarray(image)
@@ -285,7 +290,7 @@ class DetectionEvaluator:
             for mask in masks:
                 colors = self.generate_color_scheme()
                 # firstly generate 3 color channels and alpha channel
-                mask = np.repeat(mask[np.newaxis, :, :], 4, axis=0)
+                mask = np.repeat(mask, 4, axis=0)
                 # replace ones at each color channel with respective color if mask probability > mask_draw_precision
                 # and zero out the values below mask_draw_precision
                 for channel in range(len(colors)):

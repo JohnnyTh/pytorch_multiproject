@@ -3,6 +3,7 @@ import sys
 import math
 import logging
 import torch
+from datetime import datetime
 from trainers.generic_trainer import GenericTrainer
 from utils import warmup_lr_scheduler
 from utils.detection_evaluator import DetectionEvaluator
@@ -38,6 +39,8 @@ class MaskRCNNTrainer(GenericTrainer):
         if not os.path.exists(self.save_dir_test):
             os.mkdir(self.save_dir_test)
 
+        self.log_name = 'mask_rcnn_log_{}.txt'.format(datetime.now().strftime("%Y-%m-%d_%H:%M"))
+
     def _train_step(self, epoch):
         """Behaviour during one pass through the epoch.
 
@@ -57,6 +60,7 @@ class MaskRCNNTrainer(GenericTrainer):
 
         self.logger.info('Epoch {}/{}'.format(epoch, self.epochs))
         self.logger.info('-' * 10)
+        self.write_log('epoch avg_precision recall')
 
         # execute training and validation
         self.train_one_epoch(epoch)
@@ -166,6 +170,8 @@ class MaskRCNNTrainer(GenericTrainer):
         self.logger.info('Average precision with IoU threshold {}: {}'.format(iou_threshold, avg_precision))
         self.logger.info('Accumulated precision: {}'.format(precision))
         self.logger.info('Accumulated Recall: {}'.format(recall))
+        log_string = '{} {} {}'.format(epoch, avg_precision, recall)
+        self.write_log(log_string)
 
         # generate and save masked images
         evaluator.save_bboxes_masks(epoch, selected_boxes, mask_draw_precision=0.4, opacity=0.4)
@@ -208,3 +214,7 @@ class MaskRCNNTrainer(GenericTrainer):
                     for num_mask, mask in enumerate(to_save[key]):
                         save_image(mask, os.path.join(self.save_dir_test, key+'_{}_{}.png'.format(idx, num_mask)))
 
+    def write_log(self, msg):
+        addr = os.path.join(self.save_dir, self.log_name)
+        with open(addr, 'a') as file:
+            file.write(msg)
