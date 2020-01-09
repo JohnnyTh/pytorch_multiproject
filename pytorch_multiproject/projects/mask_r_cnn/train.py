@@ -4,6 +4,7 @@ ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(os.path.dirname('__fi
 sys.path.insert(0, ROOT_DIR)
 import logging
 import torch
+from torch.utils.data import DataLoader, Subset, ConcatDataset
 from models.mask_r_cnn_model import get_mask_r_cnn
 from data.mask_r_cnn_dataset import PennFudanDataset
 from trainers.mask_r_cnn_trainer import MaskRCNNTrainer
@@ -30,22 +31,28 @@ def main(config, args):
     images = os.path.join(resources_dir, 'PNGImages')
     masks = os.path.join(resources_dir, 'PedMasks')
 
-    dataset = PennFudanDataset(root=resources_dir, data_paths=[images, masks], extensions=(('.png'), )*2,
+    transform = t_custom.Compose([t_custom.RandomResizedCropBbox((500, 500), scale=(0.65, 0.9)),
+                                  t_custom.ToTensor()])
+
+    dataset = PennFudanDataset(root=resources_dir, data_paths=[images, masks], extensions=(('.png'),) * 2,
                                transforms=t_custom.ToTensor())
+    dataset_aug = PennFudanDataset(root=resources_dir, data_paths=[images, masks], extensions=(('.png'),) * 2,
+                               transforms=transform)
+    dataset_test = PennFudanDataset(root=resources_dir, data_paths=[images, masks], extensions=(('.png'),) * 2,
+                                    transforms=t_custom.ToTensor())
 
     # split the dataset in train and test set
     indices = torch.randperm(len(dataset)).tolist()
-    dataset_train = torch.utils.data.Subset(dataset, indices[:-50])
-    dataset_test = torch.utils.data.Subset(dataset, indices[-50:])
+
+    dataset_train_nonaug = Subset(dataset, indices[:-50])
+    dataset_train_aug = Subset(dataset_aug, indices[:-50])
+    dataset_train = ConcatDataset([dataset_train_nonaug, dataset_train_aug])
+
+    dataset_test = Subset(dataset_test, indices[-50:])
 
     # define training and validation data loaders
-    data_loader = torch.utils.data.DataLoader(
-        dataset_train, batch_size=2, shuffle=True, num_workers=0,
-        collate_fn=collate_fn)
-
-    data_loader_test = torch.utils.data.DataLoader(
-        dataset_test, batch_size=1, shuffle=False, num_workers=0,
-        collate_fn=collate_fn)
+    data_loader = DataLoader(dataset_train, batch_size=2, shuffle=True, num_workers=0, collate_fn=collate_fn)
+    data_loader_test = DataLoader( dataset_test, batch_size=1, shuffle=False, num_workers=0, collate_fn=collate_fn)
     dataloaders = {'train': data_loader, 'val': data_loader_test}
 
     model = get_mask_r_cnn(num_classes=2)
