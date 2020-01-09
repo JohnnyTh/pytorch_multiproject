@@ -234,8 +234,8 @@ class RandomResizedCropBbox:
         bbox[:, 1:4:2] = bbox[:, 1:4:2] - y
         # clamp the bbox coordinate values at the boundaries of cropped region
         bbox[:, 0:2][bbox[:, 0:2] < 0] = 0
-        bbox[:, 3][bbox[:, 3] > w] = w
-        bbox[:, 4][bbox[:, 4] > h] = h
+        bbox[:, 2][bbox[:, 2] > w] = w
+        bbox[:, 3][bbox[:, 3] > h] = h
         # get scale factors for horizontal and vertical dimensions
         w_scale = w_new/w
         h_scale = h_new/h
