@@ -40,6 +40,7 @@ class MaskRCNNTrainer(GenericTrainer):
             os.mkdir(self.save_dir_test)
 
         self.log_name = 'mask_rcnn_log_{}.txt'.format(datetime.now().strftime("%Y-%m-%d_%H:%M"))
+        self.write_log('epoch avg_precision recall\n')
 
     def _train_step(self, epoch):
         """Behaviour during one pass through the epoch.
@@ -60,7 +61,6 @@ class MaskRCNNTrainer(GenericTrainer):
 
         self.logger.info('Epoch {}/{}'.format(epoch, self.epochs))
         self.logger.info('-' * 10)
-        self.write_log('epoch avg_precision recall')
 
         # execute training and validation
         self.train_one_epoch(epoch)
@@ -170,7 +170,7 @@ class MaskRCNNTrainer(GenericTrainer):
         self.logger.info('Average precision with IoU threshold {}: {}'.format(iou_threshold, avg_precision))
         self.logger.info('Accumulated precision: {}'.format(precision))
         self.logger.info('Accumulated Recall: {}'.format(recall))
-        log_string = '{} {} {}'.format(epoch, avg_precision, recall)
+        log_string = '{} {} {}\n'.format(epoch, avg_precision, recall)
         self.write_log(log_string)
 
         # generate and save masked images
