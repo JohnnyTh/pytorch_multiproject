@@ -190,9 +190,9 @@ class RandomResizedCropBbox:
             h = int(round(math.sqrt(target_area / aspect_ratio)))
 
             if 0 < w <= width and 0 < h <= height:
-                i = random.randint(0, height - h)
-                j = random.randint(0, width - w)
-                return i, j, h, w
+                y = random.randint(0, height - h)
+                x = random.randint(0, width - w)
+                return y, x, h, w
 
         # Fallback to central crop
         in_ratio = float(width) / float(height)
@@ -205,9 +205,9 @@ class RandomResizedCropBbox:
         else:  # whole image
             w = width
             h = height
-        i = (height - h) // 2
-        j = (width - w) // 2
-        return i, j, h, w
+        y = (height - h) // 2
+        x = (width - w) // 2
+        return y, x, h, w
     
     def __call__(self, image, target):
         """
@@ -218,27 +218,30 @@ class RandomResizedCropBbox:
         Returns:
             PIL Image: Randomly cropped and resized image.
         """
-        i, j, h, w = self.get_params(image, self.scale, self.ratio)
-        image = F.resized_crop(image, i, j, h, w, self.size, self.interpolation)
+        y, x, h, w = self.get_params(image, self.scale, self.ratio)
+        image = F.resized_crop(image, y, x, h, w, self.size, self.interpolation)
         # get height and width of image after resizing
         w_new, h_new = image.size
 
         # note that single bbox format is [x0, y0, x1, y1]
         bbox = target['boxes']
-        # correct x0
-        bbox[:, 0][bbox[:, 0] < j] = 0
-        # correct y0
-        bbox[:, 1][bbox[:, 1] < i] = 0
-        # correct x1
-        bbox[:, 2][bbox[:, 2] > j + w] = w
-        # correct y1
-        bbox[:, 3][bbox[:, 3] > i + h] = h
-
+        # create mask that will drop all bounding boxes that have no intersection with cropped region
+        # the intersection conditions are x0 < x + w, y0 < y + h, x1 > x, y1 > y
+        drop_mask = (bbox[:, 0] < x + w) & (bbox[:, 1] < y + h) & (bbox[:, 2] > x) & (bbox[:, 3] > y)
+        bbox = bbox[drop_mask]
+        # move bonding box coordinates to coordinate system of cropped region
+        bbox[:, 0:3:2] = bbox[:, 0:3:2] - x
+        bbox[:, 1:4:2] = bbox[:, 1:4:2] - y
+        # clamp the bbox coordinate values at the boundaries of cropped region
+        bbox[:, 0:2][bbox[:, 0:2] < 0] = 0
+        bbox[:, 3][bbox[:, 3] > w] = w
+        bbox[:, 4][bbox[:, 4] > h] = h
         # get scale factors for horizontal and vertical dimensions
         w_scale = w_new/w
         h_scale = h_new/h
+        # adjust x0, x1 by horizontal scale factor
         bbox[:, 0:3:2] = bbox[:, 0:3:2] * w_scale
-        # multiply y0, y1 by vertical scale factor
+        # adjust y0, y1 by vertical scale factor
         bbox[:, 1:4:2] = bbox[:, 1:4:2] * h_scale
         target['boxes'] = bbox
 
@@ -249,7 +252,7 @@ class RandomResizedCropBbox:
                 transformed_masks = []
                 for mask in masks:
                     mask = F.to_pil_image(mask.mul(255))
-                    mask = F.resized_crop(mask, i, j, h, w, self.size, self.interpolation)
+                    mask = F.resized_crop(mask, y, x, h, w, self.size, self.interpolation)
                     mask = F.to_tensor(mask).squeeze()
                     mask = mask.to(dtype=torch.uint8)
                     transformed_masks.append(mask)
