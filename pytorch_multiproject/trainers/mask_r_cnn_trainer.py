@@ -128,13 +128,12 @@ class MaskRCNNTrainer(GenericTrainer):
         self.scheduler.step()
 
     @torch.no_grad()
-    def val_one_epoch(self, epoch, draw_bbox=True):
+    def val_one_epoch(self, epoch):
         """
 
         Parameters
         ----------
         epoch
-        draw_bbox
         """
         phase = 'val'
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
