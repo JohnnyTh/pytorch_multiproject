@@ -3,7 +3,8 @@ import warnings
 import torch
 import random
 import numbers
-from PIL import Image
+import numpy as np
+from PIL import Image, ImageFilter
 from torchvision.transforms import functional as F
 from torchvision.transforms import Lambda
 
@@ -72,6 +73,31 @@ class Compose(object):
             for t in self.transforms:
                 image = t(image)
             return image
+
+
+class GaussianSmoothingBbox(object):
+    # source
+    # https://discuss.pytorch.org/t/is-there-anyway-to-do-gaussian-filtering-for-an-image-2d-3d-in-pytorch/12351/11
+    def __init__(self, radius):
+        if isinstance(radius, numbers.Number):
+            self.min_radius = radius
+            self.max_radius = radius
+        elif isinstance(radius, list):
+            if len(radius) != 2:
+                raise ValueError(
+                    "`radius` should be a number or a list of two numbers")
+            if radius[1] < radius[0]:
+                raise ValueError(
+                    "radius[0] should be <= radius[1]")
+            self.min_radius = radius[0]
+            self.max_radius = radius[1]
+        else:
+            raise TypeError(
+                "`radius` should be a number or a list of two numbers")
+
+    def __call__(self, image, target):
+        radius = np.random.uniform(self.min_radius, self.max_radius)
+        return image.filter(ImageFilter.GaussianBlur(radius)), target
 
 
 class ColorJitterBbox:
@@ -274,6 +300,9 @@ class RandomCropBbox:
         bbox[:, 0:2][bbox[:, 0:2] < 0] = 0
         bbox[:, 2][bbox[:, 2] > w] = w
         bbox[:, 3][bbox[:, 3] > h] = h
+        # add a dummy bbox in case random crop selected an area without bounding boxes
+        if len(bbox) == 0:
+            bbox = torch.zeros((1, 4))
         target['boxes'] = bbox
 
         if 'masks' in target:
@@ -358,6 +387,9 @@ class RandomResizedCropBbox:
         bbox[:, 0:3:2] = bbox[:, 0:3:2] * w_scale
         # adjust y0, y1 by vertical scale factor
         bbox[:, 1:4:2] = bbox[:, 1:4:2] * h_scale
+        # add a dummy bbox in case random crop selected an area without bounding boxes
+        if len(bbox) == 0:
+            bbox = torch.zeros((1, 4))
         target['boxes'] = bbox
 
         if 'masks' in target:
