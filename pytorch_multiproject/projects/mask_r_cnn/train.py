@@ -35,7 +35,7 @@ def main(config, args):
                                     t_custom.RandomHorizontalFlip(0.5)])
     transform_2 = t_custom.Compose([t_custom.RandomCropBbox(),
                                     t_custom.ToTensor()])
-    transform_3 = t_custom.Compose([t_custom.ColorJitterBbox(0.5, 0.5, 0.5),
+    transform_3 = t_custom.Compose([t_custom.ColorJitterBbox(0.5, 0.5, 0.5, 0.5),
                                     t_custom.ToTensor()])
 
     dataset_1 = PennFudanDataset(root=resources_dir, data_paths=[images, masks], extensions=(('.png'),) * 2,
