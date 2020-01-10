@@ -31,19 +31,16 @@ def main(config, args):
     images = os.path.join(resources_dir, 'PNGImages')
     masks = os.path.join(resources_dir, 'PedMasks')
 
-    transform_1 = t_custom.Compose([t_custom.ToTensor(),
+    transform_1 = t_custom.Compose([t_custom.GaussianSmoothingBbox([0.5, 1]),
+                                    t_custom.ToTensor(),
                                     t_custom.RandomHorizontalFlip(0.5)])
-    transform_2 = t_custom.Compose([t_custom.RandomCropBbox(),
-                                    t_custom.ToTensor()])
-    transform_3 = t_custom.Compose([t_custom.ColorJitterBbox(0.5, 0.5, 0.5, 0.5),
+    transform_2 = t_custom.Compose([t_custom.ColorJitterBbox(0.2, 0.2, 0.2, 0.2),
                                     t_custom.ToTensor()])
 
     dataset_1 = PennFudanDataset(root=resources_dir, data_paths=[images, masks], extensions=(('.png'),) * 2,
                                transforms=transform_1)
     dataset_2 = PennFudanDataset(root=resources_dir, data_paths=[images, masks], extensions=(('.png'),) * 2,
                                    transforms=transform_2)
-    dataset_3 = PennFudanDataset(root=resources_dir, data_paths=[images, masks], extensions=(('.png'),) * 2,
-                                 transforms=transform_3)
     dataset_test = PennFudanDataset(root=resources_dir, data_paths=[images, masks], extensions=(('.png'),) * 2,
                                     transforms=t_custom.ToTensor())
 
@@ -52,8 +49,7 @@ def main(config, args):
 
     dataset_train_aug_1 = Subset(dataset_1, indices[:-50])
     dataset_train_aug_2 = Subset(dataset_2, indices[:-50])
-    dataset_train_aug_3 = Subset(dataset_3, indices[:-50])
-    dataset_train = ConcatDataset([dataset_train_aug_1, dataset_train_aug_2, dataset_train_aug_3])
+    dataset_train = ConcatDataset([dataset_train_aug_1, dataset_train_aug_2])
 
     dataset_test = Subset(dataset_test, indices[-50:])
 
