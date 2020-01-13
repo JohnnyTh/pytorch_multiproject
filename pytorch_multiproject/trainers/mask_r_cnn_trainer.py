@@ -173,7 +173,7 @@ class MaskRCNNTrainer(GenericTrainer):
         self.write_log(log_string)
 
         # generate and save masked images
-        evaluator.save_bboxes_masks(epoch, selected_boxes, mask_draw_precision=0.4, opacity=0.4)
+        evaluator.save_bboxes_masks(epoch, selected_boxes_ind=selected_boxes, mask_draw_precision=0.4, opacity=0.4)
         self.logger.info('Masked images + bboxes have been saved to {}'.format(self.save_dir_test))
 
     @torch.no_grad()
