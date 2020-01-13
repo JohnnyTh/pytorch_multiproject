@@ -55,8 +55,8 @@ class Compose(object):
 
         Parameters
         ----------
-        image (Tensor) - Tensor image of shape (C, H, W)
-        target (optional, dict) - contains coordinates of bounding boxes, mask tensors etc. that need to be transformed
+        image (Tensor): Tensor image of shape (C, H, W)
+        target (optional, dict): contains coordinates of bounding boxes, mask tensors etc. that need to be transformed
                alongside with the image.
 
         Returns
@@ -95,6 +95,14 @@ class GaussianSmoothingBbox(object):
                 "`radius` should be a number or a list of two numbers")
 
     def __call__(self, image, target):
+        """
+        Parameters
+        ----------
+        image (Tensor): Tensor image of shape (C, H, W)
+        target (optional, dict): contains coordinates of bounding boxes, mask tensors etc. that need to be transformed
+               alongside with the image.
+
+        """
         radius = torch.FloatTensor(1).uniform_(self.min_radius, self.max_radius).item()
         return image.filter(ImageFilter.GaussianBlur(radius)), target
 
@@ -185,7 +193,8 @@ class ColorJitterBbox:
 
         Returns:
             PIL Image: Color jittered image.
-            target (dict):
+            target (dict): contains coordinates of bounding boxes, mask tensors etc. that need to be transformed
+               alongside with the image
         """
         transform = self.get_params(self.brightness, self.contrast,
                                     self.saturation, self.hue)
@@ -360,6 +369,7 @@ class RandomResizedCropBbox:
 
         Returns:
             PIL Image: Randomly cropped and resized image.
+            target (dict).
         """
         y, x, h, w = get_crop_params(image, self.scale, self.ratio)
         image = F.resized_crop(image, y, x, h, w, self.size, self.interpolation)
