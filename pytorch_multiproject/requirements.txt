@@ -1,5 +1,7 @@
 torch >= 1.2.0
 torchvision
+cython >= 0.29.14
+pycocotools >= 2.0.0
 numpy >= 1.17
 requests >= 2.22.0
 pandas >= 0.24.2

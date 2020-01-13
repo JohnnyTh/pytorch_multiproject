@@ -23,7 +23,7 @@ def main_run(main_func, DEFAULT_CONFIG):
     main_func(config, arguments)
 
 
-def default_log_config(file_output=None, silence=False, console_level=logging.DEBUG, file_level=logging.DEBUG):
+def default_log_config(file_output=None, silence=False, console_level=logging.INFO, file_level=logging.DEBUG):
     log_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     date_format = "%Y-%m-%d %H:%M:%S"
     ch, fh = logging.NullHandler(), logging.NullHandler()
@@ -33,4 +33,4 @@ def default_log_config(file_output=None, silence=False, console_level=logging.DE
     if file_output:
         fh = logging.handlers.RotatingFileHandler(filename=file_output, maxBytes=1048576, backupCount=5)
         fh.setLevel(file_level)
-    logging.basicConfig(format=log_format, datefmt=date_format, level=logging.DEBUG, handlers=[ch, fh])
+    logging.basicConfig(format=log_format, datefmt=date_format, level=logging.INFO, handlers=[ch, fh])

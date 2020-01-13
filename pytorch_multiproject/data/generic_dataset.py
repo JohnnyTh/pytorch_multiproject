@@ -23,7 +23,7 @@ class GenericDataset(Dataset):
 
         if len(data_paths) > 1:
             if 1 < len(extensions) != len(data_paths):
-                raise Exception('Wrong configuration of sources')
+                raise ValueError('Wrong configuration of sources')
         if len(data_paths) == 1 and len(extensions) > len(data_paths):
             data_paths = data_paths*len(extensions)
 

@@ -10,12 +10,49 @@ such as Dataset and Trainer classes. The repo includes several implemented Deep 
 projects demonstrating usage of these concepts in practice.
 
 ## Version history:
-##### Version 0.2.0:
+### Version 0.3.0:
+Implemented [Mask R-CNN](https://arxiv.org/abs/1703.06870) for object detection using built-in torchvision model.
+#### Object detection with Mask R-CNN
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/39649806/72250821-2e6f3d80-3605-11ea-9983-18e04163d19b.jpg" alt="mask_r_cnn" width="600"/>
+</p>
+
+This project used the [Mask R-CNN model](https://github.com/pytorch/vision/blob/master/torchvision/models/detection/mask_rcnn.py)
+provided in torchvision package and [Penn-Fudan Database for Pedestrian Detection and Segmentation](https://www.cis.upenn.edu/~jshi/ped_html/)
+for bounding box regression and instance segmentation tasks.
+
+<p>Since the model had already been implemented, the project was focused on creating utilities for model performance 
+evaluation and visualisation of the results. The following components were implemented:
+
+<ul>
+    <li>Non-max suppression algorithm for output bounding boxes (utils/detection_evaluator.py)</li>
+    <li>Mean Average Precision + Recall metrics calculation (utils/detection_evaluator.py)</li>
+    <li>Mask and bounding box saver (utils/detection_evaluator.py)</li>
+    <li>A number of transforms (random crop, gaussian blur) for data augmentation (data/custom_transforms.py)</li>
+</ul>
+
+The model was trained using hyperparameters from [TorchVision Object Detection Finetuning Tutorial](https://pytorch.org/tutorials/intermediate/torchvision_tutorial.html).
+A combination of custom transforms was used in order to improve performance of the model compared to the results in tutorial.
+As shown in the image below, gaussian blur + horizontal flip and color jitter augmentation allowed for notable 
+improvement over the default horizontal flipping.
+
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/39649806/72254356-76de2980-360c-11ea-8ad4-9d3130a2fcf3.png" alt="mask_val" width="500"/>
+</p>
+
+The outputs of the trained model can be seen below (green - ground truth bounding boxes, 
+red - predicted bounding boxes; masks are displayed as coloured areas overlaid on top of persons' silhouettes):
+
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/39649806/72255424-5c597f80-360f-11ea-9fcc-0fa31f7e1795.png" alt="mask_val" width="1000"/>
+</p>
+
+### Version 0.2.0:
 Implemented CycleGAN for several tasks based on the following [Paper](https://arxiv.org/pdf/1703.10593.pdf). 
 The tasks include unpaired image-to-image translation for horse-zebra, mnist-svhn, and old-young datasets. 
 #### Cycle Generative Adversarial Networks
 <p align="center">
-  <img src="https://user-images.githubusercontent.com/39649806/69902337-fb465700-1394-11ea-9a9b-de1b582c86ec.png" alt="torch" width="600"/>
+  <img src="https://user-images.githubusercontent.com/39649806/69902337-fb465700-1394-11ea-9a9b-de1b582c86ec.png" alt="cylegan" width="600"/>
 </p>
 
 Implementation of CycleGAN drawing architecture/training details from the [Repo](https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix).
@@ -53,7 +90,7 @@ pytorch_multiproject/utils/age_gender_preprocessing.py).
  <img src="https://user-images.githubusercontent.com/39649806/69608464-2eed4e00-1030-11ea-9ef9-fe1a339627d0.jpg" alt="torch" width="600"/>
 </p>
 
-##### Version 0.1.0:
+### Version 0.1.0:
 Implemented all basic features - basic and generic classes for trainers, unit tests for important modules, 
 logging of results. Generic trainer was implemented with serialization, deserialization and cycling through epochs methods. 
 Additionally, two custom projects were added. First project is a simple NN for MNIST classification task 
@@ -86,6 +123,7 @@ pytorch-multiproject/
 ├── models/ - models, losses, and metrics
 │   ├── age_gender_model.py - Neural network model for age and gender classification
 |   ├── cycle_GAN.py - NN model, optimizer, lr_scheduler for Cycle Generative Adversarial Network
+|   ├── mask_r_cnn_model.py - Mask R-CNN from torchvision package
 │   └── mnist_model.py - Neural network model for MNIST dataset classififcation
 │
 ├── projects/ - actual DL projects created using the tools provided in repo
@@ -104,6 +142,11 @@ pytorch-multiproject/
 │   |   ├── train.json
 │   |   └── train.py - main script to start training
 |   |
+|   └── mask_r_cnn/ - Mask R-CNN for object detection
+│   |   ├── test.py
+│   |   ├── train.json
+│   |   └── train.py
+│   |
 |   └── mnist/ - MNIST dataset classififcation model
 |        ├── train.json
 |        └── train.py - main script to start training

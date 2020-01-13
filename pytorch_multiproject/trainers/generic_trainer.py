@@ -116,7 +116,7 @@ class GenericTrainer(BaseTrainer):
                     self.optimizer.change_lr(self.hyperparams.get('lr', 0.0002))
                     self.logger.info('Learning rate has been changed!')
                 else:
-                    raise Exception('required method change_lr not implemented in provided optimizer object')
+                    raise NotImplementedError('required method change_lr not implemented in provided optimizer object')
 
         # restore scheduler parameters from the checkpoint
         if checkpoint['scheduler'] is not None:
