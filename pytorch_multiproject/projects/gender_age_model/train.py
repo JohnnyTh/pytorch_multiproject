@@ -54,7 +54,7 @@ def main(config, args):
     else:
         logger.warning('Please decrease the size of test dataset, the are not enough data. '
                        'The size of test must be below {}'.format(len(test_balanced_full)))
-        raise Exception('Could not create test dataset!')
+        raise ValueError('Could not create test dataset!')
 
     # collect list of folders containing input images
     data_dirs = [os.path.join(resources_dir, o)
