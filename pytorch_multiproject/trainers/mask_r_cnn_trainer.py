@@ -15,7 +15,7 @@ class MaskRCNNTrainer(GenericTrainer):
 
     def __init__(self, dataloaders, val_phase_freq=1, *args, **kwargs):
         """
-        Trains and evaluated Mask R-CNN model from torchvision package.
+        Trains and evaluates Mask R-CNN model from torchvision package.
         Parameters
         ----------
         dataloaders (dict): 'train' and 'val' dataloaders.
