@@ -3,7 +3,6 @@ import warnings
 import torch
 import random
 import numbers
-import numpy as np
 from PIL import Image, ImageFilter
 from torchvision.transforms import functional as F
 from torchvision.transforms import Lambda
@@ -96,7 +95,7 @@ class GaussianSmoothingBbox(object):
                 "`radius` should be a number or a list of two numbers")
 
     def __call__(self, image, target):
-        radius = np.random.uniform(self.min_radius, self.max_radius)
+        radius = torch.FloatTensor(1).uniform_(self.min_radius, self.max_radius).item()
         return image.filter(ImageFilter.GaussianBlur(radius)), target
 
 
