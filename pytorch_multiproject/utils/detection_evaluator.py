@@ -9,12 +9,12 @@ class DetectionEvaluator:
 
     def __init__(self, save_dir):
         """
-        To calculate the object detection scores, we accumulate ground truth labels (targets) and
+        To calculate the object detection scores, we accumulate ground the images, ground truth labels (targets) and
            predictions of our model during the val phase, then compute the necessary metrics (e.g. bounding box mAP)
 
         Parameters
         ----------
-        save_dir
+        save_dir (str): a path where the outputs of the class method self.save_bboxes_masks(..) will be saved.
 
         """
         self.logger = logging.getLogger(os.path.basename(__file__))
@@ -23,27 +23,32 @@ class DetectionEvaluator:
 
     def accumulate(self, save_img, targets, predictions):
         """
-
+        Collects the data during the model operation in val phase for further processing.
         Parameters
         ----------
-        save_img (numpy.ndarray):
-        targets (dict):
-        predictions (dict):
+        save_img (numpy.ndarray): an array of shape (H, W, C) representing the input image.
+        targets (dict): contains ground truth coordinates of bounding boxes, segmentation mask values, etc.
+        predictions (dict): contains predicted values of bounding boxes, segmentation masks, etc.
         """
         self.data.append([save_img, targets, predictions])
 
     def bbox_score(self, iou_threshold=0.5, non_max_iou_thresh=0.5, score_threshold=0.6):
         """
-
+        Calculates the bounding box score using the accumulated ground truth targets and respective predictions.
         Parameters
         ----------
-        iou_threshold
-        non_max_iou_thresh
-        score_threshold
+        iou_threshold (float, 0. to 1., optional): determines whether predicted bounding box is considered
+                false positive (bbox IoU < iou_threshold) or true positive (bbox IoU > iou_threshold).
+        non_max_iou_thresh (float, 0. to 1., optional): non-max suppression threshold, used to discard predicted
+                bounding boxes that have IoU > threshold with any other predicted bbox.
+        score_threshold (float, 0. to 1., optional): used to discard all bounding boxes with confidence < threshold.
 
         Returns
         -------
-
+        avg_precision (): mAP score.
+        precision (float): accumulated precision based on predictions and targets on self.data.
+        recall (float): accumulated recall based on predictions and targets on self.data.
+        remaining_idx (list): indices of remaining bounding boxes for each element in self.data.
         """
         remaning_idx = []
         true_positive = np.array([])
@@ -138,18 +143,22 @@ class DetectionEvaluator:
 
         Parameters
         ----------
-        bboxes_pred_score
-        bboxes_pred
-        score_threshold
-        iou_threshold
+        bboxes_pred_score (numpy.ndarray[N]): confidence scores for each prediction.
+        bboxes_pred (numpy.ndarray[N, 4]): predicted boxes in format [x1, y1, x2, y2], with values between
+                0 and H, 0 and W
+        score_threshold (float, 0. to 1.): used to discard all bounding boxes with confidence < threshold.
+        iou_threshold (float, 0. to 1.): non-max suppression threshold, used to discard predicted bounding boxes
+                that have IoU > threshold with any other predicted bbox.
 
         Returns
         -------
-
+        out_bboxes (numpy.ndarray): bounding boxes after non-max suppression.
+        out_scores (numpy.ndarray): confidence scores of bounding boxes after non-max suppression.
+        out_idx (numpy.ndarray): indices of bounding boxes remaining after non-max suppression.
         """
 
         remaining_idx = np.arange(bboxes_pred_score.shape[0])
-        # firstly we discard all bbox predictions where class prob < base_treshold
+        # firstly we discard all bbox predictions where class prob < score_threshold
         selected_idx = np.argwhere(bboxes_pred_score > score_threshold).flatten()
         selected_bboxes = bboxes_pred[selected_idx]
         selected_scores = bboxes_pred_score[selected_idx]
@@ -196,12 +205,13 @@ class DetectionEvaluator:
 
         return out_bboxes, out_scores, out_idx
 
-    def save_bboxes_masks(self, epoch, selected_boxes_ind=None, mask_draw_precision=0.4, opacity=0.4):
+    def save_bboxes_masks(self, epoch, bbox_width=2, selected_boxes_ind=None, mask_draw_precision=0.4, opacity=0.4):
         """
         Draws bounding boxes and masks on top of the original image and saves the result.
         Parameters
         ----------
         epoch (int): epoch number
+        bbox_width (int, optional): the bbox line width, in pixels.
         selected_boxes_ind (list): a list of lists containing indexes of selected bounding boxes
                     (after non-max suppression) for each image.
         mask_draw_precision (float, 0. to 1.): confidence score, above which the mask will be drawn
@@ -209,7 +219,7 @@ class DetectionEvaluator:
         opacity (float, 0. to 1.):  mask opacity, 0 - completely transparent, 1 - completely opaque
         """
 
-        image_prep_list = list(self.draw_bbox(selected_boxes_ind))
+        image_prep_list = list(self.draw_bbox(bbox_width, selected_boxes_ind))
         image_prep_list = list(self.generate_masked_img(image_prep_list,
                                                         selected_boxes_ind,
                                                         mask_draw_precision,
@@ -219,14 +229,16 @@ class DetectionEvaluator:
             save_addr = os.path.join(self.save_dir, 'Test_img_{}_{}'.format(epoch, idx))
             image.save(save_addr, 'PNG')
 
-    def draw_bbox(self, selected_boxes_ind=None):
+    def draw_bbox(self, bbox_width=2, selected_boxes_ind=None):
         """
             Generator method.
             Draws bounding boxes on top of original image (green - ground truth, red - predicted bounding box).
             Yields resulting images
             Parameters
             ----------
-            selected_boxes_ind (list).
+            bbox_width (int, optional): the bbox line width, in pixels.
+            selected_boxes_ind (list, optional): a list of lists containing indices of bboxes remaining after non-max
+                        suppression.
         """
         for idx, data in enumerate(self.data):
             image, targets, predictions = data
@@ -247,11 +259,11 @@ class DetectionEvaluator:
 
             for target_bbox in targets_bboxes:
                 draw.rectangle((tuple(target_bbox[:2]), tuple(target_bbox[2:])),
-                               outline='green')
+                               outline='green', width=bbox_width)
 
             for single_pred in pred_bboxes:
                 draw.rectangle((tuple(single_pred[:2]), tuple(single_pred[2:])),
-                               outline='red')
+                               outline='red', width=bbox_width)
             yield image_prep
 
     def generate_masked_img(self, image_prep_list, selected_boxes_ind=None, mask_draw_precision=0.4, opacity=0.4):
@@ -313,20 +325,24 @@ class DetectionEvaluator:
 
     @staticmethod
     def generate_color_scheme():
+        # generates a random color scheme to color the masks
         return np.random.choice(range(255), size=3)
 
     @staticmethod
     def get_average_precision(precision, recall):
         """
-
+        Computes mAP as approximated AUC of Precision x Recall curve.
+        # More details here: https://github.com/rafaelpadilla/Object-Detection-Metrics
         Parameters
         ----------
-        precision
-        recall
+        precision (numpy.ndarray): precision values for all val dataset.
+        recall (numpy.ndarray): recall values for all val dataset.
 
         Returns
         -------
-
+        avg_precision (float): mAP score.
+        m_precision (numpy.ndarray): interpolated precision values.
+        m_recall (numpy.ndarray): modified recall values used to calculate the interpolated precision.
         """
         m_precision = list()
         m_precision.append(0)
@@ -359,15 +375,15 @@ class DetectionEvaluator:
     @staticmethod
     def intersection_over_union(bbox_1, bbox_2):
         """
-
+        Calculates IoU for two bounding boxes.
         Parameters
         ----------
-        bbox_1
-        bbox_2
+        bbox_1 (array-like): coordinates of first bounding box in the format [x1, y1, x2, y2].
+        bbox_2 (array-like):coordinates of second bounding box in the format [x1, y1, x2, y2].
 
         Returns
         -------
-
+        iou (float): IoU value.
         """
         bbox_1_x0 = bbox_1[0]
         bbox_1_y0 = bbox_1[1]
@@ -398,15 +414,15 @@ class DetectionEvaluator:
     @staticmethod
     def batch_iou(bbox_array_1, bbox_array_2):
         """
-
+        Calculates IoU for batched pairs of bonding boxes
         Parameters
         ----------
-        bbox_array_1
-        bbox_array_2
+        bbox_array_1 (numpy.ndarray[N, 4]): array of coordinates of first bounding box group.
+        bbox_array_2 (numpy.ndarray[N, 4]): array of coordinates of first bounding box group.
 
         Returns
         -------
-
+        iou (numpy.ndarray[N]): IoU scores.
         """
         bbox_1_x0 = bbox_array_1[:, 0]
         bbox_1_y0 = bbox_array_1[:, 1]
