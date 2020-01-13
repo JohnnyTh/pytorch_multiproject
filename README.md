@@ -123,6 +123,7 @@ pytorch-multiproject/
 ├── models/ - models, losses, and metrics
 │   ├── age_gender_model.py - Neural network model for age and gender classification
 |   ├── cycle_GAN.py - NN model, optimizer, lr_scheduler for Cycle Generative Adversarial Network
+|   ├── mask_r_cnn_model.py - Mask R-CNN from torchvision package
 │   └── mnist_model.py - Neural network model for MNIST dataset classififcation
 │
 ├── projects/ - actual DL projects created using the tools provided in repo
@@ -141,6 +142,11 @@ pytorch-multiproject/
 │   |   ├── train.json
 │   |   └── train.py - main script to start training
 |   |
+|   └── mask_r_cnn/ - Mask R-CNN for object detection
+│   |   ├── test.py
+│   |   ├── train.json
+│   |   └── train.py
+│   |
 |   └── mnist/ - MNIST dataset classififcation model
 |        ├── train.json
 |        └── train.py - main script to start training
