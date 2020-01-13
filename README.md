@@ -37,11 +37,11 @@ As shown in the image below, gaussian blur + horizontal flip and color jitter au
 improvement over the default horizontal flipping.
 
 <p align="center">
-  <img src="https://user-images.githubusercontent.com/39649806/72254356-76de2980-360c-11ea-8ad4-9d3130a2fcf3.png" alt="mask_val" width="600"/>
+  <img src="https://user-images.githubusercontent.com/39649806/72254356-76de2980-360c-11ea-8ad4-9d3130a2fcf3.png" alt="mask_val" width="500"/>
 </p>
 
 The outputs of the trained model can be seen below (green - ground truth bounding boxes, 
-red - predicted bounding boxes):
+red - predicted bounding boxes; masks are displayed as coloured areas overlaid on top of persons' silhouettes):
 
 <p align="center">
   <img src="https://user-images.githubusercontent.com/39649806/72255424-5c597f80-360f-11ea-9fcc-0fa31f7e1795.png" alt="mask_val" width="1000"/>
