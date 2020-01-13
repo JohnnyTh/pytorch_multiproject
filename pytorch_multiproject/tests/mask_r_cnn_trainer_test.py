@@ -150,7 +150,9 @@ deserialize_data = {
 @patch('utils.detection_evaluator.Image.Image.save')
 @patch('trainers.mask_r_cnn_trainer.warmup_lr_scheduler')
 @patch('trainers.mask_r_cnn_trainer.MaskRCNNTrainer._serialize', return_value=None)
-def test_train_run(self, _, __, ___, ____):
+@patch('trainers.mask_r_cnn_trainer.MaskRCNNTrainer.write_log')
+@patch('trainers.mask_r_cnn_trainer.MaskRCNNTrainer.write_log')
+def test_train_run(self, _, __, ___, ____, _____, ______):
     trainer = MaskRCNNTrainer(dataloaders=test_data['dataloaders'], root=test_data['root'],
                               model=test_data['model'], criterion=test_data['criterion'],
                               optimizer=test_data['optimizer'], scheduler=test_data['scheduler'],
@@ -163,7 +165,8 @@ def test_train_run(self, _, __, ___, ____):
 @patch('torch.load', return_value=deserialize_data)
 @patch('utils.detection_evaluator.Image.Image.save')
 @patch('trainers.mask_r_cnn_trainer.MaskRCNNTrainer._serialize', return_value=None)
-def test_train_deserialize_and_run(self, _, __, ___, ____):
+@patch('trainers.mask_r_cnn_trainer.MaskRCNNTrainer.write_log')
+def test_train_deserialize_and_run(self, _, __, ___, ____, _____):
     # Assuming we trained the model from epoch 1 to 5, then saved it and now want to restart
     trainer = MaskRCNNTrainer(dataloaders=test_data['dataloaders'], root=test_data['root'],
                               model=test_data['model'], criterion=test_data['criterion'],
@@ -178,7 +181,8 @@ def test_train_deserialize_and_run(self, _, __, ___, ____):
 @patch('os.mkdir')
 @patch('trainers.mask_r_cnn_trainer.save_image')
 @patch('torch.load', return_value=deserialize_data)
-def test_test_run(self, _, __):
+@patch('trainers.mask_r_cnn_trainer.MaskRCNNTrainer.write_log')
+def test_test_run(self, _, __, ___):
     trainer = MaskRCNNTrainer(dataloaders=test_data['dataloaders']['val'], root=test_data['root'],
                               model=test_data['model'], criterion=test_data['criterion'],
                               optimizer=test_data['optimizer'], scheduler=test_data['scheduler'],
