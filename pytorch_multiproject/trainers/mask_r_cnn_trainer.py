@@ -15,13 +15,15 @@ class MaskRCNNTrainer(GenericTrainer):
 
     def __init__(self, dataloaders, val_phase_freq=1, *args, **kwargs):
         """
-
+        Trains and evaluated Mask R-CNN model from torchvision package.
         Parameters
         ----------
-        dataloaders
-        val_phase_freq
-        args
-        kwargs
+        dataloaders (dict): 'train' and 'val' dataloaders.
+        val_phase_freq (int, optional): determines how often validation phase is executed. if freq == 1 - every phase.
+        *args: root, model, criterion, optimizer, scheduler, metrics, epochs,
+               hyperparams (optional), save_dir (optional), checkpoint (optional),
+               change_lr (optional).
+        **kwargs: checkpoint (optional).
         """
         super().__init__(*args, **kwargs)
 
@@ -44,10 +46,9 @@ class MaskRCNNTrainer(GenericTrainer):
 
     def _train_step(self, epoch):
         """Behaviour during one pass through the epoch.
-
         Parameters
         ----------
-        epoch
+        epoch (int): current epoch number.
         """
 
         # print parameters of optimizer and scheduler every epoch
@@ -77,10 +78,9 @@ class MaskRCNNTrainer(GenericTrainer):
 
     def train_one_epoch(self, epoch):
         """
-
         Parameters
         ----------
-        epoch
+        epoch (int): current epoch number.
         """
         # print training results every x iterations
         print_freq = 10
@@ -130,10 +130,9 @@ class MaskRCNNTrainer(GenericTrainer):
     @torch.no_grad()
     def val_one_epoch(self, epoch):
         """
-
         Parameters
         ----------
-        epoch
+        epoch (int): current epoch number.
         """
         phase = 'val'
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
