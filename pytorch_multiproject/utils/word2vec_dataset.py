@@ -14,11 +14,11 @@ data_root = os.path.join(ROOT_DIR, 'resources')
 
 class GetWord2VecData:
 
-    def __init__(self, window_size=5, genre='western', data_dir=data_root, url=None, sep_seq=' +++$+++ '):
+    def __init__(self, root, window_size=5, genre='western', url=None, sep_seq=' +++$+++ '):
         self.separator = sep_seq
         self.window_size = window_size
         self.genre = genre
-        self.data_dir = data_dir
+        self.data_dir = root
         self.url = url
         self.unk = '<UNK>'
         if self.url is None:
@@ -100,3 +100,8 @@ class GetWord2VecData:
         pickle.dump(word2idx, open(os.path.join(target_folder, 'word2idx.pickle'), 'wb'))
         pickle.dump(idx2word, open(os.path.join(target_folder, 'idx2word.pickle'), 'wb'))
         pickle.dump(word_count_encod, open(os.path.join(target_folder, 'word_counts.pickle'), 'wb'))
+
+
+data_getter = GetWord2VecData(data_root)
+data_getter.download_extract_zip()
+data_getter.generate_train_data_movies()
