@@ -8,23 +8,18 @@ from data.generic_dataset import GenericDataset
 
 class Word2VecDataset(GenericDataset):
 
-    def __init__(self, root, word_freq=None, subsamp_thresh=10**(-5), *args, **kwargs):
+    def __init__(self, root, word2idx, idx2word, word_freq=None, subsamp_thresh=10**(-5), *args, **kwargs):
         super.__init__(*args, **kwargs)
-        self.root = root
-        self.data_addr = os.path.join(self.root, self._found_dataset[0]['names'][0])
+        self.data_addr = os.path.join(root, self._found_dataset[0]['names'][0])
+        self.data = self.get_data()
+        self.word2idx = word2idx
+        self.idx2word = idx2word
+
         self.word_freq = word_freq
         self.subsampl_thresh = subsamp_thresh
         subsampl_prob = 1 - np.sqrt(self.subsampl_thresh / self.word_freq)
         self.subsampl_prob = np.clip(subsampl_prob, 0, 1)
 
-        word2idx = os.path.join(self.root, self._found_dataset[1]['names'][0])
-        idx2word = os.path.join(self.root, self._found_dataset[2]['names'][0])
-        word_count = os.path.join(self.root, self._found_dataset[3]['names'][0])
-
-        self.data = self.get_data()
-        self.word2idx = pickle.load(word2idx)
-        self.idx2word = pickle.load(idx2word)
-        self.word_count = pickle.load(word_count)
         self.memory = {'last_idx': None, 'current_idx': None}
 
     def __len__(self):
