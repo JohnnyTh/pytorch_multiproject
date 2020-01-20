@@ -124,12 +124,13 @@ class GetWord2VecData:
         self.logger.info('Vocab size: {} unique words'.format(len(vocabulary)))
         self.logger.info('{} of input - target(content) pairs have been formed'.format(len(data)))
         self.logger.info('Saving the pickled data...')
+
         # save all the relevant processing results using pickle
-        pickle.dump(data, open(os.path.join(target_folder, 'data.pickle'), 'wb'))
-        pickle.dump(vocabulary, open(os.path.join(target_folder, 'vocabulary.pickle'), 'wb'))
-        pickle.dump(word2idx, open(os.path.join(target_folder, 'word2idx.pickle'), 'wb'))
-        pickle.dump(idx2word, open(os.path.join(target_folder, 'idx2word.pickle'), 'wb'))
-        pickle.dump(word_count_encod, open(os.path.join(target_folder, 'word_counts.pickle'), 'wb'))
+        var_names = ['data', 'vocabulary', 'word2idx', 'idx2word', 'word_counts']
+        to_dump = [data, vocabulary, word2idx, idx2word, word_count_encod]
+        for name, content in zip(var_names, to_dump):
+            path = os.path.join(os.path.join(target_folder, name),  '{}.pickle'.format(name))
+            pickle.dump(content, open(path, 'wb'))
         self.logger.info('Done')
 
 
