@@ -37,7 +37,7 @@ class Word2VecDataset(GenericDataset):
 
         input_word, target_words = self.data[item]
         self.memory['last_idx'] = self.memory['current_idx']
-        return torch.LongTensor(input_word), torch.LongTensor(target_words)
+        return torch.tensor(input_word).long(), torch.tensor(target_words).long()
 
     def get_data(self):
         data = pickle.load(open(self.data_addr, 'rb'))

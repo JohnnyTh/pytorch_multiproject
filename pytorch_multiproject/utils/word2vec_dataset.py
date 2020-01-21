@@ -15,7 +15,7 @@ data_root = os.path.join(ROOT_DIR, 'resources')
 
 class GetWord2VecData:
 
-    def __init__(self, root, sep_seq=' +++$+++ ', window_size=5, genre='sci-fi', url=None, min_sentence_len=5, ):
+    def __init__(self, root, sep_seq=' +++$+++ ', window_size=2, genre='sci-fi', url=None, min_sentence_len=5, ):
         self.data_dir = root
         self.separator = sep_seq
         self.window_size = window_size
@@ -109,7 +109,7 @@ class GetWord2VecData:
         data = []
         t = tqdm(corpus_mod)
         print('Creating input-context word pairs')
-        t.set_description('Processing sentence: ')
+        t.set_description('Processing sentence')
         for sentence in t:
             # replace unknown words in sentence with respective token
             sent_unk = []
