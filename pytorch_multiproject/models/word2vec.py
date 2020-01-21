@@ -38,14 +38,15 @@ class Word2VecModel(nn.Module):
         if self.weights is not None:
             negative_words = (torch.multinomial(self.weights, batch_size * context_size * self.n_negatives,
                                                 replacement=True)
-                              .view(batch_size, -1))
+                              .view(batch_size, -1)
+                              .to(device))
         else:
             negative_words = (torch.FloatTensor(batch_size, context_size * self.n_negatives)
                               .uniform_(0, self.vocab_size-1)
                               .long()
                               .to(device))
 
-        inpt_emb = self.input_embeddings(input_)
+        inpt_emb = self.input_embeddings(input_).unsqueeze(2)
         target_emb = self.target_embeddings(target)
         neg_emb = self.target_embeddings(negative_words).neg()
 

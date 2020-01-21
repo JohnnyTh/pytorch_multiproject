@@ -32,6 +32,7 @@ class Word2VecTrainer(GenericTrainer):
             target_words = target_words.to(device)
 
             loss = self.model(input_word, target_words)
+            self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
             t.set_postfix(loss=loss.item())
@@ -65,4 +66,4 @@ class Word2VecTrainer(GenericTrainer):
         pickle.dump(idx2vec, open(idx2vec_path, 'wb'))
         torch.save(model_state, model_path)
 
-        self.logger.info('Saving the model at {}'.format(model_state))
+        self.logger.info('Saving the model at {}'.format(model_path))
