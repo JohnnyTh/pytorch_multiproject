@@ -27,10 +27,10 @@ def main(config, args):
         resources_dir = os.path.join(ROOT_DIR, 'resources', config.get('resource_dir', 'cornell movie-dialogs corpus'))
 
     data = os.path.join(resources_dir, 'data')
-    vocabulary = pickle.load(os.path.join(os.path.join(resources_dir, 'vocabulary'), 'vocabulary.pickle'))
-    word2idx = pickle.load(os.path.join(os.path.join(resources_dir, 'word2idx'), 'word2idx.pickle'))
-    idx2word = pickle.load(os.path.join(os.path.join(resources_dir, 'idx2word'), 'idx2word.pickle'))
-    word_count = pickle.load(os.path.join(os.path.join(resources_dir, 'word_counts'), 'word_counts.pickle'))
+    vocabulary = pickle.load(os.path.join(os.path.join(resources_dir, 'vocabulary'), 'vocabulary.pickle'), 'rb')
+    word2idx = pickle.load(os.path.join(os.path.join(resources_dir, 'word2idx'), 'word2idx.pickle'), 'rb')
+    idx2word = pickle.load(os.path.join(os.path.join(resources_dir, 'idx2word'), 'idx2word.pickle'), 'rb')
+    word_count = pickle.load(os.path.join(os.path.join(resources_dir, 'word_counts'), 'word_counts.pickle'), 'rb')
     # sort the items of the dict to ensure that the keys are in ascending order
     word_count = dict(sorted(word_count.items()))
 
