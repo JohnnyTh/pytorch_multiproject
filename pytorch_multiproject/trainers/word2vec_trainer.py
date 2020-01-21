@@ -38,10 +38,11 @@ class Word2VecTrainer(GenericTrainer):
             self.optimizer.step()
 
             t.set_postfix(loss=loss.item())
-            running_loss = loss.cpu().float()
+            running_loss = loss.view(-1).cpu().float()
             cumulative_loss = torch.cat((cumulative_loss, running_loss))
 
-        self.logger.info('Epoch loss: {}'.format(cumulative_loss.mean()))
+        self.logger.info('Epoch loss: {:.6f}'.format(cumulative_loss.mean()))
+        self.logger.info('\n\n')
         # in the current implementation the trained model is saved after each epoch
         results.update({'best_performance': True})
         return results
