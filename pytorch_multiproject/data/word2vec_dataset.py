@@ -2,23 +2,23 @@ import os
 import torch
 import pickle
 import random
-import numpy as np
 from data.generic_dataset import GenericDataset
 
 
 class Word2VecDataset(GenericDataset):
 
     def __init__(self, root, word2idx, idx2word, word_freq=None, subsamp_thresh=10**(-5), *args, **kwargs):
-        super.__init__(*args, **kwargs)
-        self.data_addr = os.path.join(root, self._found_dataset[0]['names'][0])
+        super().__init__(*args, **kwargs)
+        self.data_addr = os.path.join(self._found_dataset[0]['root'], self._found_dataset[0]['names'][0])
+        self.word_freq = word_freq
         self.data = self.get_data()
         self.word2idx = word2idx
         self.idx2word = idx2word
-
-        self.word_freq = word_freq
-        self.subsampl_thresh = subsamp_thresh
-        subsampl_prob = 1 - np.sqrt(self.subsampl_thresh / self.word_freq)
-        self.subsampl_prob = np.clip(subsampl_prob, 0, 1)
+        self.subsampl_thresh = torch.tensor(subsamp_thresh).float()
+        self.subsampl_prob = None
+        if self.word_freq is not None:
+            subsampl_prob = 1 - torch.sqrt(self.subsampl_thresh / self.word_freq)
+            self.subsampl_prob = torch.clamp(subsampl_prob, 0, 1)
 
         self.memory = {'last_idx': None, 'current_idx': None}
 
@@ -46,7 +46,7 @@ class Word2VecDataset(GenericDataset):
             data_balanced = []
             for input_word, target_words in data:
                 if random.random() > self.subsampl_prob[input_word]:
-                    data_balanced.append((input_word, target_words ))
+                    data_balanced.append((input_word, target_words))
             data = data_balanced
 
         return data

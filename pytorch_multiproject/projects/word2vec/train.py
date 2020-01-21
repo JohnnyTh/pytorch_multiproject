@@ -50,8 +50,9 @@ def main(config, args):
     # define number of epochs
     epochs = config.get('epochs', 100)
 
-    trainer = Word2VecTrainer(dataloader=data_loader, root=ROOT_DIR, model=model, criterion=None,
-                              optimizer=optim, epochs=epochs, save_dir=args.save_dir, checkpoint=args.checkpoint)
+    trainer = Word2VecTrainer(dataloader=data_loader, root=ROOT_DIR, model=model, criterion=None, optimizer=optim,
+                              scheduler=None, metrics=None, epochs=epochs, save_dir=args.save_dir,
+                              checkpoint=args.checkpoint)
 
     trainer.train()
 

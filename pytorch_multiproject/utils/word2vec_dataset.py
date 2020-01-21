@@ -3,12 +3,12 @@ import os
 ROOT_DIR = os.path.dirname(os.path.abspath(os.path.dirname('__file__')))
 sys.path.append(ROOT_DIR)
 import re
-import logging
 import requests
 import zipfile
 import pickle
 import pandas as pd
 import numpy as np
+from tqdm import tqdm
 
 data_root = os.path.join(ROOT_DIR, 'resources')
 
@@ -107,7 +107,10 @@ class GetWord2VecData:
 
         # prepare the training pairs of input and context words
         data = []
-        for sentence in corpus:
+        t = tqdm(corpus_mod)
+        print('Creating input-context word pairs')
+        t.set_description('Processing sentence: ')
+        for sentence in t:
             # replace unknown words in sentence with respective token
             sent_unk = []
             for word in sentence:
