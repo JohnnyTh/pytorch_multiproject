@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-import numpy as np
 
 
 class Word2VecModel(nn.Module):
@@ -10,9 +9,9 @@ class Word2VecModel(nn.Module):
         self.vocab_size = vocab_size
         self.embedding_size = embedding_size
         self.n_negatives = n_negatives
-        weights = np.power(word_freq, 0.75)
+        weights = torch.pow(word_freq, 0.75)
         weights = weights / weights.sum()
-        self.weights = torch.FloatTensor(weights)
+        self.weights = weights
 
         self.input_embeddings = nn.Embedding(self.vocab_size, self.embedding_size, padding_idx=padding_idx)
         self.target_embeddings = nn.Embedding(self.vocab_size, self.embedding_size, padding_idx=padding_idx)
@@ -35,7 +34,7 @@ class Word2VecModel(nn.Module):
         device = input_.device
         batch_size = input_.shape[0]
         context_size = target.shape[1]
-        # generate examples of negative context using uniform distribution
+        # generate examples of negative context using provided word weights or uniform distribution
         if self.weights is not None:
             negative_words = (torch.multinomial(self.weights, batch_size * context_size * self.n_negatives,
                                                 replacement=True)
