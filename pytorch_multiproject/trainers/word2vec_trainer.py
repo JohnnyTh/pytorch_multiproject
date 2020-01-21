@@ -1,6 +1,4 @@
 import os
-import sys
-import math
 import pickle
 import logging
 import torch

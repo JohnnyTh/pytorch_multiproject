@@ -10,7 +10,6 @@ from models.word2vec import Word2VecModel
 from data.word2vec_dataset import Word2VecDataset
 from trainers.word2vec_trainer import Word2VecTrainer
 from logger.logger import main_run, default_log_config
-import data.custom_transforms as t_custom
 
 # default configuration file with hyperparameters
 DEFAULT_CONFIG = 'train.json'
