@@ -29,12 +29,14 @@ class Word2VecDataset(GenericDataset):
         if self.memory['last_idx'] is None:
             self.memory['last_idx'] = item
         self.memory['current_idx'] = item
+        # resample the data after each epoch
         if (self.memory['current_idx'] == 0
             and self.memory['last_idx'] == len(self.data) - 1
             and self.word_freq is not None):
             self.data = self.get_data()
 
         input_word, target_words = self.data[item]
+        self.memory['last_idx'] = self.memory['current_idx']
         return input_word, np.array(target_words)
 
     def get_data(self):
