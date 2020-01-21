@@ -24,23 +24,22 @@ class GetWord2VecData:
         self.min_sentence_len = min_sentence_len
         self.unk = '<UNK>'
         self.pad = '<PAD>'
-        self.logger = logging.getLogger(os.path.basename(__file__))
         if self.url is None:
             self.url = 'http://www.cs.cornell.edu/~cristian/data/cornell_movie_dialogs_corpus.zip'
 
     def download_extract_zip(self):
-        self.logger.info('Accessing the dataset at {}'.format(self.url))
+        print('Accessing the dataset at {}'.format(self.url))
         r = requests.get(self.url)
         local_file_path = os.path.join(self.data_dir, 'word2vec.zip')
         os.makedirs(os.path.dirname(local_file_path), exist_ok=True)
         with open(local_file_path, 'wb') as f:
             f.write(r.content)
-        self.logger.info('Dataset downloaded'.format(self.url))
+        print('Dataset downloaded'.format(self.url))
 
-        self.logger.info('Unpacking the data in {}'.format(self.data_dir))
+        print('Unpacking the data in {}'.format(self.data_dir))
         with zipfile.ZipFile(local_file_path, 'r') as zip_ref:
             zip_ref.extractall(path=self.data_dir)
-        self.logger.info('Done')
+        print('Done')
 
     def skipgram(self, sentence, idx):
         # generates a pair of input word - target(context) words
@@ -120,18 +119,19 @@ class GetWord2VecData:
                 input_word, target_words = self.skipgram(sent_unk, idx)
                 data.append((word2idx[input_word], [word2idx[word] for word in target_words]))
 
-        self.logger.info('Dataset preprocessing finished')
-        self.logger.info('Vocab size: {} unique words'.format(len(vocabulary)))
-        self.logger.info('{} of input - target(content) pairs have been formed'.format(len(data)))
-        self.logger.info('Saving the pickled data...')
+        print('Dataset preprocessing finished')
+        print('Vocab size: {} unique words'.format(len(vocabulary)))
+        print('{} of input - target(content) pairs have been formed'.format(len(data)))
+        print('Saving the pickled data...')
 
         # save all the relevant processing results using pickle
         var_names = ['data', 'vocabulary', 'word2idx', 'idx2word', 'word_counts']
         to_dump = [data, vocabulary, word2idx, idx2word, word_count_encod]
         for name, content in zip(var_names, to_dump):
+            os.makedirs(os.path.join(target_folder, name), exist_ok=True)
             path = os.path.join(os.path.join(target_folder, name),  '{}.pickle'.format(name))
             pickle.dump(content, open(path, 'wb'))
-        self.logger.info('Done')
+        print('Done')
 
 
 data_getter = GetWord2VecData(data_root)

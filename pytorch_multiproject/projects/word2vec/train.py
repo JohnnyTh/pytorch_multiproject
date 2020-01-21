@@ -45,7 +45,7 @@ def main(config, args):
     model.to(device)
     # construct an optimizer
     params = [p for p in model.parameters() if p.requires_grad]
-    optim = torch.optim.Adam(params, lr=config.get('lr', 0.0002))
+    optim = torch.optim.Adam(params, lr=config.get('lr', 0.002))
 
     # define number of epochs
     epochs = config.get('epochs', 100)
