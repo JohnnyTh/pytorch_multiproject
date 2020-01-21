@@ -14,7 +14,7 @@ class Word2VecTrainer(GenericTrainer):
         self.dataloader = dataloader
 
     def _train_step(self, epoch):
-
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         # print parameters of optimizer and scheduler every epoch
         self.logger.info(str(self.optimizer))
         if self.scheduler is not None:
@@ -24,7 +24,8 @@ class Word2VecTrainer(GenericTrainer):
             'best_performance': False
         }
 
-        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        cumulative_loss = torch.empty(0)
+        self.logger.info('Epoch {}/{}'.format(epoch, self.epochs))
         t = tqdm(iter(self.dataloader), leave=False, total=len(self.dataloader))
         t.set_description("[Epoch {}]".format(epoch))
         for input_word, target_words in t:
@@ -35,8 +36,12 @@ class Word2VecTrainer(GenericTrainer):
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
-            t.set_postfix(loss=loss.item())
 
+            t.set_postfix(loss=loss.item())
+            running_loss = loss.cpu().float()
+            cumulative_loss = torch.cat((cumulative_loss, running_loss))
+
+        self.logger.info('Epoch loss: {}'.format(cumulative_loss.mean()))
         # in the current implementation the trained model is saved after each epoch
         results.update({'best_performance': True})
         return results
