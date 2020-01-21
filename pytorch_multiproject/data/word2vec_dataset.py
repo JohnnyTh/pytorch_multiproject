@@ -40,7 +40,7 @@ class Word2VecDataset(GenericDataset):
         return torch.LongTensor(input_word), torch.LongTensor(target_words)
 
     def get_data(self):
-        data = pickle.load(self.data_addr, 'rb')
+        data = pickle.load(open(self.data_addr, 'rb'))
         # if word frequency is supplied, drop input words with certain probability
         if self.word_freq is not None:
             data_balanced = []
