@@ -5,7 +5,6 @@ sys.path.insert(0, ROOT_DIR)
 import logging
 import pickle
 import torch
-import numpy as np
 from torch.utils.data import DataLoader
 from models.word2vec import Word2VecModel
 from data.word2vec_dataset import Word2VecDataset
@@ -33,9 +32,10 @@ def main(config, args):
     word2idx = pickle.load(os.path.join(os.path.join(resources_dir, 'word2idx'), 'word2idx.pickle'))
     idx2word = pickle.load(os.path.join(os.path.join(resources_dir, 'idx2word'), 'idx2word.pickle'))
     word_count = pickle.load(os.path.join(os.path.join(resources_dir, 'word_counts'), 'word_counts.pickle'))
+    # sort the items of the dict to ensure that the keys are in ascending order
     word_count = dict(sorted(word_count.items()))
 
-    word_freq = np.array([word_count[idx] for idx in word_count])
+    word_freq = torch.tensor([word_count[idx] for idx in word_count]).float()
     word_freq = word_freq / word_freq.sum()
 
     dataset = Word2VecDataset(resources_dir, word2idx, idx2word, word_freq=None, data_paths=[data], extensions=(('.pickle'),))
@@ -51,7 +51,7 @@ def main(config, args):
     # define number of epochs
     epochs = config.get('epochs', 100)
 
-    trainer = Word2VecTrainer(dataloaders=data_loader, root=ROOT_DIR, model=model, criterion=None,
+    trainer = Word2VecTrainer(dataloader=data_loader, root=ROOT_DIR, model=model, criterion=None,
                               optimizer=optim, epochs=epochs, save_dir=args.save_dir, checkpoint=args.checkpoint)
 
     trainer.train()
