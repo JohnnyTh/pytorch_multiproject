@@ -40,7 +40,7 @@ def main(config, args):
         word_freq = word_freq / word_freq.sum()
 
     dataset = Word2VecDataset(resources_dir, word2idx, idx2word, word_freq=word_freq, data_paths=[data], extensions=(('.pickle'),))
-    data_loader = DataLoader(dataset, batch_size=256, shuffle=True, num_workers=0)
+    data_loader_params = {'dataset': dataset, 'batch_size': 256, 'shuffe': True, 'num_workers': 0}
 
     model = Word2VecModel(vocab_size=len(vocabulary), word_freq=word_freq)
     # move model to the right device
@@ -52,7 +52,7 @@ def main(config, args):
     # define number of epochs
     epochs = config.get('epochs', 5)
 
-    trainer = Word2VecTrainer(dataloader=data_loader, root=ROOT_DIR, model=model, criterion=None, optimizer=optim,
+    trainer = Word2VecTrainer(dataloader=data_loader_params, root=ROOT_DIR, model=model, criterion=None, optimizer=optim,
                               scheduler=None, metrics=None, epochs=epochs, save_dir=args.save_dir,
                               checkpoint=args.checkpoint)
 

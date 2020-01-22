@@ -3,6 +3,7 @@ import pickle
 import logging
 import torch
 from trainers.generic_trainer import GenericTrainer
+from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 
@@ -11,7 +12,7 @@ class Word2VecTrainer(GenericTrainer):
     def __init__(self, dataloader, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.logger = logging.getLogger(os.path.basename(__file__))
-        self.dataloader = dataloader
+        self.data_loader_params = dataloader
 
     def _train_step(self, epoch):
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -25,8 +26,14 @@ class Word2VecTrainer(GenericTrainer):
         }
 
         cumulative_loss = torch.empty(0)
+
+        # resample the data and create a new dataloader on every epoch
+        dataset = self.data_loader_params['dataset'].subsample_data()
+        dataloader = DataLoader(dataset, batch_size=self.data_loader_params['batch_size'],
+                                shuffle=self.data_loader_params['shuffle'],
+                                num_workers=self.data_loader_params['num_workers'])
         self.logger.info('Epoch {}/{}'.format(epoch, self.epochs))
-        t = tqdm(iter(self.dataloader), leave=False, total=len(self.dataloader))
+        t = tqdm(iter(dataloader), leave=False, total=len(dataloader))
         t.set_description("[Epoch {}]".format(epoch))
         for input_word, target_words in t:
             input_word = input_word.to(device)

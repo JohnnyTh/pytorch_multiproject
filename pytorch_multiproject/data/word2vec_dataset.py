@@ -21,28 +21,16 @@ class Word2VecDataset(GenericDataset):
             # since 0 - padding el, 1 - unk el
             self.subsampl_prob = torch.cat([torch.tensor([1.1, 1.1]),
                                             torch.clamp(subsampl_prob, 0, 1)])
-        self.memory = {'last_idx': None, 'current_idx': None}
-
-        self.data = self.get_data()
+        self.data = []
 
     def __len__(self):
         return len(self.data)
 
     def __getitem__(self, item):
-        if self.memory['last_idx'] is None:
-            self.memory['last_idx'] = item
-        self.memory['current_idx'] = item
-        # resample the data after each epoch
-        if (self.memory['current_idx'] == 0
-            and self.memory['last_idx'] == len(self.data) - 1
-            and self.word_freq is not None):
-            self.data = self.get_data()
-
         input_word, target_words = self.data[item]
-        self.memory['last_idx'] = self.memory['current_idx']
         return torch.tensor(input_word).long(), torch.tensor(target_words).long()
 
-    def get_data(self):
+    def subsample_data(self):
         data = pickle.load(open(self.data_addr, 'rb'))
         # if word frequency is supplied, drop input words with certain probability
         if self.word_freq is not None:
@@ -51,5 +39,4 @@ class Word2VecDataset(GenericDataset):
                 if random.random() > self.subsampl_prob[input_word]:
                     data_balanced.append((input_word, target_words))
             data = data_balanced
-
-        return data
+        self.data = data
