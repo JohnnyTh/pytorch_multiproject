@@ -11,6 +11,8 @@ class Word2VecModel(nn.Module):
         self.n_negatives = n_negatives
         weights = torch.pow(word_freq, 0.75)
         weights = weights / weights.sum()
+        # two first elements (padding el and unk) have 0 weight since we don't want to select them for negative samples)
+        weights = torch.cat([torch.tensor([0., 0.]), weights])
         self.weights = weights
 
         self.input_embeddings = nn.Embedding(self.vocab_size, self.embedding_size, padding_idx=padding_idx)

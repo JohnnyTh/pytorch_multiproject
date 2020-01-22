@@ -17,7 +17,10 @@ class Word2VecDataset(GenericDataset):
         self.subsampl_prob = None
         if self.word_freq is not None:
             subsampl_prob = 1 - torch.sqrt(self.subsampl_thresh / self.word_freq)
-            self.subsampl_prob = torch.clamp(subsampl_prob, 0, 1)
+            # two first elements in subsampling prob distriution have value >1 so that they are never selected
+            # since 0 - padding el, 1 - unk el
+            self.subsampl_prob = torch.cat([torch.tensor([1.1, 1.1]),
+                                            torch.clamp(subsampl_prob, 0, 1)])
         self.memory = {'last_idx': None, 'current_idx': None}
 
         self.data = self.get_data()
