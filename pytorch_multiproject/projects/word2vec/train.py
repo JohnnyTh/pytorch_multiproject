@@ -34,10 +34,12 @@ def main(config, args):
     # sort the items of the dict to ensure that the keys are in ascending order
     word_count = dict(sorted(word_count.items()))
 
-    word_freq = torch.tensor([word_count[idx] for idx in word_count]).float()
-    word_freq = word_freq / word_freq.sum()
+    word_freq = None
+    if config.get('subsample_words', False):
+        word_freq = torch.tensor([word_count[idx] for idx in word_count]).float()
+        word_freq = word_freq / word_freq.sum()
 
-    dataset = Word2VecDataset(resources_dir, word2idx, idx2word, word_freq=None, data_paths=[data], extensions=(('.pickle'),))
+    dataset = Word2VecDataset(resources_dir, word2idx, idx2word, word_freq=word_freq, data_paths=[data], extensions=(('.pickle'),))
     data_loader = DataLoader(dataset, batch_size=256, shuffle=True, num_workers=0)
 
     model = Word2VecModel(vocab_size=len(vocabulary), word_freq=word_freq)
@@ -48,7 +50,7 @@ def main(config, args):
     optim = torch.optim.Adam(params, lr=config.get('lr', 0.002))
 
     # define number of epochs
-    epochs = config.get('epochs', 100)
+    epochs = config.get('epochs', 5)
 
     trainer = Word2VecTrainer(dataloader=data_loader, root=ROOT_DIR, model=model, criterion=None, optimizer=optim,
                               scheduler=None, metrics=None, epochs=epochs, save_dir=args.save_dir,

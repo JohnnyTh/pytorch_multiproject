@@ -57,3 +57,7 @@ class Word2VecModel(nn.Module):
                          .mean(1))
         loss = - (true_loss + negative_loss).mean()
         return loss
+
+    def infer(self, input_):
+        # converts input word(s) into an embedding
+        return self.input_embeddings(input_)
