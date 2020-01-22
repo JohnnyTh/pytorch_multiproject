@@ -11,7 +11,6 @@ class Word2VecDataset(GenericDataset):
         super().__init__(*args, **kwargs)
         self.data_addr = os.path.join(self._found_dataset[0]['root'], self._found_dataset[0]['names'][0])
         self.word_freq = word_freq
-        self.data = self.get_data()
         self.word2idx = word2idx
         self.idx2word = idx2word
         self.subsampl_thresh = torch.tensor(subsamp_thresh).float()
@@ -19,8 +18,9 @@ class Word2VecDataset(GenericDataset):
         if self.word_freq is not None:
             subsampl_prob = 1 - torch.sqrt(self.subsampl_thresh / self.word_freq)
             self.subsampl_prob = torch.clamp(subsampl_prob, 0, 1)
-
         self.memory = {'last_idx': None, 'current_idx': None}
+
+        self.data = self.get_data()
 
     def __len__(self):
         return len(self.data)
