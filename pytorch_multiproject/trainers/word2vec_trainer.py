@@ -9,10 +9,21 @@ from tqdm import tqdm
 
 class Word2VecTrainer(GenericTrainer):
 
-    def __init__(self, dataloader, *args, **kwargs):
+    def __init__(self, dataloader_params, subsample_words, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.logger = logging.getLogger(os.path.basename(__file__))
-        self.data_loader_params = dataloader
+        self.subsample_words = subsample_words
+
+        # create one permanent instance of dataloader without subsampling
+        self.dataloader = None
+        if not self.subsample_words:
+            dataset = dataloader_params['dataset']
+            dataset.subsample_or_get_data()
+            self.dataloader = DataLoader(dataset, batch_size=dataloader_params['batch_size'],
+                                         shuffle=dataloader_params['shuffle'],
+                                         num_workers=dataloader_params['num_workers'])
+        else:
+            self.dataloader_params = dataloader_params
 
     def _train_step(self, epoch):
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -24,16 +35,18 @@ class Word2VecTrainer(GenericTrainer):
         results = {
             'best_performance': False
         }
-
         cumulative_loss = torch.empty(0)
 
-        # resample the data and create a new dataloader on every epoch
-        dataset = self.data_loader_params['dataset'].subsample_data()
-        dataloader = DataLoader(dataset, batch_size=self.data_loader_params['batch_size'],
-                                shuffle=self.data_loader_params['shuffle'],
-                                num_workers=self.data_loader_params['num_workers'])
+        if self.subsample_words:
+            # resample the data and create a new dataloader on every epoch
+            dataset = self.dataloader_params['dataset']
+            dataset.subsample_or_get_data()
+            self.dataloader = DataLoader(dataset, batch_size=self.dataloader_params['batch_size'],
+                                         shuffle=self.dataloader_params['shuffle'],
+                                         num_workers=self.dataloader_params['num_workers'])
+
         self.logger.info('Epoch {}/{}'.format(epoch, self.epochs))
-        t = tqdm(iter(dataloader), leave=False, total=len(dataloader))
+        t = tqdm(iter(self.dataloader), leave=False, total=len(self.dataloader))
         t.set_description("[Epoch {}]".format(epoch))
         for input_word, target_words in t:
             input_word = input_word.to(device)

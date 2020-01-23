@@ -16,6 +16,8 @@ DEFAULT_CONFIG = 'train.json'
 
 
 def main(config, args):
+    subsample_words = config.get('subsample_words', False)
+    balance_negs = config.get('subsample_words', False)
     # train on the GPU or on the CPU, if a GPU is not available
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
@@ -34,15 +36,14 @@ def main(config, args):
     # sort the items of the dict to ensure that the keys are in ascending order
     word_count = dict(sorted(word_count.items()))
 
-    word_freq = None
-    if config.get('subsample_words', False):
-        word_freq = torch.tensor([word_count[idx] for idx in word_count]).float()
-        word_freq = word_freq / word_freq.sum()
+    word_freq = torch.tensor([word_count[idx] for idx in word_count]).float()
+    word_freq = word_freq / word_freq.sum()
 
-    dataset = Word2VecDataset(resources_dir, word2idx, idx2word, word_freq=word_freq, data_paths=[data], extensions=(('.pickle'),))
-    data_loader_params = {'dataset': dataset, 'batch_size': 256, 'shuffe': True, 'num_workers': 0}
+    dataset = Word2VecDataset(resources_dir, word2idx, idx2word, word_freq=(word_freq if subsample_words else None),
+                              data_paths=[data], extensions=(('.pickle'),))
+    data_loader_params = {'dataset': dataset, 'batch_size': 256, 'shuffle': True, 'num_workers': 0}
 
-    model = Word2VecModel(vocab_size=len(vocabulary), word_freq=word_freq)
+    model = Word2VecModel(vocab_size=len(vocabulary), word_freq=(word_freq if balance_negs else None))
     # move model to the right device
     model.to(device)
     # construct an optimizer
@@ -50,11 +51,11 @@ def main(config, args):
     optim = torch.optim.Adam(params, lr=config.get('lr', 0.002))
 
     # define number of epochs
-    epochs = config.get('epochs', 5)
+    epochs = config.get('epochs', 100)
 
-    trainer = Word2VecTrainer(dataloader=data_loader_params, root=ROOT_DIR, model=model, criterion=None, optimizer=optim,
-                              scheduler=None, metrics=None, epochs=epochs, save_dir=args.save_dir,
-                              checkpoint=args.checkpoint)
+    trainer = Word2VecTrainer(dataloader_params=data_loader_params, subsample_words=subsample_words, root=ROOT_DIR,
+                              model=model, criterion=None, optimizer=optim, scheduler=None, metrics=None,
+                              epochs=epochs, save_dir=args.save_dir, checkpoint=args.checkpoint)
 
     trainer.train()
 

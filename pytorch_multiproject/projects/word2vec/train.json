@@ -1,4 +1,5 @@
 {"epochs":  5,
  "lr": 0.002,
- "subsample_words": true
+ "subsample_words": true,
+ "balance_negs": true
 }
