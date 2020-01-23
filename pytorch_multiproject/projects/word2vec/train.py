@@ -17,7 +17,7 @@ DEFAULT_CONFIG = 'train.json'
 
 def main(config, args):
     subsample_words = config.get('subsample_words', False)
-    balance_negs = config.get('subsample_words', False)
+    balance_negs = config.get('balance_negs', False)
     # train on the GPU or on the CPU, if a GPU is not available
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
