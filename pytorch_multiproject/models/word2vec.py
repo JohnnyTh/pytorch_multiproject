@@ -52,7 +52,14 @@ class Word2VecModel(nn.Module):
         target_emb = self.target_embeddings(target)
         neg_emb = self.target_embeddings(negative_words).neg()
 
-        true_loss = torch.bmm(target_emb, inpt_emb).squeeze().sigmoid().log().mean(1)
+        try:
+            # squeeze(-1) - squeeze only the last dimension otherwise will produce IndexError in case batch size is 1
+            true_loss = torch.bmm(target_emb, inpt_emb).squeeze(-1).sigmoid().log().mean(1)
+        except IndexError as e:
+            print('Shape mismatch!')
+            print('target shape: {}'.format(target_emb.shape))
+            print('Input shape: {}'.format(inpt_emb.shape))
+            raise IndexError(e)
         negative_loss = (torch.bmm(neg_emb, inpt_emb).squeeze().sigmoid().log()
                          .view(-1, context_size, self.n_negatives)
                          .sum(2)
