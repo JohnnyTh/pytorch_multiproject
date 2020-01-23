@@ -39,4 +39,5 @@ class Word2VecDataset(GenericDataset):
             for input_word, target_words in data:
                 if random.random() > self.subsampl_prob[input_word]:
                     data_balanced.append((input_word, target_words))
-        self.data = data_balanced
+            data = data_balanced
+        self.data = data
