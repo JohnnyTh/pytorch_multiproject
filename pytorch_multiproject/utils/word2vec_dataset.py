@@ -5,22 +5,22 @@ sys.path.append(ROOT_DIR)
 import re
 import codecs
 import requests
+import shutil
 import pickle
-import pandas as pd
-import numpy as np
 from tqdm import tqdm
 import argparse
 
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-url', type=str, help="url with target dataset file to download")
+    parser.add_argument('prep_lotr', type=bool, help='prepares the LOTR dataset')
     parser.add_argument('-file_path', type=str, help="full path to a downloaded dataset file")
+    parser.add_argument('--url', type=str, defalut=None, help="url with target dataset file to download")
     parser.add_argument('--window', type=int, default=5, help="window size")
     parser.add_argument('--min_sentence_len', type=int, default=5,
                         help="minimum length of sentences in processed corpus")
     parser.add_argument('--min_freq', type=int, default=5, help="minimum frequency of the words in vocabulary")
-    parser.add_argument('--accumulate_corpus', type=bool, default=False,
+    parser.add_argument('--accumulate_corpus', type=bool, default=True,
                         help="whether the processed corpus will be stored in RAM or loaded from a disc")
     return parser.parse_args()
 
@@ -80,8 +80,8 @@ class GetWord2VecData:
                 sentence = line.split()
                 sentence = [re.sub(r'[^a-z]', '', word) for word in sentence if len(word) > 0]
                 sentence = [word.strip() for word in sentence if word.strip()]
-                if self.accumulate_corpus:
-                    self.corpus.append([sentence])
+                if self.accumulate_corpus and len(sentence) > self.min_sentence_len:
+                    self.corpus.append(sentence)
 
                 for word in sentence:
                     word_count[word] = word_count.get(word, 0) + 1
@@ -96,7 +96,7 @@ class GetWord2VecData:
         self.word2idx = {word: idx for idx, word in enumerate(self.vocabulary)}
         self.word_count = {self.word2idx[word]: count for word, count in word_count.items()}
         print('Vocab size: {} unique words'.format(len(self.vocabulary)))
-        save_dir = os.path.basename(file_path)
+        save_dir = os.path.dirname(file_path)
         file_names = ['vocabulary', 'word2idx', 'idx2word', 'word_counts']
         files = [self.vocabulary, self.word2idx, self.idx2word, self.word_count]
         self.pickle_dump(file_names, files, save_dir)
@@ -127,7 +127,7 @@ class GetWord2VecData:
                     t.set_postfix('{} input -target pairs created so far'.format(len(data)))
         print("")
         print('{} of input - target(content) pairs have been formed'.format(len(data)))
-        self.pickle_dump(['data'], [data], os.path.basename(file_path))
+        self.pickle_dump(['data'], [data], os.path.dirname(file_path))
 
     def convert_data_from_buffer(self, file_path):
         print("converting corpus...")
@@ -135,9 +135,6 @@ class GetWord2VecData:
         t = tqdm(self.corpus)
         t.set_description('Preparing input-context pairs')
         for line in t:
-            line = line.lower()
-            if not line:
-                continue
             sentence = []
             for word in line:
                 if word in self.vocabulary:
@@ -147,10 +144,10 @@ class GetWord2VecData:
             for i in range(len(sentence)):
                 input_word, target_words = data_getter.skipgram(sentence, i)
                 data.append((self.word2idx[input_word], [self.word2idx[t_word] for t_word in target_words]))
-                t.set_postfix('{} input -target pairs created so far'.format(len(data)))
+                t.set_postfix(progress='{} input -target pairs created so far'.format(len(data)))
         print("")
         print('{} of input - target(content) pairs have been formed'.format(len(data)))
-        self.pickle_dump(['data'], [data], os.path.basename(file_path))
+        self.pickle_dump(['data'], [data], os.path.dirname(file_path))
 
     def generate_data_large(self, file_path):
         # since method generate_train_data_movies() works with all the data loaded in memory at once,
@@ -189,4 +186,12 @@ if __name__ == '__main__':
     data_getter = GetWord2VecData(data_root, url=args.url, window_size=args.window,
                                   min_sentence_len=args.min_sentence_len, min_freq=args.min_freq,
                                   accumulate_corpus=args.accumulate_corpus)
-    data_getter.generate_data_large(args.file_path)
+    if args.prep_lotr:
+        path_src = '/content/drive/My Drive/Colab Notebooks/pt_proj/embeddings/files_data/LOTR_3.txt'
+        path_tgt = os.path.join(data_root, 'LOTR_3.txt')
+        os.makedirs(os.path.dirname(path_tgt), exist_ok=True)
+        shutil.copy2(path_src, path_tgt)
+        data_getter.generate_data_large(path_tgt)
+    else:
+        data_getter.download_txt()
+        data_getter.generate_data_large(args.file_path)
