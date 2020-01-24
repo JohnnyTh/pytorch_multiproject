@@ -13,9 +13,9 @@ import argparse
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('prep_lotr', type=bool, help='prepares the LOTR dataset')
+    parser.add_argument('-prep_lotr', type=bool, help='prepares the LOTR dataset')
     parser.add_argument('-file_path', type=str, help="full path to a downloaded dataset file")
-    parser.add_argument('--url', type=str, defalut=None, help="url with target dataset file to download")
+    parser.add_argument('--url', type=str, default=None, help="url with target dataset file to download")
     parser.add_argument('--window', type=int, default=5, help="window size")
     parser.add_argument('--min_sentence_len', type=int, default=5,
                         help="minimum length of sentences in processed corpus")
@@ -124,9 +124,9 @@ class GetWord2VecData:
                 for i in range(len(sentence)):
                     input_word, target_words = data_getter.skipgram(sentence, i)
                     data.append((self.word2idx[input_word], [self.word2idx[t_word] for t_word in target_words]))
-                    t.set_postfix('{} input -target pairs created so far'.format(len(data)))
+                    t.set_postfix('{} input-target pairs created so far'.format(len(data)))
         print("")
-        print('{} of input - target(content) pairs have been formed'.format(len(data)))
+        print('{} of input-target(content) pairs have been formed'.format(len(data)))
         self.pickle_dump(['data'], [data], os.path.dirname(file_path))
 
     def convert_data_from_buffer(self, file_path):

@@ -9,11 +9,14 @@ class Word2VecModel(nn.Module):
         self.vocab_size = vocab_size
         self.embedding_size = embedding_size
         self.n_negatives = n_negatives
-        weights = torch.pow(word_freq, 0.75)
-        weights = weights / weights.sum()
-        # two first elements (padding el and unk) have 0 weight since we don't want to select them for negative samples)
-        weights = torch.cat([torch.tensor([0., 0.]), weights])
-        self.weights = weights
+        self.weights = None
+        if word_freq is not None:
+            weights = torch.pow(word_freq, 0.75)
+            weights = weights / weights.sum()
+            # two first elements (padding el and unk) have 0 weight since we don't
+            # want to select them for negative samples)
+            weights = torch.cat([torch.tensor([0., 0.]), weights])
+            self.weights = weights
 
         self.input_embeddings = nn.Embedding(self.vocab_size, self.embedding_size, padding_idx=padding_idx)
         self.target_embeddings = nn.Embedding(self.vocab_size, self.embedding_size, padding_idx=padding_idx)
@@ -66,7 +69,3 @@ class Word2VecModel(nn.Module):
                          .mean(1))
         loss = - (true_loss + negative_loss).mean()
         return loss
-
-    def infer(self, input_):
-        # converts input word(s) into an embedding
-        return self.input_embeddings(input_)

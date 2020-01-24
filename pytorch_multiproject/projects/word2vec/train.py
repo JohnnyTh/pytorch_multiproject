@@ -43,7 +43,8 @@ def main(config, args):
                               subsamp_thresh=10**-4, data_paths=[data], extensions=(('.pickle'),))
     data_loader_params = {'dataset': dataset, 'batch_size': 256, 'shuffle': True, 'num_workers': 0}
 
-    model = Word2VecModel(vocab_size=len(vocabulary), word_freq=(word_freq if balance_negs else None))
+    model = Word2VecModel(vocab_size=len(vocabulary), embedding_size=config.get('embeddings_size', 300),
+                          word_freq=(word_freq if balance_negs else None))
     # move model to the right device
     model.to(device)
     # construct an optimizer
