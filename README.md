@@ -10,6 +10,16 @@ such as Dataset and Trainer classes. The repo includes several implemented Deep 
 projects demonstrating usage of these concepts in practice.
 
 ## Version history:
+###Version 0.4.0:
+Implemented Word2Vec algorithm using Skip-Gram Negative Sampling (SGNS) model.
+#### Skip-Gram Negative Sampling
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/39649806/73181645-4aec9900-4120-11ea-81c8-70305bbb1072.jpg" alt="SGNS" width="600"/>
+</p>
+
+In this project a version of Skip-Gram Negative Sampling model was implemented as desccribed in the original [paper](https://arxiv.org/abs/1310.4546).
+
+
 ### Version 0.3.0:
 Implemented [Mask R-CNN](https://arxiv.org/abs/1703.06870) for object detection using built-in torchvision model.
 #### Object detection with Mask R-CNN
