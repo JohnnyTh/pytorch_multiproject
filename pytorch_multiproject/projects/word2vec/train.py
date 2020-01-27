@@ -5,7 +5,6 @@ sys.path.insert(0, ROOT_DIR)
 import logging
 import pickle
 import torch
-from torch.utils.data import DataLoader
 from models.word2vec import Word2VecModel
 from data.word2vec_dataset import Word2VecDataset
 from trainers.word2vec_trainer import Word2VecTrainer
@@ -40,8 +39,10 @@ def main(config, args):
     word_freq = word_freq / word_freq.sum()
 
     dataset = Word2VecDataset(resources_dir, word2idx, idx2word, word_freq=(word_freq if subsample_words else None),
-                              subsamp_thresh=10**-4, data_paths=[data], extensions=(('.pickle'),))
-    data_loader_params = {'dataset': dataset, 'batch_size': 256, 'shuffle': True, 'num_workers': 0}
+                              subsamp_thresh=config.get('subsamp_thresh', 10**-4),
+                              data_paths=[data], extensions=(('.pickle'),))
+    data_loader_params = {'dataset': dataset, 'batch_size': config.get('batch_size', 256), 'shuffle': True,
+                          'num_workers': 0}
 
     model = Word2VecModel(vocab_size=len(vocabulary), embedding_size=config.get('embeddings_size', 300),
                           word_freq=(word_freq if balance_negs else None))

@@ -14,7 +14,7 @@ class Word2VecTrainer(GenericTrainer):
         self.logger = logging.getLogger(os.path.basename(__file__))
         self.subsample_words = subsample_words
 
-        # create one permanent instance of dataloader without subsampling
+        # create one permanent instance of dataloader if without subsampling
         self.dataloader = None
         if not self.subsample_words:
             dataset = dataloader_params['dataset']

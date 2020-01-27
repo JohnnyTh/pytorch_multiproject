@@ -1,7 +1,9 @@
-{"epochs":  10,
+{"epochs":  20,
  "lr": 0.002,
  "resource_dir": "",
- "subsample_words": false,
+ "subsample_words": true,
  "balance_negs": true,
- "embeddings_size": 300
+ "embeddings_size": 300,
+ "subsamp_thresh":0.0001,
+ "batch_size": 256
 }
