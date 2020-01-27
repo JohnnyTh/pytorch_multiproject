@@ -2,7 +2,10 @@ import os
 import torch
 import pickle
 import random
+# import numpy as np
 from data.generic_dataset import GenericDataset
+
+# NOTE - quoted lines of code use numpy instead of for loop for subsampling
 
 
 class Word2VecDataset(GenericDataset):
@@ -21,6 +24,8 @@ class Word2VecDataset(GenericDataset):
             # since 0 - padding el, 1 - unk el
             self.subsampl_prob = torch.cat([torch.tensor([1.1, 1.1]),
                                             torch.clamp(subsampl_prob, 0, 1)])
+            # self.subsampl_prob = torch.cat([torch.tensor([1.1, 1.1]),
+            #                                 torch.clamp(subsampl_prob, 0, 1)]).numpy()
         self.data = None
 
     def __len__(self):
@@ -33,6 +38,7 @@ class Word2VecDataset(GenericDataset):
 
     def subsample_or_get_data(self):
         data = pickle.load(open(self.data_addr, 'rb'))
+        # data = np.array(pickle.load(open(self.data_addr, 'rb'))
         # if word frequency is supplied, drop input words with certain probability
         data_balanced = []
         if self.word_freq is not None:
@@ -40,4 +46,10 @@ class Word2VecDataset(GenericDataset):
                 if random.random() > self.subsampl_prob[input_word]:
                     data_balanced.append((input_word, target_words))
             data = data_balanced
+
+        # use subsampl_prob as lookup table for input words in data
+        # all_probs = self.subsampl_prob[data[:, 0]]
+        # threshold = np.random.rand(len(all_probs))
+        # mask = threshold > all_probs
+        # self.data = data[mask]
         self.data = data

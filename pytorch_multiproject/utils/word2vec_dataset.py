@@ -3,10 +3,10 @@ import os
 ROOT_DIR = os.path.dirname(os.path.abspath(os.path.dirname('__file__')))
 sys.path.append(ROOT_DIR)
 import re
-import codecs
-import requests
 import shutil
 import pickle
+import codecs
+import requests
 from tqdm import tqdm
 import argparse
 
@@ -144,6 +144,7 @@ class GetWord2VecData:
             for i in range(len(sentence)):
                 input_word, target_words = data_getter.skipgram(sentence, i)
                 data.append((self.word2idx[input_word], [self.word2idx[t_word] for t_word in target_words]))
+
                 t.set_postfix(progress='{} input -target pairs created so far'.format(len(data)))
         print("")
         print('{} of input - target(content) pairs have been formed'.format(len(data)))
