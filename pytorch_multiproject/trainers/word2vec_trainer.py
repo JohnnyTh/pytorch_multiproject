@@ -10,6 +10,15 @@ from tqdm import tqdm
 class Word2VecTrainer(GenericTrainer):
 
     def __init__(self, dataloader_params, subsample_words, *args, **kwargs):
+        """
+
+        Parameters
+        ----------
+        dataloader_params
+        subsample_words
+        args
+        kwargs
+        """
         super().__init__(*args, **kwargs)
         self.logger = logging.getLogger(os.path.basename(__file__))
         self.subsample_words = subsample_words
@@ -26,6 +35,16 @@ class Word2VecTrainer(GenericTrainer):
             self.dataloader_params = dataloader_params
 
     def _train_step(self, epoch):
+        """
+
+        Parameters
+        ----------
+        epoch
+
+        Returns
+        -------
+
+        """
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         # print parameters of optimizer and scheduler every epoch
         self.logger.info(str(self.optimizer))
@@ -68,6 +87,12 @@ class Word2VecTrainer(GenericTrainer):
         return results
 
     def _serialize(self, epoch):
+        """
+
+        Parameters
+        ----------
+        epoch
+        """
         # save the model and some other parameters
         if self.scheduler is not None:
             sched_state = {'name': self.scheduler.__class__.__name__,

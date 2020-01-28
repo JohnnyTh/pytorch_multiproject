@@ -32,6 +32,19 @@ class GetWord2VecData:
 
     def __init__(self, root, window_size=5, url=None, min_sentence_len=5, min_freq=5,
                  accumulate_corpus=False):
+        """
+        Downloads and pre-processes a corpus of text for Word2Vec algorithm.
+        Parameters
+        ----------
+        root (str): root dir address where all the files will be downloaded and saved after pre-processing.
+        window_size (int): context window size for Skip-Gram model.
+        url (str): url to download the dataset from.
+        min_sentence_len (int): sentences with length below this value will be discarded from corpus.
+        min_freq (int): words encountered less then this number of time will be discarded from vocabulary.
+        accumulate_corpus (bool): if False, the preprocessed read from the disc and preprocessed two times:
+            first time to obtain vocabluary, word counts and idx - word mapping dictionaries and second time to form
+            input - context word pairs. Else the corpus will be kept in memory after the initial preprocessing.
+        """
         self.data_dir = root
         self.window_size = window_size
         self.url = url
@@ -47,6 +60,7 @@ class GetWord2VecData:
         self.word_count = None
 
     def download_txt(self):
+        # download a txt file from url.
         print('Accessing the dataset at {}'.format(self.url))
         r = requests.get(self.url)
         local_file_path = os.path.join(self.data_dir, 'word2vec.txt')
@@ -57,6 +71,17 @@ class GetWord2VecData:
         print('Done')
 
     def skipgram(self, sentence, idx):
+        """
+        Creates input - target word pair from sentence.
+        Parameters
+        ----------
+        sentence (list): a sequence of words forming a sentence.
+        idx (int): index of input word around which the context mush be sampled.
+
+        Returns
+        -------
+        input_word, target_words - input - target word pair.
+        """
         # generates a pair of input word - target(context) words
         input_word = sentence[idx]
         left = sentence[max(idx - self.window_size, 0): idx]
@@ -67,6 +92,12 @@ class GetWord2VecData:
         return input_word, target_words
 
     def build_tools(self, file_path):
+        """
+        Pre-processes the corpus, creates and saves vocabluary, word counts and idx - word mapping dictionaries.
+        Parameters
+        ----------
+        file_path (str): a path to the corpus of text.
+        """
         print("building vocab...")
         num_lines = sum(1 for line in open(file_path, 'r', errors='ignore'))
         word_count = {}
@@ -102,6 +133,12 @@ class GetWord2VecData:
         self.pickle_dump(file_names, files, save_dir)
 
     def convert_data_from_file(self, file_path):
+        """
+        Generates input -context pairs from the file saved on disc.
+        Parameters
+        ----------
+        file_path (str): a path to the corpus of text.
+        """
         print("converting corpus...")
         data = []
         num_lines = sum(1 for line in open(file_path, 'r', errors='ignore'))
@@ -130,6 +167,12 @@ class GetWord2VecData:
         self.pickle_dump(['data'], [data], os.path.dirname(file_path))
 
     def convert_data_from_buffer(self, file_path):
+        """
+        Generates input -context pairs from the corpus saved in memory.
+        Parameters
+        ----------
+        file_path (str): a path to a directory where the results will be saved.
+        """
         print("converting corpus...")
         data = []
         t = tqdm(self.corpus)
@@ -176,6 +219,14 @@ class GetWord2VecData:
 
     @staticmethod
     def pickle_dump(file_names, files, target_folder):
+        """
+        Saves the provided objects under respective file names.
+        Parameters
+        ----------
+        file_names (list): a sequence of file name strings.
+        files (list): a sequnce of objects to save in pickled form.
+        target_folder (str): a path to the save dir.
+        """
         for name, content in zip(file_names, files):
             os.makedirs(os.path.join(target_folder, name), exist_ok=True)
             path = os.path.join(os.path.join(target_folder, name),  '{}.pickle'.format(name))
