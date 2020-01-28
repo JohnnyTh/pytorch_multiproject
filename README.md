@@ -47,6 +47,8 @@ The results (shown below) hinted that there is indeed a strong degree of correla
   <img src="https://user-images.githubusercontent.com/39649806/73250078-d452a880-41be-11ea-894c-78018181e7ae.jpg" alt="cos_sim" width="1200"/>
 </p>
 
+<p> If you wold like to check the visualization code, please check the utils/visualize_word2vec.ipynb file.
+
 ### Version 0.3.0:
 Implemented [Mask R-CNN](https://arxiv.org/abs/1703.06870) for object detection using built-in torchvision model.
 #### Object detection with Mask R-CNN
@@ -210,6 +212,7 @@ pytorch-multiproject/
 │
 └── utils/ - small utility functions
     ├── util.py
+    └── visualize_word2vec.ipynb - visualization for SGNS model.
     ├── age_gender_preprocessing.py - downloads and pre-processes the data for gender age classifier and cycle GAN
     ├── gan_horses dataset.py - downloads horse - zebra dataset for cycle GAN
     └── detection_evaluator.py - metrics and mask + bbox saver for Mask R-CNN
