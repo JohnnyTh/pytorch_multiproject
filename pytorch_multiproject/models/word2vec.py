@@ -5,6 +5,17 @@ import torch.nn as nn
 class Word2VecModel(nn.Module):
 
     def __init__(self, vocab_size, padding_idx=0, embedding_size=300, n_negatives=10, word_freq=None):
+        """
+        Skip-Gram Negative Sampling (SGNS) model.
+        Parameters
+        ----------
+        vocab_size (int): size of the vocabulary.
+        padding_idx (int): index of the padding word in the embedding matrix (this word has all embeddings equal to 0).
+        embedding_size (int): size of the word embeddings vectors.
+        n_negatives (int): number of negative context samples for each positive context word
+        word_freq (torch.tensor): a tensor of length == vocab length, contains word frequencies for each word in vocab.
+            used to sample negative context examples from vocabulary.
+        """
         super().__init__()
         self.vocab_size = vocab_size
         self.embedding_size = embedding_size
@@ -36,6 +47,17 @@ class Word2VecModel(nn.Module):
             requires_grad=True)
 
     def forward(self, input_, target):
+        """
+        Converts supplied input - context pairs into vectors and computes loss.
+        Parameters
+        ----------
+        input_ (torch.tensor): input word, integer-ID encoded.
+        target (torch.tensor): context words for input, integer-ID encoded.
+
+        Returns
+        -------
+        loss(torch.tensor): model loss.
+        """
         device = input_.device
         batch_size = input_.shape[0]
         context_size = target.shape[1]
