@@ -11,13 +11,15 @@ class Word2VecTrainer(GenericTrainer):
 
     def __init__(self, dataloader_params, subsample_words, *args, **kwargs):
         """
-
+        Trains Skip-Gram Negative Sampling model.
         Parameters
         ----------
-        dataloader_params
-        subsample_words
-        args
-        kwargs
+        dataloader_params (dict): contains parameters needed for creating an instance of torch Dataloader class.
+        subsample_words (bool): if True, the Dataset is resampled and a new Dataloader instance is created every epoch.
+        *args: root, model, criterion, optimizer, scheduler, metrics, epochs,
+               hyperparams (optional), save_dir (optional), checkpoint (optional),
+               change_lr (optional).
+        **kwargs: checkpoint (optional).
         """
         super().__init__(*args, **kwargs)
         self.logger = logging.getLogger(os.path.basename(__file__))
@@ -36,14 +38,10 @@ class Word2VecTrainer(GenericTrainer):
 
     def _train_step(self, epoch):
         """
-
+        Behaviour during one pass through the epoch.
         Parameters
         ----------
-        epoch
-
-        Returns
-        -------
-
+        epoch (int): current epoch number.
         """
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         # print parameters of optimizer and scheduler every epoch
@@ -88,12 +86,11 @@ class Word2VecTrainer(GenericTrainer):
 
     def _serialize(self, epoch):
         """
-
+        Saves the model and some other parameters
         Parameters
         ----------
-        epoch
+        epoch (int): current epoch number.
         """
-        # save the model and some other parameters
         if self.scheduler is not None:
             sched_state = {'name': self.scheduler.__class__.__name__,
                            'state': self.scheduler.state_dict()}
