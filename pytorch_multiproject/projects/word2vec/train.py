@@ -38,7 +38,7 @@ def main(config, args):
     word_freq = torch.tensor([word_count[idx] for idx in word_count]).float()
     word_freq = word_freq / word_freq.sum()
 
-    dataset = Word2VecDataset(resources_dir, word2idx, idx2word, word_freq=(word_freq if subsample_words else None),
+    dataset = Word2VecDataset(word_freq=(word_freq if subsample_words else None),
                               subsamp_thresh=config.get('subsamp_thresh', 10**-4),
                               data_paths=[data], extensions=(('.pickle'),))
     data_loader_params = {'dataset': dataset, 'batch_size': config.get('batch_size', 256), 'shuffle': True,
