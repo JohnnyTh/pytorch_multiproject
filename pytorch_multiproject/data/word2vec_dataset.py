@@ -5,8 +5,6 @@ import random
 import numpy as np
 from data.generic_dataset import GenericDataset
 
-# NOTE - quoted lines of code use numpy instead of for loop for subsampling
-
 
 class Word2VecDataset(GenericDataset):
 
