@@ -136,7 +136,7 @@ Additionally, two custom projects were added. First project is a simple NN for M
 (based on the Author's [previous work](https://github.com/JohnnyTh/MNIST_convnet_pytorch)). The second project is described below.
 #### Transfer learning for age and gender classification
 <p align="center">
- <img src="https://user-images.githubusercontent.com/39649806/73366248-4a860680-42b6-11ea-8fbf-cf8c2daac6c8.jpg" alt="age_gen" width="800"/>
+ <img src="https://user-images.githubusercontent.com/39649806/73367790-afdaf700-42b8-11ea-867a-5bbc5ddf7070.jpg" alt="age_gen" width="800"/>
 </p>
 
 The project uses transfer learning to re-purpose a pre-trained model for age regression and gender classification task. Source images 
