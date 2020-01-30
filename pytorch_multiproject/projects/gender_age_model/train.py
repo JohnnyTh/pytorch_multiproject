@@ -15,7 +15,7 @@ from trainers.age_gender_trainer import AgeGenderTrainer
 from logger.logger import main_run, default_log_config
 
 # default configuration file with hyperparameters
-DEFAULT_CONFIG = 'small.json'
+DEFAULT_CONFIG = 'train.json'
 
 
 def main(config, args):
@@ -74,10 +74,10 @@ def main(config, args):
                                     extensions=(('.jpg'),)*len(data_dirs), transform=trans_non_aug)
 
     # create dataloaders
-    trainloader = torch.utils.data.DataLoader(train_dataset, batch_size=64, shuffle=True,
-                                              num_workers=config.get('num_workers', 0))
-    testloader = torch.utils.data.DataLoader(test_dataset, batch_size=64, shuffle=False,
-                                             num_workers=config.get('num_workers', 0))
+    trainloader = torch.utils.data.DataLoader(train_dataset, batch_size=config.get('minibatch_size', 128),
+                                              shuffle=True, num_workers=config.get('num_workers', 0))
+    testloader = torch.utils.data.DataLoader(test_dataset, batch_size=config.get('minibatch_size', 128),
+                                             shuffle=False, num_workers=config.get('num_workers', 0))
     dataloaders = {'train': trainloader, 'val': testloader}
 
     # define metrics
