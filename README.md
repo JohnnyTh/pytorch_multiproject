@@ -10,7 +10,7 @@ such as Dataset and Trainer classes. The repo includes several implemented Deep 
 projects demonstrating usage of these concepts in practice.
 
 ## Version history:
-###Version 0.4.0:
+### Version 0.4.0:
 Implemented Word2Vec algorithm using Skip-Gram Negative Sampling (SGNS) model.
 #### Skip-Gram Negative Sampling for word embeddings of specific corpus
 <p align="center">
@@ -47,7 +47,7 @@ The results (shown below) hinted that there is indeed a strong degree of correla
   <img src="https://user-images.githubusercontent.com/39649806/73250078-d452a880-41be-11ea-894c-78018181e7ae.jpg" alt="cos_sim" width="1200"/>
 </p>
 
-<p> If you wold like to check the visualization code, please check the utils/visualize_word2vec.ipynb file.
+<p> If you wold like to check the visualization code, please refer to the utils/visualize_word2vec.ipynb file.
 
 ### Version 0.3.0:
 Implemented [Mask R-CNN](https://arxiv.org/abs/1703.06870) for object detection using built-in torchvision model.
@@ -133,11 +133,28 @@ pytorch_multiproject/utils/age_gender_preprocessing.py).
 Implemented all basic features - basic and generic classes for trainers, unit tests for important modules, 
 logging of results. Generic trainer was implemented with serialization, deserialization and cycling through epochs methods. 
 Additionally, two custom projects were added. First project is a simple NN for MNIST classification task 
-(based on the Author's [previous work](https://github.com/JohnnyTh/MNIST_convnet_pytorch)). The second project 
-uses transfer learning to re-purpose a pre-trained model for age and gender classification task. Source images 
-for training were taken from IMDB-WIKI dataset (more precisely, only WIKI part).
-[Link to the dataset description](https://data.vision.ee.ethz.ch/cvl/rrothe/imdb-wiki/).
-[Link to the dataset](https://data.vision.ee.ethz.ch/cvl/rrothe/imdb-wiki/static/wiki_crop.tar)
+(based on the Author's [previous work](https://github.com/JohnnyTh/MNIST_convnet_pytorch)). The second project is described below.
+#### Transfer learning for age and gender classification
+<p align="center">
+ <img src="https://user-images.githubusercontent.com/39649806/73367790-afdaf700-42b8-11ea-867a-5bbc5ddf7070.jpg" alt="age_gen" width="800"/>
+</p>
+
+The project uses transfer learning to re-purpose a pre-trained model for age regression and gender classification task. Source images 
+for training were taken from IMDB-WIKI dataset (more precisely, only WIKI part). [Link to the dataset description](https://data.vision.ee.ethz.ch/cvl/rrothe/imdb-wiki/).
+[Link to the dataset](https://data.vision.ee.ethz.ch/cvl/rrothe/imdb-wiki/static/wiki_crop.tar). 
+As can be seen from the image above, two heads are trained together and the layer's weights are updated based on the total loss of the system defined as 
+the sum of age regression task loss and gender classification task loss. The results of training after epochs can be seen below.
+<p align="center">
+ <img src="https://user-images.githubusercontent.com/39649806/73438226-5de8ae80-4356-11ea-83c9-ef6c764bfbf9.png" alt="age_gen_perf" width="500"/>
+</p>
+As can be seen from the graph, the model shows high variance on both gender classification accuracy (significant variance) and MSE (slight variance) metrics since train set performance 
+exceeds val set performance at all epochs. 
+This can be explained by the fact that train set is unbalanced by gender with ~ 76.8% of images being represented
+by male photos. 
+Thus the further development of this model should be focused on, first of all, finding a way to balance the train dataset.
+ 
+
+
 ##### TODOs:
 * More models (semantic segmentation, object detection, image denoising, NLP models).
 
