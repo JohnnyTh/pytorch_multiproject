@@ -14,7 +14,7 @@ projects demonstrating usage of these concepts in practice.
 Implemented Word2Vec algorithm using Skip-Gram Negative Sampling (SGNS) model.
 #### Skip-Gram Negative Sampling for word embeddings of specific corpus
 <p align="center">
-  <img src="https://user-images.githubusercontent.com/39649806/73250790-44adf980-41c0-11ea-928e-c1292c596249.jpg" alt="SGNS" width="600"/>
+  <img src="https://user-images.githubusercontent.com/39649806/73250790-44adf980-41c0-11ea-928e-c1292c596249.jpg" alt="SGNS" width="800"/>
 </p>
 
 In this project a version of Skip-Gram Negative Sampling model for obtaining word embeddings was implemented as described in the original [paper](https://arxiv.org/abs/1310.4546).
@@ -53,7 +53,7 @@ The results (shown below) hinted that there is indeed a strong degree of correla
 Implemented [Mask R-CNN](https://arxiv.org/abs/1703.06870) for object detection using built-in torchvision model.
 #### Object detection with Mask R-CNN
 <p align="center">
-  <img src="https://user-images.githubusercontent.com/39649806/72250821-2e6f3d80-3605-11ea-9983-18e04163d19b.jpg" alt="mask_r_cnn" width="600"/>
+  <img src="https://user-images.githubusercontent.com/39649806/72250821-2e6f3d80-3605-11ea-9983-18e04163d19b.jpg" alt="mask_r_cnn" width="800"/>
 </p>
 
 This project used the [Mask R-CNN model](https://github.com/pytorch/vision/blob/master/torchvision/models/detection/mask_rcnn.py)
@@ -91,7 +91,7 @@ Implemented CycleGAN for several tasks based on the following [Paper](https://ar
 The tasks include unpaired image-to-image translation for horse-zebra, mnist-svhn, and old-young datasets. 
 #### Cycle Generative Adversarial Networks
 <p align="center">
-  <img src="https://user-images.githubusercontent.com/39649806/69902337-fb465700-1394-11ea-9a9b-de1b582c86ec.png" alt="cylegan" width="600"/>
+  <img src="https://user-images.githubusercontent.com/39649806/69902337-fb465700-1394-11ea-9a9b-de1b582c86ec.png" alt="cylegan" width="800"/>
 </p>
 
 Implementation of CycleGAN drawing architecture/training details from the [Repo](https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix).
