@@ -142,8 +142,17 @@ Additionally, two custom projects were added. First project is a simple NN for M
 The project uses transfer learning to re-purpose a pre-trained model for age regression and gender classification task. Source images 
 for training were taken from IMDB-WIKI dataset (more precisely, only WIKI part). [Link to the dataset description](https://data.vision.ee.ethz.ch/cvl/rrothe/imdb-wiki/).
 [Link to the dataset](https://data.vision.ee.ethz.ch/cvl/rrothe/imdb-wiki/static/wiki_crop.tar). 
-As can be seen from the image above, two heads are trained together and the layer's weights are updated based on the total of the system defined as 
-the sum of age regression task loss and gender classification task loss.
+As can be seen from the image above, two heads are trained together and the layer's weights are updated based on the total loss of the system defined as 
+the sum of age regression task loss and gender classification task loss. The results of training after epochs can be seen below.
+<p align="center">
+ <img src="https://user-images.githubusercontent.com/39649806/73438226-5de8ae80-4356-11ea-83c9-ef6c764bfbf9.png" alt="age_gen_perf" width="500"/>
+</p>
+As can be seen from the graph, the model shows high variance on both gender classification accuracy (significant variance) and MSE (slight variance) metrics since train set performance 
+exceeds val set performance at all epochs. 
+This can be explained by the fact that train set is unbalanced by gender with ~ 76.8% of images being represented
+by male photos. 
+Thus the further development of this model should be focused on, first of all, finding a way to balance the train dataset.
+ 
 
 
 ##### TODOs:
